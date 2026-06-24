@@ -1,0 +1,13 @@
+# One-click deploy config for Render (https://render.com).
+# In Render: New + → Blueprint → connect this repo → Apply. Free, no database.
+services:
+  - type: web
+    name: econt-shipper
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

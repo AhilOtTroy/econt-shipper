@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#0f1115">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>Econt — paste → товарителница</title>
+<style>
+  :root {
+    --bg: #0f1115; --card: #181b22; --line: #2a2f3a; --ink: #e8eaed;
+    --muted: #9aa3b2; --accent: #1f8b4c; --accent2: #2563eb; --warn: #b91c1c;
+    --chip: #232834;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 system-ui, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 18px 14px 70px; }
+  .view.hide, .hide { display: none; }
+  header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  header h1 { font-size: 17px; margin: 0; flex: 1; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
+  .badge.demo { background: #3a2d12; color: #f4c463; }
+  .badge.production { background: #12301f; color: #57d98a; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line);
+    background: var(--chip); color: var(--ink); border-radius: 9px; padding: 11px 16px; }
+  button:hover { border-color: #3a414f; }
+  button.primary { background: var(--accent2); border-color: var(--accent2); color: #fff; font-weight: 600; }
+  button.go { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+  button.ghost { background: transparent; }
+  button.block { width: 100%; }
+  button:disabled { opacity: .45; cursor: default; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  textarea { width: 100%; min-height: 120px; resize: vertical; }
+  textarea, input, select { background: #0d0f14; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 9px; padding: 11px 12px; font: inherit; width: 100%; }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 4px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 120px; }
+  .inline { display: flex; align-items: center; gap: 8px; }
+  .inline input[type=checkbox] { width: auto; transform: scale(1.3); }
+  .muted { color: var(--muted); font-size: 13px; }
+  .err { color: #ff8b8b; white-space: pre-wrap; font-size: 13px; margin-top: 8px; }
+  .good { color: #57d98a; font-size: 13px; margin-top: 8px; }
+  .ok-num { font-size: 30px; font-weight: 800; letter-spacing: 1px; word-break: break-all; }
+  .price { font-size: 22px; font-weight: 700; }
+  a { color: #7fb1ff; }
+  .toolbar { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  h2 { font-size: 18px; margin: 0 0 4px; }
+  h3 { margin: 4px 0 8px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 14px 0; }
+  .pin { letter-spacing: 8px; text-align: center; font-size: 24px; }
+  .step { margin-bottom: 14px; }
+  .logo { font-size: 26px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===================== SETUP WIZARD ===================== -->
+  <div id="view-setup" class="view hide">
+    <div class="card">
+      <div class="logo">📦</div>
+      <h2>Set up your Econt shipper</h2>
+      <p class="muted">One-time setup. Everything you enter stays on <b>this device</b>, locked by a PIN. Nothing is stored on any server.</p>
+    </div>
+
+    <div class="card step">
+      <h3>1 · Choose a PIN</h3>
+      <p class="muted">Used to lock this app and encrypt your Econt password on this device.</p>
+      <div class="row">
+        <div><label>PIN (4+ digits)</label><input id="suPin" class="pin" type="password" inputmode="numeric" autocomplete="new-password"></div>
+        <div><label>Repeat PIN</label><input id="suPin2" class="pin" type="password" inputmode="numeric" autocomplete="new-password"></div>
+      </div>
+    </div>
+
+    <div class="card step">
+      <h3>2 · Your Econt account</h3>
+      <label>Mode</label>
+      <select id="suMode">
+        <option value="production">Production (real shipments)</option>
+        <option value="demo">Demo (test — nothing is created)</option>
+      </select>
+      <div class="row">
+        <div><label>Econt username (exact, case-sensitive)</label><input id="suUser" autocomplete="username"></div>
+        <div><label>Econt password</label><input id="suPass" type="password" autocomplete="current-password"></div>
+      </div>
+      <button class="primary" id="suTestBtn" style="margin-top:12px">Test login</button>
+      <div id="suTestMsg" class="muted"></div>
+    </div>
+
+    <div class="card step">
+      <h3>3 · You (the sender)</h3>
+      <div class="row">
+        <div><label>Your name</label><input id="suSenderName"></div>
+        <div><label>Your phone</label><input id="suSenderPhone" inputmode="tel"></div>
+      </div>
+      <label>Your drop-off office</label>
+      <div class="inline">
+        <input id="suSenderOfficeSearch" placeholder="search city / office name…">
+        <button class="ghost" id="suSenderSearchBtn">Find</button>
+      </div>
+      <select id="suSenderOffice" class="hide" style="margin-top:8px"></select>
+    </div>
+
+    <div class="card step">
+      <h3>4 · Your usual options</h3>
+      <div class="row">
+        <div><label>Weight (kg)</label><input id="suWeight" type="number" step="0.1" min="0.1" value="1"></div>
+        <div><label>Contents</label><input id="suDesc" placeholder="e.g. слушалки"></div>
+        <div><label>Who pays</label>
+          <select id="suPayer"><option value="receiver">Receiver pays</option><option value="sender">I pay</option></select>
+        </div>
+      </div>
+      <label class="inline" style="margin-top:10px"><input type="checkbox" id="suCod"> Usually cash-on-delivery (you type the amount per parcel)</label>
+    </div>
+
+    <button class="go block" id="suFinishBtn" disabled>Finish setup →</button>
+    <div id="suFinishMsg" class="err"></div>
+  </div>
+
+  <!-- ===================== LOCK SCREEN ===================== -->
+  <div id="view-lock" class="view hide">
+    <div class="card" style="text-align:center">
+      <div class="logo">🔒</div>
+      <h2>Enter PIN</h2>
+      <input id="lockPin" class="pin" type="password" inputmode="numeric" autocomplete="current-password" style="margin:14px 0">
+      <button class="primary block" id="lockBtn">Unlock</button>
+      <div id="lockMsg" class="err"></div>
+      <button class="ghost" id="forgetBtn" style="margin-top:14px">Forget this device & start over</button>
+    </div>
+  </div>
+
+  <!-- ===================== MAIN APP ===================== -->
+  <div id="view-app" class="view hide">
+    <header>
+      <h1>Econt — paste → товарителница</h1>
+      <span id="modeBadge" class="badge demo">DEMO</span>
+      <button class="ghost" id="settingsBtn">⚙</button>
+      <button class="ghost" id="lockNowBtn">🔒</button>
+    </header>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="card hide">
+      <h3>Econt account</h3>
+      <label>Mode</label>
+      <select id="cfgMode">
+        <option value="production">Production (real)</option>
+        <option value="demo">Demo (test)</option>
+      </select>
+      <div class="row">
+        <div><label>Username</label><input id="cfgUser" autocomplete="off"></div>
+        <div><label>Password (blank = keep)</label><input id="cfgPass" type="password" placeholder="••••" autocomplete="off"></div>
+      </div>
+      <button class="ghost" id="cfgTestBtn" style="margin-top:10px">Test login</button>
+
+      <hr>
+      <h3>Sender</h3>
+      <div class="row">
+        <div><label>Name</label><input id="cfgSenderName"></div>
+        <div><label>Phone</label><input id="cfgSenderPhone"></div>
+      </div>
+      <label>Your drop-off office code</label>
+      <div class="inline">
+        <input id="cfgSenderOffice" placeholder="e.g. 9049">
+        <input id="cfgSenderSearch" placeholder="search…">
+        <button class="ghost" id="cfgSenderSearchBtn">Find</button>
+      </div>
+      <select id="cfgSenderOfficeSel" class="hide" style="margin-top:8px"></select>
+
+      <hr>
+      <h3>Default options</h3>
+      <div class="row">
+        <div><label>Weight (kg)</label><input id="cfgWeight" type="number" step="0.1" min="0.1"></div>
+        <div><label>Contents</label><input id="cfgDesc"></div>
+        <div><label>Who pays</label>
+          <select id="cfgPayer"><option value="receiver">Receiver</option><option value="sender">Sender</option></select>
+        </div>
+      </div>
+      <label class="inline" style="margin-top:10px"><input type="checkbox" id="cfgCodOn"> COD on by default</label>
+
+      <hr>
+      <div class="toolbar">
+        <button class="ghost" id="refreshOfficesBtn">Refresh offices</button>
+        <button class="primary" id="saveCfgBtn">Save</button>
+      </div>
+      <div id="cfgMsg" class="muted"></div>
+    </div>
+
+    <!-- PASTE -->
+    <div class="card">
+      <label>Paste the customer's message</label>
+      <textarea id="msg" placeholder="Моля да ги изпратите в Офис на еконт: …  Име – 08xx xxx xxx"></textarea>
+      <div class="toolbar" style="margin-top:10px">
+        <button class="ghost" id="clearBtn">Clear</button>
+        <button class="primary" id="parseBtn">Preview →</button>
+      </div>
+      <div id="parseErr" class="err"></div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="preview" class="card hide">
+      <h3>Check & confirm</h3>
+      <div class="row">
+        <div><label>Recipient name</label><input id="pName"></div>
+        <div><label>Phone</label><input id="pPhone" inputmode="tel"></div>
+      </div>
+      <label>Deliver to office</label>
+      <select id="pOffice"></select>
+      <div class="inline" style="margin-top:6px">
+        <input id="officeSearch" placeholder="wrong office? search by name/city…">
+        <button class="ghost" id="officeSearchBtn">Search</button>
+      </div>
+      <div id="officeHint" class="muted" style="margin-top:6px"></div>
+      <div class="row" style="margin-top:8px">
+        <div><label>Weight (kg)</label><input id="pWeight" type="number" step="0.1" min="0.1"></div>
+        <div><label>Description</label><input id="pDesc"></div>
+        <div><label>Pays</label>
+          <select id="pPayer"><option value="receiver">Receiver</option><option value="sender">Sender</option></select>
+        </div>
+      </div>
+      <label class="inline" style="margin-top:10px"><input type="checkbox" id="pCodOn"> COD
+        <input id="pCodAmount" type="number" step="0.01" min="0" placeholder="amount" style="width:130px; margin-left:6px"></label>
+      <hr>
+      <div id="priceBox" class="muted">Getting price…</div>
+      <div id="previewErr" class="err"></div>
+      <div class="toolbar" style="margin-top:12px">
+        <button class="ghost" id="recalcBtn">Recalculate</button>
+        <button class="go" id="createBtn">✓ Create shipment number</button>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div id="result" class="card hide">
+      <h3>✅ Shipment created</h3>
+      <div class="ok-num" id="shipNum"></div>
+      <div class="toolbar" style="justify-content:flex-start; margin:12px 0">
+        <button class="primary" id="copyBtn">Copy number</button>
+        <a id="pdfLink" href="#" target="_blank"><button class="ghost">🖨 Label PDF</button></a>
+        <button class="ghost" id="newBtn">+ New</button>
+      </div>
+      <div id="resultMeta" class="muted"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
