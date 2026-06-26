@@ -113,6 +113,8 @@
         </div>
       </div>
       <label class="inline" style="margin-top:10px"><input type="checkbox" id="suCod"> Usually cash-on-delivery (you type the amount per parcel)</label>
+      <label>Default COD currency</label>
+      <select id="suCur"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
     </div>
 
     <button class="go block" id="suFinishBtn" disabled>Finish setup →</button>
@@ -178,6 +180,8 @@
         </div>
       </div>
       <label class="inline" style="margin-top:10px"><input type="checkbox" id="cfgCodOn"> COD on by default</label>
+      <label>Default COD currency</label>
+      <select id="cfgCur"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
 
       <hr>
       <div class="toolbar">
@@ -220,7 +224,8 @@
         </div>
       </div>
       <label class="inline" style="margin-top:10px"><input type="checkbox" id="pCodOn"> COD
-        <input id="pCodAmount" type="number" step="0.01" min="0" placeholder="amount" style="width:130px; margin-left:6px"></label>
+        <input id="pCodAmount" type="number" step="0.01" min="0" placeholder="amount" style="width:110px; margin-left:6px">
+        <select id="pCodCur" style="width:auto"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select></label>
       <hr>
       <div id="priceBox" class="muted">Getting price…</div>
       <div id="previewErr" class="err"></div>

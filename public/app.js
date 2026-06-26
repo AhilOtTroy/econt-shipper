@@ -99,7 +99,7 @@ $('suFinishBtn').onclick = async () => {
       shipmentType: 'pack', packCount: 1,
       weight: Number($('suWeight').value) || 1, shipmentDescription: $('suDesc').value.trim(),
       payer: $('suPayer').value, payAfterAccept: false, payAfterTest: false,
-      cod: { enabled: $('suCod').checked, amount: 0, currency: 'BGN' }, countryCode: 'BGR',
+      cod: { enabled: $('suCod').checked, amount: 0, currency: $('suCur').value }, countryCode: 'BGR',
     },
   };
   await persist();
@@ -138,6 +138,7 @@ function enterApp() {
   $('cfgSenderName').value = s.name || ''; $('cfgSenderPhone').value = s.phone || ''; $('cfgSenderOffice').value = s.officeCode || '';
   $('cfgWeight').value = d.weight ?? 1; $('cfgDesc').value = d.shipmentDescription || '';
   $('cfgPayer').value = d.payer || 'receiver'; $('cfgCodOn').checked = !!(d.cod && d.cod.enabled);
+  $('cfgCur').value = (d.cod && d.cod.currency) || 'EUR';
   show('app');
 }
 
@@ -165,7 +166,7 @@ $('saveCfgBtn').onclick = async () => {
   CONFIG.sender = { name: $('cfgSenderName').value.trim(), phone: $('cfgSenderPhone').value.trim(), officeCode: $('cfgSenderOffice').value.trim(), address: CONFIG.sender.address || null };
   CONFIG.defaults = Object.assign({}, CONFIG.defaults, {
     weight: Number($('cfgWeight').value) || 1, shipmentDescription: $('cfgDesc').value.trim(),
-    payer: $('cfgPayer').value, cod: Object.assign({}, CONFIG.defaults.cod, { enabled: $('cfgCodOn').checked }),
+    payer: $('cfgPayer').value, cod: Object.assign({}, CONFIG.defaults.cod, { enabled: $('cfgCodOn').checked, currency: $('cfgCur').value }),
   });
   await persist();
   enterApp();
@@ -198,6 +199,7 @@ async function doParse() {
     $('pWeight').value = d.weight ?? 1; $('pDesc').value = d.shipmentDescription || '';
     $('pPayer').value = d.payer || 'receiver';
     $('pCodOn').checked = !!(d.cod && d.cod.enabled); $('pCodAmount').value = (d.cod && d.cod.amount) || '';
+    $('pCodCur').value = (d.cod && d.cod.currency) || 'EUR';
     $('preview').classList.remove('hide'); $('result').classList.add('hide');
     $('preview').scrollIntoView({ behavior: 'smooth' });
     doPreview();
@@ -208,7 +210,7 @@ function gatherOverrides() {
   return {
     recipientName: $('pName').value.trim(), phone: $('pPhone').value.trim(), officeCode: $('pOffice').value,
     weight: Number($('pWeight').value) || undefined, description: $('pDesc').value.trim(), payer: $('pPayer').value,
-    cod: { enabled: $('pCodOn').checked, amount: Number($('pCodAmount').value) || 0, currency: 'BGN' },
+    cod: { enabled: $('pCodOn').checked, amount: Number($('pCodAmount').value) || 0, currency: $('pCodCur').value },
   };
 }
 function shipBody(overrides) { return { creds: creds(), sender: CONFIG.sender, defaults: CONFIG.defaults, overrides }; }
@@ -216,7 +218,7 @@ function shipBody(overrides) { return { creds: creds(), sender: CONFIG.sender, d
 function showPrice(resp) {
   const st = resp.label || resp;
   const total = st.totalPrice;
-  const cur = st.totalPriceCurrency || st.currency || 'BGN';
+  const cur = st.totalPriceCurrency || st.currency || $('pCodCur').value || 'EUR';
   return total != null ? `Estimated price: <span class="price">${Number(total).toFixed(2)} ${cur}</span>` : 'Validated ✓';
 }
 async function doPreview() {
@@ -240,7 +242,7 @@ async function doCreate() {
     $('shipNum').textContent = st.shipmentNumber || '(no number returned)';
     const pdf = st.pdfURL;
     if (pdf) { $('pdfLink').href = pdf; $('pdfLink').style.display = ''; } else { $('pdfLink').style.display = 'none'; }
-    $('resultMeta').textContent = st.totalPrice != null ? `Price: ${Number(st.totalPrice).toFixed(2)} ${st.totalPriceCurrency || 'BGN'}` : '';
+    $('resultMeta').textContent = st.totalPrice != null ? `Price: ${Number(st.totalPrice).toFixed(2)} ${st.totalPriceCurrency || $('pCodCur').value || 'EUR'}` : '';
     $('preview').classList.add('hide'); $('result').classList.remove('hide');
     $('result').scrollIntoView({ behavior: 'smooth' });
   } finally { $('createBtn').disabled = false; $('createBtn').textContent = '✓ Create shipment number'; }
