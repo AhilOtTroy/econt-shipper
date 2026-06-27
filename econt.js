@@ -55,6 +55,11 @@ function createLabel(creds, label, mode) {
   return callEcont(creds, '/Shipments/LabelService.createLabel.json', { label, mode });
 }
 
+// Live status/tracking for a list of shipment numbers.
+function getShipmentStatuses(creds, shipmentNumbers) {
+  return callEcont(creds, '/Shipments/ShipmentService.getShipmentStatuses.json', { shipmentNumbers });
+}
+
 function toAddress(a) {
   if (!a) return undefined;
   return {
@@ -112,4 +117,4 @@ function buildLabel(sender, defaults, o) {
   return label;
 }
 
-module.exports = { callEcont, getOffices, createLabel, buildLabel, baseUrl };
+module.exports = { callEcont, getOffices, createLabel, getShipmentStatuses, buildLabel, baseUrl };

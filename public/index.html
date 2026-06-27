@@ -17,23 +17,20 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { margin: 0; background: var(--bg); color: var(--ink);
     font: 16px/1.55 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
-  .wrap { max-width: 680px; margin: 0 auto; padding: 0 14px 72px; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 0 14px 80px; }
   .view.hide, .hide { display: none !important; }
+  .view:not(.hide) { animation: viewIn .28s cubic-bezier(.2,.7,.2,1); }
+  @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-  /* top bar */
-  .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px;
-    padding: 12px 2px; background: var(--bg); }
+  .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px; padding: 12px 2px; background: var(--bg); }
   .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: var(--brand); letter-spacing: -.01em; }
-  .brand svg { display: block; }
   .spacer { flex: 1; }
   .langtoggle { display: inline-flex; background: #fff; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
   .lang { border: 0; background: transparent; color: var(--muted); padding: 6px 12px; font-weight: 700; font-size: 13px; }
   .lang.active { background: var(--brand); color: #fff; }
-  .icon { border: 1px solid var(--line); background: #fff; color: var(--brand); width: 36px; height: 34px; border-radius: 10px; font-weight: 800; }
+  .icon { border: 1px solid var(--line); background: #fff; color: var(--brand); width: 38px; height: 36px; border-radius: 10px; font-weight: 800; }
 
-  /* generic */
-  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink);
-    border-radius: 11px; padding: 12px 16px; transition: .12s; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 11px; padding: 12px 16px; transition: .12s; }
   button:hover { border-color: #c9d4e4; }
   button:active { transform: translateY(1px); }
   .primary { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 700; }
@@ -42,11 +39,10 @@
   .go:hover { background: var(--go-d); border-color: var(--go-d); }
   .ghost { background: transparent; }
   .block { width: 100%; }
-  button:disabled { opacity: .45; cursor: default; }
+  button:disabled { opacity: .55; cursor: default; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
   textarea { min-height: 120px; resize: vertical; }
-  textarea, input, select { width: 100%; background: #fff; color: var(--ink);
-    border: 1px solid var(--line); border-radius: 11px; padding: 12px 13px; font: inherit; outline: none; }
+  textarea, input, select { width: 100%; background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 11px; padding: 12px 13px; font: inherit; outline: none; transition: border-color .12s, box-shadow .12s; }
   textarea:focus, input:focus, select:focus { border-color: var(--brand-2); box-shadow: 0 0 0 3px var(--brand-soft); }
   label { display: block; font-size: 12.5px; color: var(--muted); margin: 13px 0 5px; font-weight: 600; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -69,14 +65,44 @@
   .badge.production { background: #def5e6; color: var(--go-d); }
   .step-no { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-weight: 800; font-size: 12px; margin-right: 6px; }
 
-  /* landing */
+  .spin { display: inline-block; width: 15px; height: 15px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sp .6s linear infinite; vertical-align: -2px; margin-right: 8px; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+
+  #toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: .26s cubic-bezier(.2,.7,.2,1); z-index: 50; max-width: 90%; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .segnav { display: flex; background: #fff; border: 1px solid var(--line); border-radius: 13px; padding: 4px; gap: 4px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .segnav button { flex: 1; border: 0; background: transparent; border-radius: 10px; padding: 11px; font-weight: 700; color: var(--muted); }
+  .segnav button.active { background: var(--brand); color: #fff; }
+
   .hero { text-align: center; padding: 22px 18px 24px; background: linear-gradient(180deg, #fff, #f7faff); }
   .hero .pill { display: inline-block; background: var(--brand-soft); color: var(--brand); font-weight: 700; font-size: 12.5px; padding: 5px 12px; border-radius: 999px; margin-bottom: 14px; }
   .hero h1 { font-size: 27px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.02em; }
   .hero p { color: var(--muted); margin: 0 auto 18px; max-width: 460px; }
   .feat { display: flex; gap: 11px; align-items: flex-start; margin: 12px 0; text-align: left; }
   .feat .tick { flex: none; width: 26px; height: 26px; border-radius: 8px; background: var(--brand-soft); color: var(--brand); display: flex; align-items: center; justify-content: center; font-weight: 800; }
-  .demo-note { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 10px; }
+
+  .parcel { border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; background: #fff; box-shadow: var(--shadow); }
+  .parcel-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .parcel-num { min-width: 0; }
+  .parcel-num { font-weight: 800; color: var(--brand); letter-spacing: .3px; }
+  .statusb { margin-left: auto; font-size: 11.5px; font-weight: 800; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .s-blue { background: var(--brand-soft); color: var(--brand); } .s-green { background: #def5e6; color: var(--go-d); }
+  .s-red { background: #fde7e7; color: var(--warn); } .s-gray { background: #eef2f7; color: var(--muted); }
+  .parcel-sub { color: var(--ink); font-size: 13.5px; margin-top: 6px; }
+  .parcel-meta { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+  .parcel-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .parcel-row button { padding: 7px 12px; font-size: 13px; }
+  .events { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+  .event { display: flex; gap: 9px; font-size: 12.5px; color: var(--muted); padding: 3px 0; }
+  .event .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-2); margin-top: 5px; flex: none; }
+  .sk { background: linear-gradient(90deg, #eef2f7, #dde6f1, #eef2f7); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 6px; color: transparent !important; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  .check-c { width: 50px; height: 50px; flex: none; }
+  .check-c circle { stroke: var(--go); stroke-width: 3; fill: none; stroke-dasharray: 157; stroke-dashoffset: 157; animation: draw .5s ease forwards; }
+  .check-c path { stroke: var(--go); stroke-width: 4; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 50; stroke-dashoffset: 50; animation: draw .35s .45s ease forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
 </style>
 </head>
 <body>
@@ -109,7 +135,7 @@
         <p class="muted" data-i18n="land_what_p">Малък помощник за подателите в Еконт. Поставяте съобщението с офис/адрес, което клиентът ви праща, проверявате данните и приложението създава товарителницата във вашия Еконт профил. Данните ви за вход остават на вашето устройство, защитени с PIN.</p>
         <div class="feat"><span class="tick">✓</span><span data-i18n="land_f1">Автоматично разпознава офис, име и телефон от текста</span></div>
         <div class="feat"><span class="tick">✓</span><span data-i18n="land_f2">Преглед на цената преди да потвърдите — нищо не се създава по погрешка</span></div>
-        <div class="feat"><span class="tick">✓</span><span data-i18n="land_f3">Работи на телефона ви като приложение</span></div>
+        <div class="feat"><span class="tick">✓</span><span data-i18n="land_f3">Жив списък на пратките ви със статус от Еконт</span></div>
         <div class="feat"><span class="tick">✓</span><span data-i18n="land_f4">Евро или лева, наложен платеж, вашите настройки по подразбиране</span></div>
       </div>
     </div>
@@ -127,7 +153,7 @@
       <p class="muted" data-i18n="setup_s1_sub">Заключва приложението и криптира паролата ви за Еконт на това устройство.</p>
       <div class="row">
         <div><label data-i18n="setup_pin">PIN (4+ цифри)</label><input id="suPin" class="pin" type="password" inputmode="numeric" autocomplete="new-password"></div>
-        <div><label data-i18n="setup_pin2">Повторете PIN</label><input id="suPin2" class="pin" type="password" inputmode="numeric" autocomplete="new-password"></div>
+        <div><label data-i18n="setup_pin2">Повторете PIN</label><input id="suPin2" class="pin" type="password" inputmode="numeric" autocomplete="new-password" data-enter="suFinishBtn"></div>
       </div>
     </div>
 
@@ -139,8 +165,8 @@
         <option value="demo" data-i18n="mode_demo">Демо (тест — нищо не се създава)</option>
       </select>
       <div class="row">
-        <div><label data-i18n="setup_user">Потребителско име в Еконт (точно, с главни/малки букви)</label><input id="suUser" autocomplete="username"></div>
-        <div><label data-i18n="setup_pass">Парола за Еконт</label><input id="suPass" type="password" autocomplete="current-password"></div>
+        <div><label data-i18n="setup_user">Потребителско име в Еконт (точно, с главни/малки букви)</label><input id="suUser" autocomplete="username" data-enter="suTestBtn"></div>
+        <div><label data-i18n="setup_pass">Парола за Еконт</label><input id="suPass" type="password" autocomplete="current-password" data-enter="suTestBtn"></div>
       </div>
       <button class="primary" id="suTestBtn" style="margin-top:12px" data-i18n="setup_test">Проверка на входа</button>
       <div id="suTestMsg" class="muted"></div>
@@ -154,7 +180,7 @@
       </div>
       <label data-i18n="setup_youroffice">Вашият офис за подаване</label>
       <div class="inline">
-        <input id="suSenderOfficeSearch" data-i18n-ph="setup_search_office" placeholder="търсене по град / име на офис…">
+        <input id="suSenderOfficeSearch" data-i18n-ph="setup_search_office" data-enter="suSenderSearchBtn" placeholder="търсене по град / име на офис…">
         <button class="ghost" id="suSenderSearchBtn" data-i18n="find">Намери</button>
       </div>
       <select id="suSenderOffice" class="hide" style="margin-top:8px"></select>
@@ -183,7 +209,7 @@
     <div class="card" style="text-align:center">
       <div style="font-size:34px">🔒</div>
       <h2 data-i18n="lock_title">Въведете PIN</h2>
-      <input id="lockPin" class="pin" type="password" inputmode="numeric" autocomplete="current-password" style="margin:14px 0">
+      <input id="lockPin" class="pin" type="password" inputmode="numeric" autocomplete="current-password" data-enter="lockBtn" style="margin:14px 0">
       <button class="primary block" id="lockBtn" data-i18n="unlock">Отключи</button>
       <div id="lockMsg" class="err" style="text-align:center"></div>
       <button class="ghost" id="forgetBtn" style="margin-top:14px" data-i18n="forget">Изтрий от това устройство и започни наново</button>
@@ -193,119 +219,143 @@
   <!-- ===================== APP ===================== -->
   <div id="view-app" class="view hide">
     <div class="card" style="display:flex; align-items:center; gap:8px; padding:13px 16px">
-      <strong data-i18n="app_h">Нова товарителница</strong>
+      <strong data-i18n="app_brand">Econt Shipper</strong>
       <span id="modeBadge" class="badge demo">DEMO</span>
       <div class="spacer"></div>
       <button class="ghost icon" id="settingsBtn" title="Settings">⚙</button>
       <button class="ghost icon" id="lockNowBtn" title="Lock">🔒</button>
     </div>
 
-    <!-- SETTINGS -->
-    <div id="settings" class="card hide">
-      <h3 data-i18n="set_account">Еконт акаунт</h3>
-      <label data-i18n="setup_mode">Режим</label>
-      <select id="cfgMode">
-        <option value="production" data-i18n="mode_prod">Реален</option>
-        <option value="demo" data-i18n="mode_demo">Демо</option>
-      </select>
-      <div class="row">
-        <div><label data-i18n="username">Потребител</label><input id="cfgUser" autocomplete="off"></div>
-        <div><label data-i18n="pass_keep">Парола (празно = без промяна)</label><input id="cfgPass" type="password" placeholder="••••" autocomplete="off"></div>
-      </div>
-      <button class="ghost" id="cfgTestBtn" style="margin-top:10px" data-i18n="setup_test">Проверка на входа</button>
+    <div class="segnav">
+      <button id="navNew" class="active" data-i18n="nav_new">Нова</button>
+      <button id="navParcels" data-i18n="nav_parcels">Пратки</button>
+    </div>
 
-      <hr>
-      <h3 data-i18n="set_sender">Подател</h3>
-      <div class="row">
-        <div><label data-i18n="name">Име</label><input id="cfgSenderName"></div>
-        <div><label data-i18n="phone">Телефон</label><input id="cfgSenderPhone"></div>
-      </div>
-      <label data-i18n="set_office_code">Код на вашия офис за подаване</label>
-      <div class="inline">
-        <input id="cfgSenderOffice" placeholder="напр. 9049" style="max-width:120px">
-        <input id="cfgSenderSearch" data-i18n-ph="search" placeholder="търсене…">
-        <button class="ghost" id="cfgSenderSearchBtn" data-i18n="find">Намери</button>
-      </div>
-      <select id="cfgSenderOfficeSel" class="hide" style="margin-top:8px"></select>
+    <div id="tab-new">
+      <!-- SETTINGS -->
+      <div id="settings" class="card hide">
+        <h3 data-i18n="set_account">Еконт акаунт</h3>
+        <label data-i18n="setup_mode">Режим</label>
+        <select id="cfgMode">
+          <option value="production" data-i18n="mode_prod">Реален</option>
+          <option value="demo" data-i18n="mode_demo">Демо</option>
+        </select>
+        <div class="row">
+          <div><label data-i18n="username">Потребител</label><input id="cfgUser" autocomplete="off" data-enter="saveCfgBtn"></div>
+          <div><label data-i18n="pass_keep">Парола (празно = без промяна)</label><input id="cfgPass" type="password" placeholder="••••" autocomplete="off" data-enter="saveCfgBtn"></div>
+        </div>
+        <button class="ghost" id="cfgTestBtn" style="margin-top:10px" data-i18n="setup_test">Проверка на входа</button>
 
-      <hr>
-      <h3 data-i18n="set_defaults">Настройки по подразбиране</h3>
-      <div class="row">
-        <div><label data-i18n="weight">Тегло (кг)</label><input id="cfgWeight" type="number" step="0.1" min="0.1"></div>
-        <div><label data-i18n="contents">Съдържание</label><input id="cfgDesc"></div>
-        <div><label data-i18n="who_pays">Кой плаща</label>
-          <select id="cfgPayer"><option value="receiver" data-i18n="receiver">Получател</option><option value="sender" data-i18n="sender">Подател</option></select>
+        <hr>
+        <h3 data-i18n="set_sender">Подател</h3>
+        <div class="row">
+          <div><label data-i18n="name">Име</label><input id="cfgSenderName"></div>
+          <div><label data-i18n="phone">Телефон</label><input id="cfgSenderPhone"></div>
+        </div>
+        <label data-i18n="set_office_code">Код на вашия офис за подаване</label>
+        <div class="inline">
+          <input id="cfgSenderOffice" placeholder="напр. 9049" style="max-width:120px">
+          <input id="cfgSenderSearch" data-i18n-ph="search" data-enter="cfgSenderSearchBtn" placeholder="търсене…">
+          <button class="ghost" id="cfgSenderSearchBtn" data-i18n="find">Намери</button>
+        </div>
+        <select id="cfgSenderOfficeSel" class="hide" style="margin-top:8px"></select>
+
+        <hr>
+        <h3 data-i18n="set_defaults">Настройки по подразбиране</h3>
+        <div class="row">
+          <div><label data-i18n="weight">Тегло (кг)</label><input id="cfgWeight" type="number" step="0.1" min="0.1"></div>
+          <div><label data-i18n="contents">Съдържание</label><input id="cfgDesc"></div>
+          <div><label data-i18n="who_pays">Кой плаща</label>
+            <select id="cfgPayer"><option value="receiver" data-i18n="receiver">Получател</option><option value="sender" data-i18n="sender">Подател</option></select>
+          </div>
+        </div>
+        <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgCodOn"> <span data-i18n="set_cod_default">Наложен платеж по подразбиране</span></label>
+        <label data-i18n="cod_currency">Валута на наложен платеж</label>
+        <select id="cfgCur"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
+
+        <hr>
+        <div class="toolbar">
+          <button class="ghost" id="refreshOfficesBtn" data-i18n="refresh_offices">Обнови офисите</button>
+          <button class="primary" id="saveCfgBtn" data-i18n="save">Запази</button>
+        </div>
+        <div id="cfgMsg" class="muted"></div>
+      </div>
+
+      <!-- PASTE -->
+      <div class="card">
+        <label data-i18n="paste_label">Поставете съобщението на клиента</label>
+        <textarea id="msg" data-i18n-ph="paste_ph" placeholder="Моля да ги изпратите в Офис на еконт: …  Име – 08xx xxx xxx"></textarea>
+        <div class="muted" style="margin-top:6px; font-size:12px" data-i18n="paste_hint">Съвет: Ctrl+Enter за преглед</div>
+        <div class="toolbar" style="margin-top:8px">
+          <button class="ghost" id="clearBtn" data-i18n="clear">Изчисти</button>
+          <button class="primary" id="parseBtn" data-i18n="preview">Преглед →</button>
+        </div>
+        <div id="parseErr" class="err"></div>
+      </div>
+
+      <!-- PREVIEW -->
+      <div id="preview" class="card hide">
+        <h3 data-i18n="prev_h">Проверете и потвърдете</h3>
+        <div class="row">
+          <div><label data-i18n="recipient">Име на получателя</label><input id="pName" data-enter="recalcBtn"></div>
+          <div><label data-i18n="phone">Телефон</label><input id="pPhone" inputmode="tel" data-enter="recalcBtn"></div>
+        </div>
+        <label data-i18n="deliver_office">Доставка до офис</label>
+        <select id="pOffice"></select>
+        <div class="inline" style="margin-top:6px">
+          <input id="officeSearch" data-i18n-ph="wrong_office" data-enter="officeSearchBtn" placeholder="грешен офис? търсене по име/град…">
+          <button class="ghost" id="officeSearchBtn" data-i18n="search_btn">Търси</button>
+        </div>
+        <div id="officeHint" class="muted" style="margin-top:6px"></div>
+        <div class="row" style="margin-top:8px">
+          <div><label data-i18n="weight">Тегло (кг)</label><input id="pWeight" type="number" step="0.1" min="0.1" data-enter="recalcBtn"></div>
+          <div><label data-i18n="description">Описание</label><input id="pDesc" data-enter="recalcBtn"></div>
+          <div><label data-i18n="pays">Плаща</label>
+            <select id="pPayer"><option value="receiver" data-i18n="receiver">Получател</option><option value="sender" data-i18n="sender">Подател</option></select>
+          </div>
+        </div>
+        <label class="inline" style="margin-top:12px"><input type="checkbox" id="pCodOn"> <span data-i18n="cod">Нал. платеж</span>
+          <input id="pCodAmount" type="number" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" style="width:100px; margin-left:6px">
+          <select id="pCodCur" style="width:auto"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select></label>
+        <hr>
+        <div id="priceBox" class="muted"></div>
+        <div id="previewErr" class="err"></div>
+        <div class="toolbar" style="margin-top:12px">
+          <button class="ghost" id="recalcBtn" data-i18n="recalc">Преизчисли</button>
+          <button class="go" id="createBtn" data-i18n="create_btn">✓ Създай товарителница</button>
         </div>
       </div>
-      <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgCodOn"> <span data-i18n="set_cod_default">Наложен платеж по подразбиране</span></label>
-      <label data-i18n="cod_currency">Валута на наложен платеж</label>
-      <select id="cfgCur"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
 
-      <hr>
-      <div class="toolbar">
-        <button class="ghost" id="refreshOfficesBtn" data-i18n="refresh_offices">Обнови офисите</button>
-        <button class="primary" id="saveCfgBtn" data-i18n="save">Запази</button>
-      </div>
-      <div id="cfgMsg" class="muted"></div>
-    </div>
-
-    <!-- PASTE -->
-    <div class="card">
-      <label data-i18n="paste_label">Поставете съобщението на клиента</label>
-      <textarea id="msg" data-i18n-ph="paste_ph" placeholder="Моля да ги изпратите в Офис на еконт: …  Име – 08xx xxx xxx"></textarea>
-      <div class="toolbar" style="margin-top:10px">
-        <button class="ghost" id="clearBtn" data-i18n="clear">Изчисти</button>
-        <button class="primary" id="parseBtn" data-i18n="preview">Преглед →</button>
-      </div>
-      <div id="parseErr" class="err"></div>
-    </div>
-
-    <!-- PREVIEW -->
-    <div id="preview" class="card hide">
-      <h3 data-i18n="prev_h">Проверете и потвърдете</h3>
-      <div class="row">
-        <div><label data-i18n="recipient">Име на получателя</label><input id="pName"></div>
-        <div><label data-i18n="phone">Телефон</label><input id="pPhone" inputmode="tel"></div>
-      </div>
-      <label data-i18n="deliver_office">Доставка до офис</label>
-      <select id="pOffice"></select>
-      <div class="inline" style="margin-top:6px">
-        <input id="officeSearch" data-i18n-ph="wrong_office" placeholder="грешен офис? търсене по име/град…">
-        <button class="ghost" id="officeSearchBtn" data-i18n="search_btn">Търси</button>
-      </div>
-      <div id="officeHint" class="muted" style="margin-top:6px"></div>
-      <div class="row" style="margin-top:8px">
-        <div><label data-i18n="weight">Тегло (кг)</label><input id="pWeight" type="number" step="0.1" min="0.1"></div>
-        <div><label data-i18n="description">Описание</label><input id="pDesc"></div>
-        <div><label data-i18n="pays">Плаща</label>
-          <select id="pPayer"><option value="receiver" data-i18n="receiver">Получател</option><option value="sender" data-i18n="sender">Подател</option></select>
+      <!-- RESULT -->
+      <div id="result" class="card hide">
+        <div style="display:flex; align-items:center; gap:12px">
+          <svg class="check-c" viewBox="0 0 56 56"><circle cx="28" cy="28" r="25"/><path d="M16 29l8 8 17-19"/></svg>
+          <h3 data-i18n="res_h" style="margin:0; font-size:15px; color:var(--ink); text-transform:none; letter-spacing:0">Товарителницата е създадена</h3>
         </div>
-      </div>
-      <label class="inline" style="margin-top:12px"><input type="checkbox" id="pCodOn"> <span data-i18n="cod">Нал. платеж</span>
-        <input id="pCodAmount" type="number" step="0.01" min="0" data-i18n-ph="amount" placeholder="сума" style="width:100px; margin-left:6px">
-        <select id="pCodCur" style="width:auto"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select></label>
-      <hr>
-      <div id="priceBox" class="muted"></div>
-      <div id="previewErr" class="err"></div>
-      <div class="toolbar" style="margin-top:12px">
-        <button class="ghost" id="recalcBtn" data-i18n="recalc">Преизчисли</button>
-        <button class="go" id="createBtn" data-i18n="create_btn">✓ Създай товарителница</button>
+        <div class="ok-num" id="shipNum" style="margin-top:10px"></div>
+        <div class="toolbar" style="justify-content:flex-start; margin:12px 0">
+          <button class="primary" id="copyBtn" data-i18n="copy">Копирай номера</button>
+          <a id="pdfLink" href="#" target="_blank"><button class="ghost" data-i18n="label_pdf">🖨 Етикет PDF</button></a>
+          <button class="ghost" id="newBtn" data-i18n="new">+ Нова</button>
+        </div>
+        <div id="resultMeta" class="muted"></div>
       </div>
     </div>
 
-    <!-- RESULT -->
-    <div id="result" class="card hide">
-      <h3 data-i18n="res_h">✅ Товарителницата е създадена</h3>
-      <div class="ok-num" id="shipNum"></div>
-      <div class="toolbar" style="justify-content:flex-start; margin:12px 0">
-        <button class="primary" id="copyBtn" data-i18n="copy">Копирай номера</button>
-        <a id="pdfLink" href="#" target="_blank"><button class="ghost" data-i18n="label_pdf">🖨 Етикет PDF</button></a>
-        <button class="ghost" id="newBtn" data-i18n="new">+ Нова</button>
+    <div id="tab-parcels" class="hide">
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:8px">
+          <strong data-i18n="parcels_h">Вашите пратки</strong>
+          <span class="spacer"></span>
+          <button class="ghost" id="refreshParcelsBtn" data-i18n="parcels_refresh">Обнови</button>
+        </div>
+        <div class="muted" style="margin-top:6px" data-i18n="parcels_note">Показва пратките, създадени през това приложение, с актуален статус от Еконт.</div>
       </div>
-      <div id="resultMeta" class="muted"></div>
+      <div id="parcelList"></div>
     </div>
   </div>
 </div>
+<div id="toast"></div>
 
 <script src="/app.js"></script>
 </body>

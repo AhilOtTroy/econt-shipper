@@ -122,6 +122,38 @@ async function handleApi(req, res, url) {
     } catch (e) { return sendJson(res, 200, e.friendly ? { ok: false, error: e.message } : errorPayload(e)); }
   }
 
+  if (url.pathname === '/api/track') {
+    try {
+      const creds = getCreds(body);
+      const nums = (body.shipmentNumbers || []).filter(Boolean);
+      if (!nums.length) return sendJson(res, 200, { ok: true, parcels: [] });
+      const r = await econt.getShipmentStatuses(creds, nums);
+      const parcels = (r.shipmentStatuses || []).map((e) => {
+        const s = e.status || {};
+        const evRaw = s.trackingEvents || [];
+        return {
+          number: s.shipmentNumber,
+          error: e.error ? (flattenEcontError(e.error, []).join(' ') || null) : null,
+          recipient: (s.receiverClient && s.receiverClient.name) || null,
+          office: s.receiverOfficeCode || null,
+          type: s.shipmentType, weight: s.weight, description: s.shipmentDescription,
+          status: s.shortDeliveryStatus || s.shortDeliveryStatusEn || null,
+          statusEn: s.shortDeliveryStatusEn || null,
+          createdTime: s.createdTime, sendTime: s.sendTime, deliveryTime: s.deliveryTime,
+          expectedDeliveryDate: s.expectedDeliveryDate,
+          cdCollected: s.cdCollectedAmount, cdCurrency: s.cdCollectedCurrency,
+          totalPrice: s.totalPrice, currency: s.currency, pdfURL: s.pdfURL,
+          events: evRaw.map((ev) => ({
+            time: ev.time || ev.eventTime || ev.date || null,
+            office: ev.officeName || ev.officeNameEn || null,
+            text: ev.destinationDescription || ev.destinationDescriptionEn || ev.description || ev.officeName || '',
+          })),
+        };
+      });
+      return sendJson(res, 200, { ok: true, parcels });
+    } catch (e) { return sendJson(res, 200, e.friendly ? { ok: false, error: e.message } : errorPayload(e)); }
+  }
+
   if (url.pathname === '/api/preview' || url.pathname === '/api/create') {
     try {
       const creds = getCreds(body);

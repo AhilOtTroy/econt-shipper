@@ -1,44 +1,42 @@
 'use strict';
 
 const $ = (id) => document.getElementById(id);
+const $q = (sel) => document.querySelector(sel);
 const KEY = 'econt_shipper_v1';
+const PKEY = 'econt_parcels';
 
 // ===================== i18n =====================
 const I18N = {
   bg: {
-    land_pill: 'За подателите в Еконт',
-    land_title: 'Поставете съобщение. Получавате товарителница.',
+    land_pill: 'За подателите в Еконт', land_title: 'Поставете съобщение. Получавате товарителница.',
     land_sub: 'Превърнете съобщението на клиента в готов номер на пратка в Еконт — за секунди, с вашите обичайни настройки.',
-    land_cta: 'Започнете',
-    land_what_h: 'Какво е това?',
+    land_cta: 'Започнете', land_what_h: 'Какво е това?',
     land_what_p: 'Малък помощник за подателите в Еконт. Поставяте съобщението с офис/адрес, което клиентът ви праща, проверявате данните и приложението създава товарителницата във вашия Еконт профил. Данните ви за вход остават на вашето устройство, защитени с PIN.',
-    land_f1: 'Автоматично разпознава офис, име и телефон от текста',
-    land_f2: 'Преглед на цената преди да потвърдите — нищо не се създава по погрешка',
-    land_f3: 'Работи на телефона ви като приложение',
-    land_f4: 'Евро или лева, наложен платеж, вашите настройки по подразбиране',
-    setup_title: 'Настройка на вашия Еконт помощник',
-    setup_sub: 'Еднократна настройка. Всичко, което въведете, остава на това устройство, заключено с PIN. Нищо не се пази на сървър.',
+    land_f1: 'Автоматично разпознава офис, име и телефон от текста', land_f2: 'Преглед на цената преди да потвърдите — нищо не се създава по погрешка',
+    land_f3: 'Жив списък на пратките ви със статус от Еконт', land_f4: 'Евро или лева, наложен платеж, вашите настройки по подразбиране',
+    setup_title: 'Настройка на вашия Еконт помощник', setup_sub: 'Еднократна настройка. Всичко, което въведете, остава на това устройство, заключено с PIN. Нищо не се пази на сървър.',
     setup_s1: 'Изберете PIN', setup_s1_sub: 'Заключва приложението и криптира паролата ви за Еконт на това устройство.',
-    setup_pin: 'PIN (4+ цифри)', setup_pin2: 'Повторете PIN',
-    setup_s2: 'Вашият Еконт акаунт', setup_mode: 'Режим', mode_prod: 'Реален', mode_demo: 'Демо',
+    setup_pin: 'PIN (4+ цифри)', setup_pin2: 'Повторете PIN', setup_s2: 'Вашият Еконт акаунт', setup_mode: 'Режим', mode_prod: 'Реален', mode_demo: 'Демо',
     setup_user: 'Потребителско име в Еконт (точно, с главни/малки букви)', setup_pass: 'Парола за Еконт', setup_test: 'Проверка на входа',
     setup_s3: 'Вие (подателят)', setup_yourname: 'Вашето име', setup_yourphone: 'Вашият телефон', setup_youroffice: 'Вашият офис за подаване',
-    setup_search_office: 'търсене по град / име на офис…', find: 'Намери',
-    setup_s4: 'Вашите обичайни настройки', weight: 'Тегло (кг)', contents: 'Съдържание', who_pays: 'Кой плаща',
+    setup_search_office: 'търсене по град / име на офис…', find: 'Намери', setup_s4: 'Вашите обичайни настройки', weight: 'Тегло (кг)', contents: 'Съдържание', who_pays: 'Кой плаща',
     receiver_pays: 'Получателят плаща', i_pay: 'Аз плащам', setup_cod: 'Обикновено с наложен платеж (сумата въвеждате за всяка пратка)',
     cod_currency: 'Валута на наложен платеж', setup_finish: 'Завършете настройката →',
     lock_title: 'Въведете PIN', unlock: 'Отключи', forget: 'Изтрий от това устройство и започни наново',
-    app_h: 'Нова товарителница', set_account: 'Еконт акаунт', username: 'Потребител', pass_keep: 'Парола (празно = без промяна)',
+    app_brand: 'Econt Shipper', nav_new: 'Нова', nav_parcels: 'Пратки',
+    set_account: 'Еконт акаунт', username: 'Потребител', pass_keep: 'Парола (празно = без промяна)',
     set_sender: 'Подател', name: 'Име', phone: 'Телефон', set_office_code: 'Код на вашия офис за подаване', search: 'търсене…',
     set_defaults: 'Настройки по подразбиране', receiver: 'Получател', sender: 'Подател', set_cod_default: 'Наложен платеж по подразбиране',
     refresh_offices: 'Обнови офисите', save: 'Запази',
-    paste_label: 'Поставете съобщението на клиента', paste_ph: 'Моля да ги изпратите в Офис на еконт: …  Име – 08xx xxx xxx',
-    clear: 'Изчисти', preview: 'Преглед →',
-    prev_h: 'Проверете и потвърдете', recipient: 'Име на получателя', deliver_office: 'Доставка до офис',
+    paste_label: 'Поставете съобщението на клиента', paste_ph: 'Моля да ги изпратите в Офис на еконт: …  Име – 08xx xxx xxx', paste_hint: 'Съвет: Ctrl+Enter за преглед',
+    clear: 'Изчисти', preview: 'Преглед →', prev_h: 'Проверете и потвърдете', recipient: 'Име на получателя', deliver_office: 'Доставка до офис',
     wrong_office: 'грешен офис? търсене по име/град…', search_btn: 'Търси', description: 'Описание', pays: 'Плаща',
     cod: 'Нал. платеж', amount: 'сума', recalc: 'Преизчисли', create_btn: '✓ Създай товарителница',
-    res_h: '✅ Товарителницата е създадена', copy: 'Копирай номера', label_pdf: '🖨 Етикет PDF', new: '+ Нова',
-    // dynamic
+    res_h: 'Товарителницата е създадена', copy: 'Копирай номера', label_pdf: '🖨 Етикет PDF', new: '+ Нова',
+    parcels_h: 'Вашите пратки', parcels_refresh: 'Обнови', parcels_note: 'Показва пратките, създадени през това приложение, с актуален статус от Еконт.',
+    parcels_empty: 'Все още няма пратки тук. Създайте първата от раздел „Нова“.', exp_delivery: 'Очаквана доставка', collected: 'Събрано НП',
+    track_events: 'Проследяване', reprint: 'Етикет', copied: 'Копирано ✓', need_desc: 'Описанието е задължително за колетни пратки.',
+    loading: 'Зареждане…', no_status: 'няма статус', other_env: 'друга среда', status_delivered: 'Доставена', status_transit: 'В движение', kg: 'кг',
     testing: 'Проверка…', login_ok: '✓ Входът работи — {n} офиса са налични.', need_creds: 'Първо въведете потребител и парола.',
     pin_short: 'PIN трябва да е поне 4 цифри.', pin_mismatch: 'PIN кодовете не съвпадат.', test_first: 'Първо проверете входа за Еконт (стъпка 2).',
     fill_sender: 'Попълнете име, телефон и изберете офис за подаване (стъпка 3).',
@@ -53,38 +51,35 @@ const I18N = {
     no_number: '(няма върнат номер)', econt_prefix: 'Еконт: ', error_prefix: 'Грешка: ',
   },
   en: {
-    land_pill: 'For Econt senders',
-    land_title: 'Paste a message. Get an Econt label.',
+    land_pill: 'For Econt senders', land_title: 'Paste a message. Get an Econt label.',
     land_sub: "Turn a customer's chat message into a ready Econt shipment number — in seconds, with your usual settings.",
-    land_cta: 'Get started',
-    land_what_h: 'What is this?',
+    land_cta: 'Get started', land_what_h: 'What is this?',
     land_what_p: 'A tiny helper for Econt senders. Paste the office/address message your customer sends you, check the details, and it creates the shipment label (товарителница) in your Econt account. Your login stays on your device, locked by a PIN.',
-    land_f1: 'Recognizes the office, name and phone from the text automatically',
-    land_f2: 'Preview the price before you confirm — nothing is created by mistake',
-    land_f3: 'Works on your phone like an app',
-    land_f4: 'Euro or leva, cash-on-delivery, your default settings',
-    setup_title: 'Set up your Econt helper',
-    setup_sub: 'One-time setup. Everything you enter stays on this device, locked by a PIN. Nothing is stored on a server.',
+    land_f1: 'Recognizes the office, name and phone from the text automatically', land_f2: 'Preview the price before you confirm — nothing is created by mistake',
+    land_f3: 'A live list of your parcels with status from Econt', land_f4: 'Euro or leva, cash-on-delivery, your default settings',
+    setup_title: 'Set up your Econt helper', setup_sub: 'One-time setup. Everything you enter stays on this device, locked by a PIN. Nothing is stored on a server.',
     setup_s1: 'Choose a PIN', setup_s1_sub: 'Locks the app and encrypts your Econt password on this device.',
-    setup_pin: 'PIN (4+ digits)', setup_pin2: 'Repeat PIN',
-    setup_s2: 'Your Econt account', setup_mode: 'Mode', mode_prod: 'Production', mode_demo: 'Demo',
+    setup_pin: 'PIN (4+ digits)', setup_pin2: 'Repeat PIN', setup_s2: 'Your Econt account', setup_mode: 'Mode', mode_prod: 'Production', mode_demo: 'Demo',
     setup_user: 'Econt username (exact, case-sensitive)', setup_pass: 'Econt password', setup_test: 'Test login',
     setup_s3: 'You (the sender)', setup_yourname: 'Your name', setup_yourphone: 'Your phone', setup_youroffice: 'Your drop-off office',
-    setup_search_office: 'search by city / office name…', find: 'Find',
-    setup_s4: 'Your usual options', weight: 'Weight (kg)', contents: 'Contents', who_pays: 'Who pays',
+    setup_search_office: 'search by city / office name…', find: 'Find', setup_s4: 'Your usual options', weight: 'Weight (kg)', contents: 'Contents', who_pays: 'Who pays',
     receiver_pays: 'Receiver pays', i_pay: 'I pay', setup_cod: 'Usually cash-on-delivery (you type the amount per parcel)',
     cod_currency: 'COD currency', setup_finish: 'Finish setup →',
     lock_title: 'Enter PIN', unlock: 'Unlock', forget: 'Forget this device & start over',
-    app_h: 'New shipment', set_account: 'Econt account', username: 'Username', pass_keep: 'Password (blank = keep)',
+    app_brand: 'Econt Shipper', nav_new: 'New', nav_parcels: 'Parcels',
+    set_account: 'Econt account', username: 'Username', pass_keep: 'Password (blank = keep)',
     set_sender: 'Sender', name: 'Name', phone: 'Phone', set_office_code: 'Your drop-off office code', search: 'search…',
     set_defaults: 'Default options', receiver: 'Receiver', sender: 'Sender', set_cod_default: 'COD on by default',
     refresh_offices: 'Refresh offices', save: 'Save',
-    paste_label: "Paste the customer's message", paste_ph: 'Моля да ги изпратите в Офис на еконт: …  Name – 08xx xxx xxx',
-    clear: 'Clear', preview: 'Preview →',
-    prev_h: 'Check & confirm', recipient: 'Recipient name', deliver_office: 'Deliver to office',
+    paste_label: "Paste the customer's message", paste_ph: 'Моля да ги изпратите в Офис на еконт: …  Name – 08xx xxx xxx', paste_hint: 'Tip: Ctrl+Enter to preview',
+    clear: 'Clear', preview: 'Preview →', prev_h: 'Check & confirm', recipient: 'Recipient name', deliver_office: 'Deliver to office',
     wrong_office: 'wrong office? search by name/city…', search_btn: 'Search', description: 'Description', pays: 'Pays',
     cod: 'COD', amount: 'amount', recalc: 'Recalculate', create_btn: '✓ Create shipment number',
-    res_h: '✅ Shipment created', copy: 'Copy number', label_pdf: '🖨 Label PDF', new: '+ New',
+    res_h: 'Shipment created', copy: 'Copy number', label_pdf: '🖨 Label PDF', new: '+ New',
+    parcels_h: 'Your parcels', parcels_refresh: 'Refresh', parcels_note: 'Shows parcels created through this app, with live status from Econt.',
+    parcels_empty: 'No parcels yet. Create your first from the New tab.', exp_delivery: 'Expected delivery', collected: 'COD collected',
+    track_events: 'Tracking', reprint: 'Label', copied: 'Copied ✓', need_desc: 'Description is required for parcels.',
+    loading: 'Loading…', no_status: 'no status', other_env: 'other env', status_delivered: 'Delivered', status_transit: 'In transit', kg: 'kg',
     testing: 'Testing…', login_ok: '✓ Login works — {n} offices available.', need_creds: 'Enter username and password first.',
     pin_short: 'PIN must be at least 4 digits.', pin_mismatch: 'PINs do not match.', test_first: 'Test your Econt login first (step 2).',
     fill_sender: 'Fill your name, phone and pick your drop-off office (step 3).',
@@ -113,7 +108,16 @@ function applyLang() {
   $('langBg').classList.toggle('active', LANG === 'bg');
   $('langEn').classList.toggle('active', LANG === 'en');
 }
-function setLang(l) { LANG = l; localStorage.setItem('econt_lang', l); applyLang(); }
+function setLang(l) { LANG = l; localStorage.setItem('econt_lang', l); applyLang(); if (!$('tab-parcels').classList.contains('hide')) openParcels(); }
+
+// ===================== helpers =====================
+function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 2300); }
+function btnBusy(btn, on, label) {
+  if (!btn) return;
+  if (on) { btn.disabled = true; if (btn.dataset.html == null) btn.dataset.html = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>' + (label || ''); }
+  else { btn.disabled = false; if (btn.dataset.html != null) { btn.innerHTML = btn.dataset.html; delete btn.dataset.html; } }
+}
+function fmtDate(ms) { if (!ms) return ''; const d = new Date(Number(ms)); if (isNaN(d.getTime())) return ''; return d.toLocaleDateString(LANG === 'bg' ? 'bg-BG' : 'en-GB', { day: '2-digit', month: 'short' }); }
 
 // ===================== state =====================
 const SESSION = { password: null, pin: null };
@@ -125,8 +129,7 @@ const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
 const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 async function deriveKey(pin, salt) {
   const base = await crypto.subtle.importKey('raw', tenc.encode(pin), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
-    base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
 }
 async function encryptSecret(plain, pin) {
   const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
@@ -143,15 +146,15 @@ async function decryptSecret(e, pin) {
 // ---------- storage ----------
 const loadStore = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } };
 const saveStore = (o) => localStorage.setItem(KEY, JSON.stringify(o));
-async function persist() {
-  saveStore({ v: 1, mode: CONFIG.mode, username: CONFIG.username, enc: await encryptSecret(SESSION.password, SESSION.pin), sender: CONFIG.sender, defaults: CONFIG.defaults });
-}
+async function persist() { saveStore({ v: 1, mode: CONFIG.mode, username: CONFIG.username, enc: await encryptSecret(SESSION.password, SESSION.pin), sender: CONFIG.sender, defaults: CONFIG.defaults }); }
+const loadParcels = () => { try { return JSON.parse(localStorage.getItem(PKEY)) || []; } catch { return []; } };
+const saveParcels = (a) => localStorage.setItem(PKEY, JSON.stringify(a.slice(0, 300)));
+const addParcel = (p) => { const a = loadParcels(); a.unshift(p); saveParcels(a); };
 
 // ---------- views ----------
 function show(view) { for (const v of ['landing', 'setup', 'lock', 'app']) $('view-' + v).classList.toggle('hide', v !== view); }
 const creds = () => ({ mode: CONFIG.mode, username: CONFIG.username, password: SESSION.password });
 const api = async (path, body) => (await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })).json();
-
 function officeLabel(c) { return `${c.name} — ${c.address}${c.city ? ', ' + c.city : ''}${c.postCode ? ' (' + c.postCode + ')' : ''}`; }
 async function fillOfficeSelect(sel, q, credsObj) {
   sel.classList.remove('hide'); sel.innerHTML = `<option>${t('searching')}</option>`;
@@ -167,7 +170,7 @@ let wizardTested = false;
 const wizardCreds = () => ({ mode: $('suMode').value, username: $('suUser').value.trim(), password: $('suPass').value });
 $('suTestBtn').onclick = async () => {
   const c = wizardCreds();
-  if (!c.username || !c.password) { $('suTestMsg').textContent = t('need_creds'); return; }
+  if (!c.username || !c.password) { $('suTestMsg').className = 'err'; $('suTestMsg').textContent = t('need_creds'); return; }
   $('suTestMsg').className = 'muted'; $('suTestMsg').textContent = t('testing');
   const r = await api('/api/test', { creds: c });
   if (r.ok) { wizardTested = true; $('suTestMsg').className = 'good'; $('suTestMsg').textContent = t('login_ok', { n: r.officeCount }); $('suFinishBtn').disabled = false; }
@@ -195,7 +198,6 @@ $('suFinishBtn').onclick = async () => {
 // ===================== LOCK =====================
 function showLock() { show('lock'); $('lockMsg').textContent = ''; $('lockPin').value = ''; setTimeout(() => $('lockPin').focus(), 50); }
 $('lockBtn').onclick = unlock;
-$('lockPin').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') unlock(); });
 async function unlock() {
   const store = loadStore(); if (!store) return show('landing');
   try {
@@ -208,6 +210,13 @@ $('forgetBtn').onclick = () => { if (confirm(t('forget_confirm'))) { localStorag
 $('lockNowBtn').onclick = () => { SESSION.password = null; SESSION.pin = null; showLock(); };
 
 // ===================== APP =====================
+function switchTab(which) {
+  $('navNew').classList.toggle('active', which === 'new');
+  $('navParcels').classList.toggle('active', which === 'parcels');
+  $('tab-new').classList.toggle('hide', which !== 'new');
+  $('tab-parcels').classList.toggle('hide', which !== 'parcels');
+  if (which === 'parcels') openParcels();
+}
 function enterApp() {
   const badge = $('modeBadge'); badge.textContent = CONFIG.mode.toUpperCase(); badge.className = 'badge ' + CONFIG.mode;
   $('cfgMode').value = CONFIG.mode; $('cfgUser').value = CONFIG.username || ''; $('cfgPass').value = '';
@@ -216,9 +225,12 @@ function enterApp() {
   $('cfgWeight').value = d.weight ?? 1; $('cfgDesc').value = d.shipmentDescription || '';
   $('cfgPayer').value = d.payer || 'receiver'; $('cfgCodOn').checked = !!(d.cod && d.cod.enabled);
   $('cfgCur').value = (d.cod && d.cod.currency) || 'EUR';
+  switchTab('new');
   show('app');
 }
-$('settingsBtn').onclick = () => $('settings').classList.toggle('hide');
+$('navNew').onclick = () => switchTab('new');
+$('navParcels').onclick = () => switchTab('parcels');
+$('settingsBtn').onclick = () => { switchTab('new'); $('settings').classList.toggle('hide'); };
 $('cfgTestBtn').onclick = async () => {
   const c = { mode: $('cfgMode').value, username: $('cfgUser').value.trim(), password: $('cfgPass').value || SESSION.password };
   $('cfgMsg').textContent = t('testing');
@@ -230,9 +242,10 @@ $('cfgSenderSearchBtn').onclick = () => {
   fillOfficeSelect($('cfgSenderOfficeSel'), $('cfgSenderSearch').value, c);
 };
 $('cfgSenderOfficeSel').onchange = () => { $('cfgSenderOffice').value = $('cfgSenderOfficeSel').value; };
-$('refreshOfficesBtn').onclick = async () => {
-  $('cfgMsg').textContent = t('refreshing');
+$('refreshOfficesBtn').onclick = async (ev) => {
+  btnBusy(ev.currentTarget, true); $('cfgMsg').textContent = t('refreshing');
   const r = await api('/api/offices/refresh', { creds: creds() });
+  btnBusy(ev.currentTarget, false);
   $('cfgMsg').textContent = r.ok ? t('offices_loaded', { n: r.count }) : (t('error_prefix') + r.error);
 };
 $('saveCfgBtn').onclick = async () => {
@@ -240,16 +253,16 @@ $('saveCfgBtn').onclick = async () => {
   if ($('cfgPass').value) SESSION.password = $('cfgPass').value;
   CONFIG.sender = { name: $('cfgSenderName').value.trim(), phone: $('cfgSenderPhone').value.trim(), officeCode: $('cfgSenderOffice').value.trim(), address: CONFIG.sender.address || null };
   CONFIG.defaults = Object.assign({}, CONFIG.defaults, { weight: Number($('cfgWeight').value) || 1, shipmentDescription: $('cfgDesc').value.trim(), payer: $('cfgPayer').value, cod: Object.assign({}, CONFIG.defaults.cod, { enabled: $('cfgCodOn').checked, currency: $('cfgCur').value }) });
-  await persist(); enterApp(); $('cfgMsg').textContent = t('saved');
+  await persist(); enterApp(); toast(t('saved'));
 };
 
 // ---------- parse / preview / create ----------
 let CANDIDATES = [];
-async function doParse() {
+async function doParse(ev) {
   $('parseErr').textContent = '';
   const text = $('msg').value.trim();
   if (!text) { $('parseErr').textContent = t('paste_first'); return; }
-  $('parseBtn').disabled = true;
+  const btn = $('parseBtn'); btnBusy(btn, true);
   try {
     const r = await api('/api/parse', { text, creds: creds() });
     if (!r.ok) { $('parseErr').textContent = r.error || 'Parse failed'; return; }
@@ -267,9 +280,9 @@ async function doParse() {
     $('pCodOn').checked = !!(d.cod && d.cod.enabled); $('pCodAmount').value = (d.cod && d.cod.amount) || '';
     $('pCodCur').value = (d.cod && d.cod.currency) || 'EUR';
     $('preview').classList.remove('hide'); $('result').classList.add('hide');
-    $('preview').scrollIntoView({ behavior: 'smooth' });
+    $('preview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     doPreview();
-  } finally { $('parseBtn').disabled = false; }
+  } finally { btnBusy(btn, false); }
 }
 function gatherOverrides() {
   return { recipientName: $('pName').value.trim(), phone: $('pPhone').value.trim(), officeCode: $('pOffice').value, weight: Number($('pWeight').value) || undefined, description: $('pDesc').value.trim(), payer: $('pPayer').value, cod: { enabled: $('pCodOn').checked, amount: Number($('pCodAmount').value) || 0, currency: $('pCodCur').value } };
@@ -280,52 +293,119 @@ function showPrice(resp) {
   const cur = st.totalPriceCurrency || st.currency || $('pCodCur').value || 'EUR';
   return total != null ? t('est_price', { v: Number(total).toFixed(2), cur }) : t('validated');
 }
-async function doPreview() {
-  $('previewErr').textContent = ''; $('priceBox').textContent = t('getting_price');
+async function doPreview(ev) {
+  $('previewErr').textContent = '';
   const o = gatherOverrides();
   if (!o.officeCode) { $('priceBox').textContent = ''; $('previewErr').textContent = t('pick_office'); return; }
+  const btn = ev && ev.currentTarget && ev.currentTarget.id === 'recalcBtn' ? $('recalcBtn') : null;
+  btnBusy(btn, true); $('priceBox').innerHTML = '<span class="sk">price price price</span>';
   const r = await api('/api/preview', shipBody(o));
+  btnBusy(btn, false);
   if (!r.ok) { $('priceBox').textContent = ''; $('previewErr').textContent = t('econt_prefix') + r.error; return; }
   $('priceBox').innerHTML = showPrice(r.response);
+}
+function playCheck() {
+  const old = $q('#result .check-c'); if (!old) return;
+  old.replaceWith(old.cloneNode(true));
 }
 async function doCreate() {
   $('previewErr').textContent = '';
   const o = gatherOverrides();
   if (!o.recipientName || !o.phone || !o.officeCode) { $('previewErr').textContent = t('need_recip'); return; }
+  if (!o.description) { $('previewErr').textContent = t('need_desc'); $('pDesc').focus(); return; }
   if (o.cod.enabled && !(o.cod.amount > 0)) { $('previewErr').textContent = t('cod_blank'); return; }
-  $('createBtn').disabled = true; $('createBtn').textContent = t('creating');
+  const btn = $('createBtn'); btnBusy(btn, true, t('creating'));
   try {
     const r = await api('/api/create', shipBody(o));
     if (!r.ok) { $('previewErr').textContent = t('econt_prefix') + r.error; return; }
     const st = r.response.label || r.response;
-    $('shipNum').textContent = st.shipmentNumber || t('no_number');
+    const num = st.shipmentNumber || t('no_number');
+    $('shipNum').textContent = num;
     const pdf = st.pdfURL;
     if (pdf) { $('pdfLink').href = pdf; $('pdfLink').style.display = ''; } else { $('pdfLink').style.display = 'none'; }
     $('resultMeta').textContent = st.totalPrice != null ? t('price_label', { v: Number(st.totalPrice).toFixed(2), cur: st.totalPriceCurrency || $('pCodCur').value || 'EUR' }) : '';
-    $('preview').classList.add('hide'); $('result').classList.remove('hide'); $('result').scrollIntoView({ behavior: 'smooth' });
-  } finally { $('createBtn').disabled = false; $('createBtn').textContent = t('create_btn'); }
+    if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, office: o.officeCode, weight: o.weight, description: o.description, cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
+    $('preview').classList.add('hide'); $('result').classList.remove('hide');
+    playCheck();
+    $('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } finally { btnBusy(btn, false); }
 }
 $('clearBtn').onclick = () => { $('msg').value = ''; $('preview').classList.add('hide'); $('result').classList.add('hide'); };
 $('parseBtn').onclick = doParse;
 $('recalcBtn').onclick = doPreview;
 $('createBtn').onclick = doCreate;
 $('officeSearchBtn').onclick = async () => { await fillOfficeSelect($('pOffice'), $('officeSearch').value, creds()); doPreview(); };
-$('pOffice').onchange = doPreview;
-$('copyBtn').onclick = () => navigator.clipboard.writeText($('shipNum').textContent);
+$('pOffice').onchange = () => doPreview();
+$('copyBtn').onclick = () => { navigator.clipboard.writeText($('shipNum').textContent); toast(t('copied')); };
 $('newBtn').onclick = () => { $('msg').value = ''; $('result').classList.add('hide'); $('preview').classList.add('hide'); $('msg').focus(); };
 
-// ---------- landing / language ----------
+// ---------- parcels (live) ----------
+function statusClass(p) { if (p.error) return 's-red'; if (p.deliveryTime) return 's-green'; if (p.status) return 's-blue'; return 's-gray'; }
+function parcelCardHTML(p) {
+  return `<div class="parcel" data-num="${p.number}">
+    <div class="parcel-top"><span class="parcel-num">${p.number}</span><span class="statusb sk" data-status>${t('loading')}</span></div>
+    <div class="parcel-sub">${p.recipient || ''}${p.office ? ' · ' + p.office : ''}</div>
+    <div class="parcel-meta" data-meta>${[p.description, p.weight ? p.weight + ' ' + t('kg') : ''].filter(Boolean).join(' · ')}</div>
+    <div class="parcel-row">
+      <button data-copy>${t('copy')}</button>
+      ${p.pdfURL ? `<a href="${p.pdfURL}" target="_blank"><button class="ghost">${t('reprint')}</button></a>` : ''}
+      <button class="ghost" data-events hidden>${t('track_events')}</button>
+    </div>
+    <div class="events hide" data-eventbox></div>
+  </div>`;
+}
+function updateParcelCard(p) {
+  const c = $q(`.parcel[data-num="${p.number}"]`); if (!c) return;
+  const s = c.querySelector('[data-status]');
+  s.className = 'statusb ' + statusClass(p);
+  s.textContent = p.error ? t('no_status') : (p.status || (p.deliveryTime ? t('status_delivered') : t('status_transit')));
+  const bits = [p.description, p.weight ? p.weight + ' ' + t('kg') : ''].filter(Boolean);
+  if (p.deliveryTime) bits.push(t('status_delivered') + ' ' + fmtDate(p.deliveryTime));
+  else if (p.expectedDeliveryDate) bits.push(t('exp_delivery') + ': ' + fmtDate(p.expectedDeliveryDate));
+  if (p.cdCollected) bits.push(t('collected') + ': ' + Number(p.cdCollected).toFixed(2) + ' ' + (p.cdCurrency || ''));
+  c.querySelector('[data-meta]').innerHTML = bits.join(' · ');
+  const btn = c.querySelector('[data-events]'), box = c.querySelector('[data-eventbox]');
+  if (p.events && p.events.length) {
+    btn.hidden = false;
+    box.innerHTML = p.events.map((ev) => `<div class="event"><span class="dot"></span><span>${[fmtDate(ev.time), ev.office, ev.text].filter(Boolean).join(' · ')}</span></div>`).join('');
+    btn.onclick = () => box.classList.toggle('hide');
+  } else { btn.hidden = true; }
+}
+async function openParcels() {
+  const list = loadParcels(), box = $('parcelList');
+  if (!list.length) { box.innerHTML = `<div class="card muted" style="text-align:center">${t('parcels_empty')}</div>`; return; }
+  box.innerHTML = list.map(parcelCardHTML).join('');
+  box.querySelectorAll('[data-copy]').forEach((b) => { const num = b.closest('.parcel').getAttribute('data-num'); b.onclick = () => { navigator.clipboard.writeText(num); toast(t('copied')); }; });
+  refreshParcels();
+}
+async function refreshParcels(ev) {
+  const list = loadParcels();
+  list.filter((p) => p.mode !== CONFIG.mode).forEach((p) => { const c = $q(`.parcel[data-num="${p.number}"] [data-status]`); if (c) { c.className = 'statusb s-gray'; c.textContent = t('other_env'); } });
+  const nums = list.filter((p) => p.mode === CONFIG.mode).map((p) => p.number);
+  if (!nums.length) return;
+  const btn = $('refreshParcelsBtn'); btnBusy(btn, true);
+  try {
+    const r = await api('/api/track', { creds: creds(), shipmentNumbers: nums });
+    if (!r.ok) { toast(r.error); return; }
+    (r.parcels || []).forEach(updateParcelCard);
+  } finally { btnBusy(btn, false); }
+}
+$('refreshParcelsBtn').onclick = refreshParcels;
+
+// ---------- landing / language / enter-key ----------
 $('langBg').onclick = () => setLang('bg');
 $('langEn').onclick = () => setLang('en');
 $('getStartedBtn').onclick = () => { if (SESSION.password) show('app'); else if (loadStore()) showLock(); else show('setup'); };
 $('infoBtn').onclick = () => show('landing');
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const el = e.target;
+  if (el && el.id === 'msg') { if (e.ctrlKey || e.metaKey) { e.preventDefault(); $('parseBtn').click(); } return; }
+  if (el && el.tagName === 'INPUT' && el.dataset.enter) { e.preventDefault(); const b = $(el.dataset.enter); if (b && !b.disabled) b.click(); }
+});
 
 // ---------- boot ----------
 applyLang();
 if (!('crypto' in window) || !crypto.subtle) {
   document.body.innerHTML = '<div style="padding:24px">This app needs a secure connection (https) to encrypt your PIN. Open it via the https link or http://localhost.</div>';
-} else if (loadStore()) {
-  showLock();
-} else {
-  show('landing');
-}
+} else if (loadStore()) { showLock(); } else { show('landing'); }
