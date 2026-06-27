@@ -37,6 +37,7 @@ const I18N = {
     parcels_empty: 'Все още няма пратки тук. Създайте първата от раздел „Нова“.', exp_delivery: 'Очаквана доставка', collected: 'Събрано НП',
     track_events: 'Проследяване', reprint: 'Етикет', copied: 'Копирано ✓', need_desc: 'Описанието е задължително за колетни пратки.',
     loading: 'Зареждане…', no_status: 'няма статус', other_env: 'друга среда', status_delivered: 'Доставена', status_transit: 'В движение', kg: 'кг',
+    review: 'Преглед', test: 'Тест', flags_default: 'Флагове по подразбиране за всяка пратка',
     testing: 'Проверка…', login_ok: '✓ Входът работи — {n} офиса са налични.', need_creds: 'Първо въведете потребител и парола.',
     pin_short: 'PIN трябва да е поне 4 цифри.', pin_mismatch: 'PIN кодовете не съвпадат.', test_first: 'Първо проверете входа за Еконт (стъпка 2).',
     fill_sender: 'Попълнете име, телефон и изберете офис за подаване (стъпка 3).',
@@ -80,6 +81,7 @@ const I18N = {
     parcels_empty: 'No parcels yet. Create your first from the New tab.', exp_delivery: 'Expected delivery', collected: 'COD collected',
     track_events: 'Tracking', reprint: 'Label', copied: 'Copied ✓', need_desc: 'Description is required for parcels.',
     loading: 'Loading…', no_status: 'no status', other_env: 'other env', status_delivered: 'Delivered', status_transit: 'In transit', kg: 'kg',
+    review: 'Review', test: 'Test', flags_default: 'Default flags for every parcel',
     testing: 'Testing…', login_ok: '✓ Login works — {n} offices available.', need_creds: 'Enter username and password first.',
     pin_short: 'PIN must be at least 4 digits.', pin_mismatch: 'PINs do not match.', test_first: 'Test your Econt login first (step 2).',
     fill_sender: 'Fill your name, phone and pick your drop-off office (step 3).',
@@ -225,6 +227,7 @@ function enterApp() {
   $('cfgWeight').value = d.weight ?? 1; $('cfgDesc').value = d.shipmentDescription || '';
   $('cfgPayer').value = d.payer || 'receiver'; $('cfgCodOn').checked = !!(d.cod && d.cod.enabled);
   $('cfgCur').value = (d.cod && d.cod.currency) || 'EUR';
+  $('cfgReview').checked = !!d.payAfterAccept; $('cfgTest').checked = !!d.payAfterTest;
   switchTab('new');
   show('app');
 }
@@ -252,7 +255,7 @@ $('saveCfgBtn').onclick = async () => {
   CONFIG.mode = $('cfgMode').value; CONFIG.username = $('cfgUser').value.trim();
   if ($('cfgPass').value) SESSION.password = $('cfgPass').value;
   CONFIG.sender = { name: $('cfgSenderName').value.trim(), phone: $('cfgSenderPhone').value.trim(), officeCode: $('cfgSenderOffice').value.trim(), address: CONFIG.sender.address || null };
-  CONFIG.defaults = Object.assign({}, CONFIG.defaults, { weight: Number($('cfgWeight').value) || 1, shipmentDescription: $('cfgDesc').value.trim(), payer: $('cfgPayer').value, cod: Object.assign({}, CONFIG.defaults.cod, { enabled: $('cfgCodOn').checked, currency: $('cfgCur').value }) });
+  CONFIG.defaults = Object.assign({}, CONFIG.defaults, { weight: Number($('cfgWeight').value) || 1, shipmentDescription: $('cfgDesc').value.trim(), payer: $('cfgPayer').value, payAfterAccept: $('cfgReview').checked, payAfterTest: $('cfgTest').checked, cod: Object.assign({}, CONFIG.defaults.cod, { enabled: $('cfgCodOn').checked, currency: $('cfgCur').value }) });
   await persist(); enterApp(); toast(t('saved'));
 };
 
@@ -277,15 +280,32 @@ async function doParse(ev) {
     const d = CONFIG.defaults;
     $('pWeight').value = d.weight ?? 1; $('pDesc').value = d.shipmentDescription || '';
     $('pPayer').value = d.payer || 'receiver';
-    $('pCodOn').checked = !!(d.cod && d.cod.enabled); $('pCodAmount').value = (d.cod && d.cod.amount) || '';
-    $('pCodCur').value = (d.cod && d.cod.currency) || 'EUR';
+    // COD: use a detected amount/currency from the message if present, else defaults.
+    if (p.cod && p.cod.amount) {
+      $('pCodOn').checked = true; $('pCodAmount').value = p.cod.amount;
+      $('pCodCur').value = p.cod.currency || (d.cod && d.cod.currency) || 'EUR';
+    } else {
+      $('pCodOn').checked = !!(d.cod && d.cod.enabled); $('pCodAmount').value = (d.cod && d.cod.amount) || '';
+      $('pCodCur').value = (d.cod && d.cod.currency) || 'EUR';
+    }
+    // Review/Test flags: hide the per-parcel toggle when it's globally forced on.
+    $('pReviewWrap').classList.toggle('hide', !!d.payAfterAccept); $('pReview').checked = false;
+    $('pTestWrap').classList.toggle('hide', !!d.payAfterTest); $('pTest').checked = false;
+    $('flagsRow').classList.toggle('hide', !!d.payAfterAccept && !!d.payAfterTest);
     $('preview').classList.remove('hide'); $('result').classList.add('hide');
     $('preview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     doPreview();
   } finally { btnBusy(btn, false); }
 }
 function gatherOverrides() {
-  return { recipientName: $('pName').value.trim(), phone: $('pPhone').value.trim(), officeCode: $('pOffice').value, weight: Number($('pWeight').value) || undefined, description: $('pDesc').value.trim(), payer: $('pPayer').value, cod: { enabled: $('pCodOn').checked, amount: Number($('pCodAmount').value) || 0, currency: $('pCodCur').value } };
+  const d = CONFIG.defaults || {};
+  return {
+    recipientName: $('pName').value.trim(), phone: $('pPhone').value.trim(), officeCode: $('pOffice').value,
+    weight: Number($('pWeight').value) || undefined, description: $('pDesc').value.trim(), payer: $('pPayer').value,
+    cod: { enabled: $('pCodOn').checked, amount: Number($('pCodAmount').value) || 0, currency: $('pCodCur').value },
+    payAfterAccept: d.payAfterAccept ? true : $('pReview').checked,
+    payAfterTest: d.payAfterTest ? true : $('pTest').checked,
+  };
 }
 const shipBody = (overrides) => ({ creds: creds(), sender: CONFIG.sender, defaults: CONFIG.defaults, overrides });
 function showPrice(resp) {

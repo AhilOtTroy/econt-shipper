@@ -88,8 +88,11 @@ function buildLabel(sender, defaults, o) {
     shipmentDescription: o.description || d.shipmentDescription || '',
   };
 
-  if (d.payAfterAccept) label.payAfterAccept = true;
-  if (d.payAfterTest) label.payAfterTest = true;
+  // Review (преглед) / Test (тест) — per-parcel override falls back to the default.
+  const review = o.payAfterAccept != null ? o.payAfterAccept : d.payAfterAccept;
+  const test = o.payAfterTest != null ? o.payAfterTest : d.payAfterTest;
+  if (review) label.payAfterAccept = true;
+  if (test) label.payAfterTest = true;
 
   // Sender drop-off location
   if (sender.officeCode) label.senderOfficeCode = String(sender.officeCode);

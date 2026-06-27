@@ -272,6 +272,11 @@
         <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgCodOn"> <span data-i18n="set_cod_default">Наложен платеж по подразбиране</span></label>
         <label data-i18n="cod_currency">Валута на наложен платеж</label>
         <select id="cfgCur"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
+        <label data-i18n="flags_default">Флагове по подразбиране за всяка пратка</label>
+        <div class="inline" style="gap:16px">
+          <label class="inline"><input type="checkbox" id="cfgReview"> <span data-i18n="review">Преглед</span></label>
+          <label class="inline"><input type="checkbox" id="cfgTest"> <span data-i18n="test">Тест</span></label>
+        </div>
 
         <hr>
         <div class="toolbar">
@@ -317,6 +322,10 @@
         <label class="inline" style="margin-top:12px"><input type="checkbox" id="pCodOn"> <span data-i18n="cod">Нал. платеж</span>
           <input id="pCodAmount" type="number" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" style="width:100px; margin-left:6px">
           <select id="pCodCur" style="width:auto"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select></label>
+        <div class="inline" id="flagsRow" style="margin-top:10px; gap:16px">
+          <label class="inline" id="pReviewWrap"><input type="checkbox" id="pReview"> <span data-i18n="review">Преглед</span></label>
+          <label class="inline" id="pTestWrap"><input type="checkbox" id="pTest"> <span data-i18n="test">Тест</span></label>
+        </div>
         <hr>
         <div id="priceBox" class="muted"></div>
         <div id="previewErr" class="err"></div>
