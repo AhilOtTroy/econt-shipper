@@ -1,248 +1,306 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bg">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="theme-color" content="#0f1115">
+<meta name="theme-color" content="#003c80">
 <link rel="manifest" href="/manifest.webmanifest">
-<title>Econt — paste → товарителница</title>
+<title>Econt — съобщение → товарителница</title>
 <style>
   :root {
-    --bg: #0f1115; --card: #181b22; --line: #2a2f3a; --ink: #e8eaed;
-    --muted: #9aa3b2; --accent: #1f8b4c; --accent2: #2563eb; --warn: #b91c1c;
-    --chip: #232834;
+    --bg: #eef2f7; --card: #ffffff; --ink: #112138; --muted: #66748d;
+    --line: #e4e9f1; --brand: #003c80; --brand-2: #0a73d6; --brand-soft: #e9f1fb;
+    --go: #1e9e57; --go-d: #16894a; --warn: #c0392b;
+    --shadow: 0 1px 2px rgba(17,40,80,.06), 0 6px 20px rgba(17,40,80,.07);
+    --radius: 16px;
   }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { margin: 0; background: var(--bg); color: var(--ink);
-    font: 16px/1.5 system-ui, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 18px 14px 70px; }
-  .view.hide, .hide { display: none; }
-  header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-  header h1 { font-size: 17px; margin: 0; flex: 1; }
-  .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
-  .badge.demo { background: #3a2d12; color: #f4c463; }
-  .badge.production { background: #12301f; color: #57d98a; }
-  button { font: inherit; cursor: pointer; border: 1px solid var(--line);
-    background: var(--chip); color: var(--ink); border-radius: 9px; padding: 11px 16px; }
-  button:hover { border-color: #3a414f; }
-  button.primary { background: var(--accent2); border-color: var(--accent2); color: #fff; font-weight: 600; }
-  button.go { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
-  button.ghost { background: transparent; }
-  button.block { width: 100%; }
+    font: 16px/1.55 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 0 14px 72px; }
+  .view.hide, .hide { display: none !important; }
+
+  /* top bar */
+  .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px;
+    padding: 12px 2px; background: var(--bg); }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: var(--brand); letter-spacing: -.01em; }
+  .brand svg { display: block; }
+  .spacer { flex: 1; }
+  .langtoggle { display: inline-flex; background: #fff; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .lang { border: 0; background: transparent; color: var(--muted); padding: 6px 12px; font-weight: 700; font-size: 13px; }
+  .lang.active { background: var(--brand); color: #fff; }
+  .icon { border: 1px solid var(--line); background: #fff; color: var(--brand); width: 36px; height: 34px; border-radius: 10px; font-weight: 800; }
+
+  /* generic */
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink);
+    border-radius: 11px; padding: 12px 16px; transition: .12s; }
+  button:hover { border-color: #c9d4e4; }
+  button:active { transform: translateY(1px); }
+  .primary { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 700; }
+  .primary:hover { background: #00336e; border-color: #00336e; }
+  .go { background: var(--go); border-color: var(--go); color: #fff; font-weight: 800; }
+  .go:hover { background: var(--go-d); border-color: var(--go-d); }
+  .ghost { background: transparent; }
+  .block { width: 100%; }
   button:disabled { opacity: .45; cursor: default; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
-  textarea { width: 100%; min-height: 120px; resize: vertical; }
-  textarea, input, select { background: #0d0f14; color: var(--ink);
-    border: 1px solid var(--line); border-radius: 9px; padding: 11px 12px; font: inherit; width: 100%; }
-  label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 4px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  textarea { min-height: 120px; resize: vertical; }
+  textarea, input, select { width: 100%; background: #fff; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 11px; padding: 12px 13px; font: inherit; outline: none; }
+  textarea:focus, input:focus, select:focus { border-color: var(--brand-2); box-shadow: 0 0 0 3px var(--brand-soft); }
+  label { display: block; font-size: 12.5px; color: var(--muted); margin: 13px 0 5px; font-weight: 600; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; }
-  .row > div { flex: 1; min-width: 120px; }
-  .inline { display: flex; align-items: center; gap: 8px; }
-  .inline input[type=checkbox] { width: auto; transform: scale(1.3); }
-  .muted { color: var(--muted); font-size: 13px; }
-  .err { color: #ff8b8b; white-space: pre-wrap; font-size: 13px; margin-top: 8px; }
-  .good { color: #57d98a; font-size: 13px; margin-top: 8px; }
-  .ok-num { font-size: 30px; font-weight: 800; letter-spacing: 1px; word-break: break-all; }
-  .price { font-size: 22px; font-weight: 700; }
-  a { color: #7fb1ff; }
+  .row > div { flex: 1; min-width: 130px; }
+  .inline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .inline input[type=checkbox] { width: auto; transform: scale(1.3); accent-color: var(--brand); }
+  .muted { color: var(--muted); font-size: 13.5px; }
+  .err { color: var(--warn); white-space: pre-wrap; font-size: 13.5px; margin-top: 8px; }
+  .good { color: var(--go-d); font-size: 13.5px; margin-top: 8px; font-weight: 600; }
+  .ok-num { font-size: 32px; font-weight: 900; letter-spacing: .5px; word-break: break-all; color: var(--brand); }
+  .price { font-size: 24px; font-weight: 800; color: var(--brand); }
+  a { color: var(--brand-2); }
   .toolbar { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
-  h2 { font-size: 18px; margin: 0 0 4px; }
-  h3 { margin: 4px 0 8px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-  hr { border: none; border-top: 1px solid var(--line); margin: 14px 0; }
-  .pin { letter-spacing: 8px; text-align: center; font-size: 24px; }
-  .step { margin-bottom: 14px; }
-  .logo { font-size: 26px; }
+  h2 { font-size: 21px; margin: 0 0 6px; letter-spacing: -.01em; }
+  h3 { margin: 2px 0 4px; font-size: 12px; color: var(--brand); text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 16px 0; }
+  .pin { letter-spacing: 10px; text-align: center; font-size: 26px; font-weight: 700; }
+  .badge { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 800; }
+  .badge.demo { background: #fff4d6; color: #9a6700; }
+  .badge.production { background: #def5e6; color: var(--go-d); }
+  .step-no { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-weight: 800; font-size: 12px; margin-right: 6px; }
+
+  /* landing */
+  .hero { text-align: center; padding: 22px 18px 24px; background: linear-gradient(180deg, #fff, #f7faff); }
+  .hero .pill { display: inline-block; background: var(--brand-soft); color: var(--brand); font-weight: 700; font-size: 12.5px; padding: 5px 12px; border-radius: 999px; margin-bottom: 14px; }
+  .hero h1 { font-size: 27px; line-height: 1.2; margin: 6px 0 10px; letter-spacing: -.02em; }
+  .hero p { color: var(--muted); margin: 0 auto 18px; max-width: 460px; }
+  .feat { display: flex; gap: 11px; align-items: flex-start; margin: 12px 0; text-align: left; }
+  .feat .tick { flex: none; width: 26px; height: 26px; border-radius: 8px; background: var(--brand-soft); color: var(--brand); display: flex; align-items: center; justify-content: center; font-weight: 800; }
+  .demo-note { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 10px; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
+  <div class="topbar">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#003c80"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Econt <span style="color:var(--brand-2)">Shipper</span></span>
+    </div>
+    <div class="spacer"></div>
+    <button id="infoBtn" class="icon" title="What is this?">?</button>
+    <div class="langtoggle">
+      <button id="langBg" class="lang">БГ</button>
+      <button id="langEn" class="lang">EN</button>
+    </div>
+  </div>
+
+  <!-- ===================== LANDING ===================== -->
+  <div id="view-landing" class="view hide">
+    <div class="card" style="padding:0; overflow:hidden">
+      <div class="hero">
+        <span class="pill" data-i18n="land_pill">За подателите в Еконт</span>
+        <h1 data-i18n="land_title">Поставете съобщение. Получавате товарителница.</h1>
+        <p data-i18n="land_sub">Превърнете съобщението на клиента в готов номер на пратка в Еконт — за секунди, с вашите обичайни настройки.</p>
+        <button class="primary block" id="getStartedBtn" data-i18n="land_cta">Започнете</button>
+      </div>
+      <div style="padding:18px">
+        <h3 data-i18n="land_what_h">Какво е това?</h3>
+        <p class="muted" data-i18n="land_what_p">Малък помощник за подателите в Еконт. Поставяте съобщението с офис/адрес, което клиентът ви праща, проверявате данните и приложението създава товарителницата във вашия Еконт профил. Данните ви за вход остават на вашето устройство, защитени с PIN.</p>
+        <div class="feat"><span class="tick">✓</span><span data-i18n="land_f1">Автоматично разпознава офис, име и телефон от текста</span></div>
+        <div class="feat"><span class="tick">✓</span><span data-i18n="land_f2">Преглед на цената преди да потвърдите — нищо не се създава по погрешка</span></div>
+        <div class="feat"><span class="tick">✓</span><span data-i18n="land_f3">Работи на телефона ви като приложение</span></div>
+        <div class="feat"><span class="tick">✓</span><span data-i18n="land_f4">Евро или лева, наложен платеж, вашите настройки по подразбиране</span></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===================== SETUP WIZARD ===================== -->
   <div id="view-setup" class="view hide">
     <div class="card">
-      <div class="logo">📦</div>
-      <h2>Set up your Econt shipper</h2>
-      <p class="muted">One-time setup. Everything you enter stays on <b>this device</b>, locked by a PIN. Nothing is stored on any server.</p>
+      <h2 data-i18n="setup_title">Настройка на вашия Еконт помощник</h2>
+      <p class="muted" data-i18n="setup_sub">Еднократна настройка. Всичко, което въведете, остава на това устройство, заключено с PIN. Нищо не се пази на сървър.</p>
     </div>
 
-    <div class="card step">
-      <h3>1 · Choose a PIN</h3>
-      <p class="muted">Used to lock this app and encrypt your Econt password on this device.</p>
+    <div class="card">
+      <h3><span class="step-no">1</span><span data-i18n="setup_s1">Изберете PIN</span></h3>
+      <p class="muted" data-i18n="setup_s1_sub">Заключва приложението и криптира паролата ви за Еконт на това устройство.</p>
       <div class="row">
-        <div><label>PIN (4+ digits)</label><input id="suPin" class="pin" type="password" inputmode="numeric" autocomplete="new-password"></div>
-        <div><label>Repeat PIN</label><input id="suPin2" class="pin" type="password" inputmode="numeric" autocomplete="new-password"></div>
+        <div><label data-i18n="setup_pin">PIN (4+ цифри)</label><input id="suPin" class="pin" type="password" inputmode="numeric" autocomplete="new-password"></div>
+        <div><label data-i18n="setup_pin2">Повторете PIN</label><input id="suPin2" class="pin" type="password" inputmode="numeric" autocomplete="new-password"></div>
       </div>
     </div>
 
-    <div class="card step">
-      <h3>2 · Your Econt account</h3>
-      <label>Mode</label>
+    <div class="card">
+      <h3><span class="step-no">2</span><span data-i18n="setup_s2">Вашият Еконт акаунт</span></h3>
+      <label data-i18n="setup_mode">Режим</label>
       <select id="suMode">
-        <option value="production">Production (real shipments)</option>
-        <option value="demo">Demo (test — nothing is created)</option>
+        <option value="production" data-i18n="mode_prod">Реален (същински пратки)</option>
+        <option value="demo" data-i18n="mode_demo">Демо (тест — нищо не се създава)</option>
       </select>
       <div class="row">
-        <div><label>Econt username (exact, case-sensitive)</label><input id="suUser" autocomplete="username"></div>
-        <div><label>Econt password</label><input id="suPass" type="password" autocomplete="current-password"></div>
+        <div><label data-i18n="setup_user">Потребителско име в Еконт (точно, с главни/малки букви)</label><input id="suUser" autocomplete="username"></div>
+        <div><label data-i18n="setup_pass">Парола за Еконт</label><input id="suPass" type="password" autocomplete="current-password"></div>
       </div>
-      <button class="primary" id="suTestBtn" style="margin-top:12px">Test login</button>
+      <button class="primary" id="suTestBtn" style="margin-top:12px" data-i18n="setup_test">Проверка на входа</button>
       <div id="suTestMsg" class="muted"></div>
     </div>
 
-    <div class="card step">
-      <h3>3 · You (the sender)</h3>
+    <div class="card">
+      <h3><span class="step-no">3</span><span data-i18n="setup_s3">Вие (подателят)</span></h3>
       <div class="row">
-        <div><label>Your name</label><input id="suSenderName"></div>
-        <div><label>Your phone</label><input id="suSenderPhone" inputmode="tel"></div>
+        <div><label data-i18n="setup_yourname">Вашето име</label><input id="suSenderName"></div>
+        <div><label data-i18n="setup_yourphone">Вашият телефон</label><input id="suSenderPhone" inputmode="tel"></div>
       </div>
-      <label>Your drop-off office</label>
+      <label data-i18n="setup_youroffice">Вашият офис за подаване</label>
       <div class="inline">
-        <input id="suSenderOfficeSearch" placeholder="search city / office name…">
-        <button class="ghost" id="suSenderSearchBtn">Find</button>
+        <input id="suSenderOfficeSearch" data-i18n-ph="setup_search_office" placeholder="търсене по град / име на офис…">
+        <button class="ghost" id="suSenderSearchBtn" data-i18n="find">Намери</button>
       </div>
       <select id="suSenderOffice" class="hide" style="margin-top:8px"></select>
     </div>
 
-    <div class="card step">
-      <h3>4 · Your usual options</h3>
+    <div class="card">
+      <h3><span class="step-no">4</span><span data-i18n="setup_s4">Вашите обичайни настройки</span></h3>
       <div class="row">
-        <div><label>Weight (kg)</label><input id="suWeight" type="number" step="0.1" min="0.1" value="1"></div>
-        <div><label>Contents</label><input id="suDesc" placeholder="e.g. слушалки"></div>
-        <div><label>Who pays</label>
-          <select id="suPayer"><option value="receiver">Receiver pays</option><option value="sender">I pay</option></select>
+        <div><label data-i18n="weight">Тегло (кг)</label><input id="suWeight" type="number" step="0.1" min="0.1" value="1"></div>
+        <div><label data-i18n="contents">Съдържание</label><input id="suDesc" placeholder="напр. слушалки"></div>
+        <div><label data-i18n="who_pays">Кой плаща</label>
+          <select id="suPayer"><option value="receiver" data-i18n="receiver_pays">Получателят плаща</option><option value="sender" data-i18n="i_pay">Аз плащам</option></select>
         </div>
       </div>
-      <label class="inline" style="margin-top:10px"><input type="checkbox" id="suCod"> Usually cash-on-delivery (you type the amount per parcel)</label>
-      <label>Default COD currency</label>
+      <label class="inline" style="margin-top:12px"><input type="checkbox" id="suCod"> <span data-i18n="setup_cod">Обикновено с наложен платеж (сумата въвеждате за всяка пратка)</span></label>
+      <label data-i18n="cod_currency">Валута на наложен платеж</label>
       <select id="suCur"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
     </div>
 
-    <button class="go block" id="suFinishBtn" disabled>Finish setup →</button>
+    <button class="go block" id="suFinishBtn" disabled data-i18n="setup_finish">Завършете настройката →</button>
     <div id="suFinishMsg" class="err"></div>
   </div>
 
-  <!-- ===================== LOCK SCREEN ===================== -->
+  <!-- ===================== LOCK ===================== -->
   <div id="view-lock" class="view hide">
     <div class="card" style="text-align:center">
-      <div class="logo">🔒</div>
-      <h2>Enter PIN</h2>
+      <div style="font-size:34px">🔒</div>
+      <h2 data-i18n="lock_title">Въведете PIN</h2>
       <input id="lockPin" class="pin" type="password" inputmode="numeric" autocomplete="current-password" style="margin:14px 0">
-      <button class="primary block" id="lockBtn">Unlock</button>
-      <div id="lockMsg" class="err"></div>
-      <button class="ghost" id="forgetBtn" style="margin-top:14px">Forget this device & start over</button>
+      <button class="primary block" id="lockBtn" data-i18n="unlock">Отключи</button>
+      <div id="lockMsg" class="err" style="text-align:center"></div>
+      <button class="ghost" id="forgetBtn" style="margin-top:14px" data-i18n="forget">Изтрий от това устройство и започни наново</button>
     </div>
   </div>
 
-  <!-- ===================== MAIN APP ===================== -->
+  <!-- ===================== APP ===================== -->
   <div id="view-app" class="view hide">
-    <header>
-      <h1>Econt — paste → товарителница</h1>
+    <div class="card" style="display:flex; align-items:center; gap:8px; padding:13px 16px">
+      <strong data-i18n="app_h">Нова товарителница</strong>
       <span id="modeBadge" class="badge demo">DEMO</span>
-      <button class="ghost" id="settingsBtn">⚙</button>
-      <button class="ghost" id="lockNowBtn">🔒</button>
-    </header>
+      <div class="spacer"></div>
+      <button class="ghost icon" id="settingsBtn" title="Settings">⚙</button>
+      <button class="ghost icon" id="lockNowBtn" title="Lock">🔒</button>
+    </div>
 
     <!-- SETTINGS -->
     <div id="settings" class="card hide">
-      <h3>Econt account</h3>
-      <label>Mode</label>
+      <h3 data-i18n="set_account">Еконт акаунт</h3>
+      <label data-i18n="setup_mode">Режим</label>
       <select id="cfgMode">
-        <option value="production">Production (real)</option>
-        <option value="demo">Demo (test)</option>
+        <option value="production" data-i18n="mode_prod">Реален</option>
+        <option value="demo" data-i18n="mode_demo">Демо</option>
       </select>
       <div class="row">
-        <div><label>Username</label><input id="cfgUser" autocomplete="off"></div>
-        <div><label>Password (blank = keep)</label><input id="cfgPass" type="password" placeholder="••••" autocomplete="off"></div>
+        <div><label data-i18n="username">Потребител</label><input id="cfgUser" autocomplete="off"></div>
+        <div><label data-i18n="pass_keep">Парола (празно = без промяна)</label><input id="cfgPass" type="password" placeholder="••••" autocomplete="off"></div>
       </div>
-      <button class="ghost" id="cfgTestBtn" style="margin-top:10px">Test login</button>
+      <button class="ghost" id="cfgTestBtn" style="margin-top:10px" data-i18n="setup_test">Проверка на входа</button>
 
       <hr>
-      <h3>Sender</h3>
+      <h3 data-i18n="set_sender">Подател</h3>
       <div class="row">
-        <div><label>Name</label><input id="cfgSenderName"></div>
-        <div><label>Phone</label><input id="cfgSenderPhone"></div>
+        <div><label data-i18n="name">Име</label><input id="cfgSenderName"></div>
+        <div><label data-i18n="phone">Телефон</label><input id="cfgSenderPhone"></div>
       </div>
-      <label>Your drop-off office code</label>
+      <label data-i18n="set_office_code">Код на вашия офис за подаване</label>
       <div class="inline">
-        <input id="cfgSenderOffice" placeholder="e.g. 9049">
-        <input id="cfgSenderSearch" placeholder="search…">
-        <button class="ghost" id="cfgSenderSearchBtn">Find</button>
+        <input id="cfgSenderOffice" placeholder="напр. 9049" style="max-width:120px">
+        <input id="cfgSenderSearch" data-i18n-ph="search" placeholder="търсене…">
+        <button class="ghost" id="cfgSenderSearchBtn" data-i18n="find">Намери</button>
       </div>
       <select id="cfgSenderOfficeSel" class="hide" style="margin-top:8px"></select>
 
       <hr>
-      <h3>Default options</h3>
+      <h3 data-i18n="set_defaults">Настройки по подразбиране</h3>
       <div class="row">
-        <div><label>Weight (kg)</label><input id="cfgWeight" type="number" step="0.1" min="0.1"></div>
-        <div><label>Contents</label><input id="cfgDesc"></div>
-        <div><label>Who pays</label>
-          <select id="cfgPayer"><option value="receiver">Receiver</option><option value="sender">Sender</option></select>
+        <div><label data-i18n="weight">Тегло (кг)</label><input id="cfgWeight" type="number" step="0.1" min="0.1"></div>
+        <div><label data-i18n="contents">Съдържание</label><input id="cfgDesc"></div>
+        <div><label data-i18n="who_pays">Кой плаща</label>
+          <select id="cfgPayer"><option value="receiver" data-i18n="receiver">Получател</option><option value="sender" data-i18n="sender">Подател</option></select>
         </div>
       </div>
-      <label class="inline" style="margin-top:10px"><input type="checkbox" id="cfgCodOn"> COD on by default</label>
-      <label>Default COD currency</label>
+      <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgCodOn"> <span data-i18n="set_cod_default">Наложен платеж по подразбиране</span></label>
+      <label data-i18n="cod_currency">Валута на наложен платеж</label>
       <select id="cfgCur"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
 
       <hr>
       <div class="toolbar">
-        <button class="ghost" id="refreshOfficesBtn">Refresh offices</button>
-        <button class="primary" id="saveCfgBtn">Save</button>
+        <button class="ghost" id="refreshOfficesBtn" data-i18n="refresh_offices">Обнови офисите</button>
+        <button class="primary" id="saveCfgBtn" data-i18n="save">Запази</button>
       </div>
       <div id="cfgMsg" class="muted"></div>
     </div>
 
     <!-- PASTE -->
     <div class="card">
-      <label>Paste the customer's message</label>
-      <textarea id="msg" placeholder="Моля да ги изпратите в Офис на еконт: …  Име – 08xx xxx xxx"></textarea>
+      <label data-i18n="paste_label">Поставете съобщението на клиента</label>
+      <textarea id="msg" data-i18n-ph="paste_ph" placeholder="Моля да ги изпратите в Офис на еконт: …  Име – 08xx xxx xxx"></textarea>
       <div class="toolbar" style="margin-top:10px">
-        <button class="ghost" id="clearBtn">Clear</button>
-        <button class="primary" id="parseBtn">Preview →</button>
+        <button class="ghost" id="clearBtn" data-i18n="clear">Изчисти</button>
+        <button class="primary" id="parseBtn" data-i18n="preview">Преглед →</button>
       </div>
       <div id="parseErr" class="err"></div>
     </div>
 
     <!-- PREVIEW -->
     <div id="preview" class="card hide">
-      <h3>Check & confirm</h3>
+      <h3 data-i18n="prev_h">Проверете и потвърдете</h3>
       <div class="row">
-        <div><label>Recipient name</label><input id="pName"></div>
-        <div><label>Phone</label><input id="pPhone" inputmode="tel"></div>
+        <div><label data-i18n="recipient">Име на получателя</label><input id="pName"></div>
+        <div><label data-i18n="phone">Телефон</label><input id="pPhone" inputmode="tel"></div>
       </div>
-      <label>Deliver to office</label>
+      <label data-i18n="deliver_office">Доставка до офис</label>
       <select id="pOffice"></select>
       <div class="inline" style="margin-top:6px">
-        <input id="officeSearch" placeholder="wrong office? search by name/city…">
-        <button class="ghost" id="officeSearchBtn">Search</button>
+        <input id="officeSearch" data-i18n-ph="wrong_office" placeholder="грешен офис? търсене по име/град…">
+        <button class="ghost" id="officeSearchBtn" data-i18n="search_btn">Търси</button>
       </div>
       <div id="officeHint" class="muted" style="margin-top:6px"></div>
       <div class="row" style="margin-top:8px">
-        <div><label>Weight (kg)</label><input id="pWeight" type="number" step="0.1" min="0.1"></div>
-        <div><label>Description</label><input id="pDesc"></div>
-        <div><label>Pays</label>
-          <select id="pPayer"><option value="receiver">Receiver</option><option value="sender">Sender</option></select>
+        <div><label data-i18n="weight">Тегло (кг)</label><input id="pWeight" type="number" step="0.1" min="0.1"></div>
+        <div><label data-i18n="description">Описание</label><input id="pDesc"></div>
+        <div><label data-i18n="pays">Плаща</label>
+          <select id="pPayer"><option value="receiver" data-i18n="receiver">Получател</option><option value="sender" data-i18n="sender">Подател</option></select>
         </div>
       </div>
-      <label class="inline" style="margin-top:10px"><input type="checkbox" id="pCodOn"> COD
-        <input id="pCodAmount" type="number" step="0.01" min="0" placeholder="amount" style="width:110px; margin-left:6px">
+      <label class="inline" style="margin-top:12px"><input type="checkbox" id="pCodOn"> <span data-i18n="cod">Нал. платеж</span>
+        <input id="pCodAmount" type="number" step="0.01" min="0" data-i18n-ph="amount" placeholder="сума" style="width:100px; margin-left:6px">
         <select id="pCodCur" style="width:auto"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select></label>
       <hr>
-      <div id="priceBox" class="muted">Getting price…</div>
+      <div id="priceBox" class="muted"></div>
       <div id="previewErr" class="err"></div>
       <div class="toolbar" style="margin-top:12px">
-        <button class="ghost" id="recalcBtn">Recalculate</button>
-        <button class="go" id="createBtn">✓ Create shipment number</button>
+        <button class="ghost" id="recalcBtn" data-i18n="recalc">Преизчисли</button>
+        <button class="go" id="createBtn" data-i18n="create_btn">✓ Създай товарителница</button>
       </div>
     </div>
 
     <!-- RESULT -->
     <div id="result" class="card hide">
-      <h3>✅ Shipment created</h3>
+      <h3 data-i18n="res_h">✅ Товарителницата е създадена</h3>
       <div class="ok-num" id="shipNum"></div>
       <div class="toolbar" style="justify-content:flex-start; margin:12px 0">
-        <button class="primary" id="copyBtn">Copy number</button>
-        <a id="pdfLink" href="#" target="_blank"><button class="ghost">🖨 Label PDF</button></a>
-        <button class="ghost" id="newBtn">+ New</button>
+        <button class="primary" id="copyBtn" data-i18n="copy">Копирай номера</button>
+        <a id="pdfLink" href="#" target="_blank"><button class="ghost" data-i18n="label_pdf">🖨 Етикет PDF</button></a>
+        <button class="ghost" id="newBtn" data-i18n="new">+ Нова</button>
       </div>
       <div id="resultMeta" class="muted"></div>
     </div>

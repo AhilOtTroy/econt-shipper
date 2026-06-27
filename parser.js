@@ -90,11 +90,15 @@ function matchOffices(locationText, offices, limit) {
   const ranked = [];
 
   for (const o of offices) {
-    const hay = officeHaystack(o);
-    const hayTokens = new Set(tokenize(hay));
+    const hayArr = tokenize(officeHaystack(o));
+    const hayTokens = new Set(hayArr);
     let score = 0;
     for (const t of qTokens) {
-      if (hayTokens.has(t)) score += /^\d{4}$/.test(t) ? 4 : Math.min(t.length, 8);
+      let hit = hayTokens.has(t);
+      // Bulgarian definite article etc.: "халите"≈"хали", "орлова"≈"орлов".
+      // Allow a prefix match between query and office tokens (length ≥ 4).
+      if (!hit && t.length >= 4) hit = hayArr.some((h) => h.length >= 4 && (h.startsWith(t) || t.startsWith(h)));
+      if (hit) score += /^\d{4}$/.test(t) ? 4 : Math.min(t.length, 8);
     }
     if (postcode && (o.address?.city?.postCode === postcode)) score += 6;
     if (score > 0) {
