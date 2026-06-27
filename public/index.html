@@ -93,6 +93,12 @@
   .parcel-meta { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
   .parcel-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   .parcel-row button { padding: 7px 12px; font-size: 13px; }
+  .parcel-timer { margin-top: 8px; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+  .parcel-timer .clk { font-variant-numeric: tabular-nums; letter-spacing: .3px; }
+  .t-blue { color: var(--brand); } .t-green { color: var(--go-d); } .t-amber { color: #9a6700; } .t-muted { color: var(--muted); font-weight: 600; }
+  .details { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+  .drow { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; padding: 3px 0; }
+  .drow .k { color: var(--muted); flex: none; } .drow .v { color: var(--ink); text-align: right; font-weight: 600; word-break: break-word; }
   .events { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
   .event { display: flex; gap: 9px; font-size: 12.5px; color: var(--muted); padding: 3px 0; }
   .event .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-2); margin-top: 5px; flex: none; }
@@ -272,11 +278,12 @@
         <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgCodOn"> <span data-i18n="set_cod_default">Наложен платеж по подразбиране</span></label>
         <label data-i18n="cod_currency">Валута на наложен платеж</label>
         <select id="cfgCur"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
-        <label data-i18n="flags_default">Флагове по подразбиране за всяка пратка</label>
-        <div class="inline" style="gap:16px">
-          <label class="inline"><input type="checkbox" id="cfgReview"> <span data-i18n="review">Преглед</span></label>
-          <label class="inline"><input type="checkbox" id="cfgTest"> <span data-i18n="test">Тест</span></label>
-        </div>
+        <label data-i18n="review_setting">Опция „Преглед“, прикачена към всяка пратка</label>
+        <select id="cfgReviewMode">
+          <option value="none" data-i18n="review_none">Без преглед</option>
+          <option value="review" data-i18n="review_only">Преглед</option>
+          <option value="review_test" data-i18n="review_test">Преглед и тест</option>
+        </select>
 
         <hr>
         <div class="toolbar">
@@ -322,10 +329,6 @@
         <label class="inline" style="margin-top:12px"><input type="checkbox" id="pCodOn"> <span data-i18n="cod">Нал. платеж</span>
           <input id="pCodAmount" type="number" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" style="width:100px; margin-left:6px">
           <select id="pCodCur" style="width:auto"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select></label>
-        <div class="inline" id="flagsRow" style="margin-top:10px; gap:16px">
-          <label class="inline" id="pReviewWrap"><input type="checkbox" id="pReview"> <span data-i18n="review">Преглед</span></label>
-          <label class="inline" id="pTestWrap"><input type="checkbox" id="pTest"> <span data-i18n="test">Тест</span></label>
-        </div>
         <hr>
         <div id="priceBox" class="muted"></div>
         <div id="previewErr" class="err"></div>
@@ -358,7 +361,11 @@
           <span class="spacer"></span>
           <button class="ghost" id="refreshParcelsBtn" data-i18n="parcels_refresh">Обнови</button>
         </div>
-        <div class="muted" style="margin-top:6px" data-i18n="parcels_note">Показва пратките, създадени през това приложение, с актуален статус от Еконт.</div>
+        <div class="muted" style="margin-top:6px" data-i18n="parcels_note">Показва пратките с актуален статус и време в движение от Еконт.</div>
+        <div class="inline" style="margin-top:10px">
+          <input id="trackNumInput" data-i18n-ph="track_ph" data-enter="trackNumBtn" placeholder="добави номер на пратка…" inputmode="numeric">
+          <button class="primary" id="trackNumBtn" data-i18n="track_add">Добави</button>
+        </div>
       </div>
       <div id="parcelList"></div>
     </div>

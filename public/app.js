@@ -37,7 +37,12 @@ const I18N = {
     parcels_empty: 'Все още няма пратки тук. Създайте първата от раздел „Нова“.', exp_delivery: 'Очаквана доставка', collected: 'Събрано НП',
     track_events: 'Проследяване', reprint: 'Етикет', copied: 'Копирано ✓', need_desc: 'Описанието е задължително за колетни пратки.',
     loading: 'Зареждане…', no_status: 'няма статус', other_env: 'друга среда', status_delivered: 'Доставена', status_transit: 'В движение', kg: 'кг',
-    review: 'Преглед', test: 'Тест', flags_default: 'Флагове по подразбиране за всяка пратка',
+    review_only: 'Преглед', review_test: 'Преглед и тест', review_none: 'Без преглед',
+    review_setting: 'Опция „Преглед“, прикачена към всяка пратка',
+    track_ph: 'добави номер на пратка…', track_add: 'Добави', already_added: 'Вече е добавена', invalid_number: 'Невалиден номер на пратка',
+    details: 'Детайли', hide_details: 'Скрий детайли', in_operation: 'Във движение от', delivered_ok: 'Доставена успешно', returned_ok: 'Върната към подателя', awaiting_dispatch: 'Очаква изпращане',
+    d_status: 'Статус', d_sender: 'Подател', d_recipient: 'Получател', d_phone: 'Телефон', d_office: 'Офис получател', d_sender_office: 'Офис подател', d_storage: 'Съхранява се в', d_type: 'Тип', d_packs: 'Брой', d_weight: 'Тегло', d_contents: 'Съдържание', d_review: 'Преглед', d_created: 'Създадена', d_sent: 'Изпратена', d_expected: 'Очаквана доставка', d_delivered: 'Доставена на', d_cod: 'Наложен платеж', d_price: 'Цена', d_attempts: 'Опити за доставка', d_routing: 'Маршрут',
+    dd: 'д', dh: 'ч', dm: 'м', ds: 'с',
     testing: 'Проверка…', login_ok: '✓ Входът работи — {n} офиса са налични.', need_creds: 'Първо въведете потребител и парола.',
     pin_short: 'PIN трябва да е поне 4 цифри.', pin_mismatch: 'PIN кодовете не съвпадат.', test_first: 'Първо проверете входа за Еконт (стъпка 2).',
     fill_sender: 'Попълнете име, телефон и изберете офис за подаване (стъпка 3).',
@@ -81,7 +86,12 @@ const I18N = {
     parcels_empty: 'No parcels yet. Create your first from the New tab.', exp_delivery: 'Expected delivery', collected: 'COD collected',
     track_events: 'Tracking', reprint: 'Label', copied: 'Copied ✓', need_desc: 'Description is required for parcels.',
     loading: 'Loading…', no_status: 'no status', other_env: 'other env', status_delivered: 'Delivered', status_transit: 'In transit', kg: 'kg',
-    review: 'Review', test: 'Test', flags_default: 'Default flags for every parcel',
+    review_only: 'Review', review_test: 'Review & Test', review_none: 'No review',
+    review_setting: 'Review option attached to every parcel',
+    track_ph: 'add a shipment number…', track_add: 'Add', already_added: 'Already added', invalid_number: 'Invalid shipment number',
+    details: 'Details', hide_details: 'Hide details', in_operation: 'In transit for', delivered_ok: 'Delivered successfully', returned_ok: 'Returned to sender', awaiting_dispatch: 'Awaiting dispatch',
+    d_status: 'Status', d_sender: 'Sender', d_recipient: 'Recipient', d_phone: 'Phone', d_office: 'Receiver office', d_sender_office: 'Sender office', d_storage: 'Stored at', d_type: 'Type', d_packs: 'Packs', d_weight: 'Weight', d_contents: 'Contents', d_review: 'Review', d_created: 'Created', d_sent: 'Dispatched', d_expected: 'Expected delivery', d_delivered: 'Delivered at', d_cod: 'COD', d_price: 'Price', d_attempts: 'Delivery attempts', d_routing: 'Routing',
+    dd: 'd', dh: 'h', dm: 'm', ds: 's',
     testing: 'Testing…', login_ok: '✓ Login works — {n} offices available.', need_creds: 'Enter username and password first.',
     pin_short: 'PIN must be at least 4 digits.', pin_mismatch: 'PINs do not match.', test_first: 'Test your Econt login first (step 2).',
     fill_sender: 'Fill your name, phone and pick your drop-off office (step 3).',
@@ -119,7 +129,10 @@ function btnBusy(btn, on, label) {
   if (on) { btn.disabled = true; if (btn.dataset.html == null) btn.dataset.html = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>' + (label || ''); }
   else { btn.disabled = false; if (btn.dataset.html != null) { btn.innerHTML = btn.dataset.html; delete btn.dataset.html; } }
 }
-function fmtDate(ms) { if (!ms) return ''; const d = new Date(Number(ms)); if (isNaN(d.getTime())) return ''; return d.toLocaleDateString(LANG === 'bg' ? 'bg-BG' : 'en-GB', { day: '2-digit', month: 'short' }); }
+function fmtDate(ms) { if (!ms) return ''; let n = Number(ms); if (n < 1e12) n *= 1000; const d = new Date(n); if (isNaN(d.getTime())) return ''; return d.toLocaleDateString(LANG === 'bg' ? 'bg-BG' : 'en-GB', { day: '2-digit', month: 'short' }); }
+// Review service (преглед): one setting, three states — None / Review / Review & Test.
+function reviewModeOf(d) { if (!d) return 'none'; if (d.reviewMode) return d.reviewMode; if (d.payAfterTest) return 'review_test'; if (d.payAfterAccept) return 'review'; return 'none'; }
+function reviewFlags(mode) { return { payAfterAccept: mode === 'review' || mode === 'review_test', payAfterTest: mode === 'review_test' }; }
 
 // ===================== state =====================
 const SESSION = { password: null, pin: null };
@@ -217,7 +230,7 @@ function switchTab(which) {
   $('navParcels').classList.toggle('active', which === 'parcels');
   $('tab-new').classList.toggle('hide', which !== 'new');
   $('tab-parcels').classList.toggle('hide', which !== 'parcels');
-  if (which === 'parcels') openParcels();
+  if (which === 'parcels') openParcels(); else stopTimers();
 }
 function enterApp() {
   const badge = $('modeBadge'); badge.textContent = CONFIG.mode.toUpperCase(); badge.className = 'badge ' + CONFIG.mode;
@@ -227,7 +240,7 @@ function enterApp() {
   $('cfgWeight').value = d.weight ?? 1; $('cfgDesc').value = d.shipmentDescription || '';
   $('cfgPayer').value = d.payer || 'receiver'; $('cfgCodOn').checked = !!(d.cod && d.cod.enabled);
   $('cfgCur').value = (d.cod && d.cod.currency) || 'EUR';
-  $('cfgReview').checked = !!d.payAfterAccept; $('cfgTest').checked = !!d.payAfterTest;
+  $('cfgReviewMode').value = reviewModeOf(d);
   switchTab('new');
   show('app');
 }
@@ -255,7 +268,8 @@ $('saveCfgBtn').onclick = async () => {
   CONFIG.mode = $('cfgMode').value; CONFIG.username = $('cfgUser').value.trim();
   if ($('cfgPass').value) SESSION.password = $('cfgPass').value;
   CONFIG.sender = { name: $('cfgSenderName').value.trim(), phone: $('cfgSenderPhone').value.trim(), officeCode: $('cfgSenderOffice').value.trim(), address: CONFIG.sender.address || null };
-  CONFIG.defaults = Object.assign({}, CONFIG.defaults, { weight: Number($('cfgWeight').value) || 1, shipmentDescription: $('cfgDesc').value.trim(), payer: $('cfgPayer').value, payAfterAccept: $('cfgReview').checked, payAfterTest: $('cfgTest').checked, cod: Object.assign({}, CONFIG.defaults.cod, { enabled: $('cfgCodOn').checked, currency: $('cfgCur').value }) });
+  const rm = $('cfgReviewMode').value, rf = reviewFlags(rm);
+  CONFIG.defaults = Object.assign({}, CONFIG.defaults, { weight: Number($('cfgWeight').value) || 1, shipmentDescription: $('cfgDesc').value.trim(), payer: $('cfgPayer').value, reviewMode: rm, payAfterAccept: rf.payAfterAccept, payAfterTest: rf.payAfterTest, cod: Object.assign({}, CONFIG.defaults.cod, { enabled: $('cfgCodOn').checked, currency: $('cfgCur').value }) });
   await persist(); enterApp(); toast(t('saved'));
 };
 
@@ -288,23 +302,18 @@ async function doParse(ev) {
       $('pCodOn').checked = !!(d.cod && d.cod.enabled); $('pCodAmount').value = (d.cod && d.cod.amount) || '';
       $('pCodCur').value = (d.cod && d.cod.currency) || 'EUR';
     }
-    // Review/Test flags: hide the per-parcel toggle when it's globally forced on.
-    $('pReviewWrap').classList.toggle('hide', !!d.payAfterAccept); $('pReview').checked = false;
-    $('pTestWrap').classList.toggle('hide', !!d.payAfterTest); $('pTest').checked = false;
-    $('flagsRow').classList.toggle('hide', !!d.payAfterAccept && !!d.payAfterTest);
     $('preview').classList.remove('hide'); $('result').classList.add('hide');
     $('preview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     doPreview();
   } finally { btnBusy(btn, false); }
 }
 function gatherOverrides() {
-  const d = CONFIG.defaults || {};
+  const mode = reviewModeOf(CONFIG.defaults); const rf = reviewFlags(mode);
   return {
     recipientName: $('pName').value.trim(), phone: $('pPhone').value.trim(), officeCode: $('pOffice').value,
     weight: Number($('pWeight').value) || undefined, description: $('pDesc').value.trim(), payer: $('pPayer').value,
     cod: { enabled: $('pCodOn').checked, amount: Number($('pCodAmount').value) || 0, currency: $('pCodCur').value },
-    payAfterAccept: d.payAfterAccept ? true : $('pReview').checked,
-    payAfterTest: d.payAfterTest ? true : $('pTest').checked,
+    payAfterAccept: rf.payAfterAccept, payAfterTest: rf.payAfterTest, reviewMode: mode,
   };
 }
 const shipBody = (overrides) => ({ creds: creds(), sender: CONFIG.sender, defaults: CONFIG.defaults, overrides });
@@ -344,7 +353,7 @@ async function doCreate() {
     const pdf = st.pdfURL;
     if (pdf) { $('pdfLink').href = pdf; $('pdfLink').style.display = ''; } else { $('pdfLink').style.display = 'none'; }
     $('resultMeta').textContent = st.totalPrice != null ? t('price_label', { v: Number(st.totalPrice).toFixed(2), cur: st.totalPriceCurrency || $('pCodCur').value || 'EUR' }) : '';
-    if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, office: o.officeCode, weight: o.weight, description: o.description, cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
+    if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, office: o.officeCode, weight: o.weight, description: o.description, cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
     $('preview').classList.add('hide'); $('result').classList.remove('hide');
     playCheck();
     $('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -359,46 +368,94 @@ $('pOffice').onchange = () => doPreview();
 $('copyBtn').onclick = () => { navigator.clipboard.writeText($('shipNum').textContent); toast(t('copied')); };
 $('newBtn').onclick = () => { $('msg').value = ''; $('result').classList.add('hide'); $('preview').classList.add('hide'); $('msg').focus(); };
 
-// ---------- parcels (live) ----------
-function statusClass(p) { if (p.error) return 's-red'; if (p.deliveryTime) return 's-green'; if (p.status) return 's-blue'; return 's-gray'; }
+// ---------- parcels (live status + operation timer) ----------
+const toMs = (v) => { if (v == null) return null; let n = Number(v); if (!n) return null; if (n < 1e12) n *= 1000; return n; };
+function fmtDateTime(ms) { const d = new Date(toMs(ms)); if (isNaN(d.getTime())) return ''; return d.toLocaleString(LANG === 'bg' ? 'bg-BG' : 'en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+function fmtDuration(ms) {
+  if (!(ms > 0)) ms = 0;
+  const s = Math.floor(ms / 1000), d = Math.floor(s / 86400), p2 = (x) => String(x).padStart(2, '0');
+  return (d > 0 ? d + t('dd') + ' ' : '') + p2(Math.floor(s % 86400 / 3600)) + ':' + p2(Math.floor(s % 3600 / 60)) + ':' + p2(s % 60);
+}
+// Operation state: timer runs in transit, stops on delivered or returned.
+function classify(p) {
+  const txt = ((p.status || '') + ' ' + (p.statusEn || '')).toLowerCase();
+  if (/върнат|върната|return|отказан|refus|reject/.test(txt)) return 'returned';
+  if (p.deliveryTime || /достав|получена|получен|delivered/.test(txt)) return 'delivered';
+  if (p.sendTime) return 'transit';
+  return 'created';
+}
+function statusClass(p) { const st = classify(p); return st === 'returned' ? 's-red' : st === 'delivered' ? 's-green' : st === 'transit' ? 's-blue' : 's-gray'; }
+
+const TICK = {}; let TIMER_INT = null;
+function startTimers() { stopTimers(); TIMER_INT = setInterval(() => { const now = Date.now(); for (const num in TICK) { const c = $q(`.parcel[data-num="${num}"] [data-timer] .clk`); if (c) c.textContent = fmtDuration(now - TICK[num]); } }, 1000); }
+function stopTimers() { if (TIMER_INT) { clearInterval(TIMER_INT); TIMER_INT = null; } }
+function renderTimer(num, p) {
+  const cell = $q(`.parcel[data-num="${num}"] [data-timer]`); if (!cell) return;
+  const st = classify(p), sent = toMs(p.sendTime); delete TICK[num];
+  if (st === 'delivered') { const dt = toMs(p.deliveryTime); cell.className = 'parcel-timer t-green'; cell.innerHTML = '✓ ' + t('delivered_ok') + (sent && dt ? ' <span class="clk">· ' + fmtDuration(dt - sent) + '</span>' : ''); }
+  else if (st === 'returned') { const dt = toMs(p.deliveryTime) || Date.now(); cell.className = 'parcel-timer t-amber'; cell.innerHTML = '↩ ' + t('returned_ok') + (sent ? ' <span class="clk">· ' + fmtDuration(dt - sent) + '</span>' : ''); }
+  else if (st === 'transit' && sent) { cell.className = 'parcel-timer t-blue'; cell.innerHTML = '⏱ ' + t('in_operation') + ' <span class="clk">' + fmtDuration(Date.now() - sent) + '</span>'; TICK[num] = sent; }
+  else { cell.className = 'parcel-timer t-muted'; cell.textContent = '• ' + t('awaiting_dispatch'); }
+}
+
+function reviewLabel(mode) { return mode === 'review_test' ? t('review_test') : mode === 'review' ? t('review_only') : null; }
+function detailRows(p, local) {
+  const rows = []; const add = (k, v) => { if (v != null && v !== '') rows.push([k, v]); };
+  add(t('d_status'), p.status);
+  add(t('d_recipient'), p.recipient); add(t('d_phone'), p.recipientPhone);
+  add(t('d_office'), p.office || p.receiverAddress); add(t('d_storage'), p.storageOffice);
+  add(t('d_sender'), p.sender); add(t('d_sender_office'), p.senderOffice);
+  add(t('d_type'), p.type); add(t('d_packs'), p.packCount);
+  add(t('d_weight'), p.weight != null ? p.weight + ' ' + t('kg') : null); add(t('d_contents'), p.description);
+  add(t('d_review'), reviewLabel(local && local.reviewMode));
+  add(t('d_sent'), p.sendTime ? fmtDateTime(p.sendTime) : null);
+  add(t('d_expected'), p.expectedDeliveryDate ? fmtDate(p.expectedDeliveryDate) : null);
+  add(t('d_delivered'), p.deliveryTime ? fmtDateTime(p.deliveryTime) : null);
+  add(t('d_attempts'), p.deliveryAttempts);
+  add(t('d_cod'), p.cdCollected ? Number(p.cdCollected).toFixed(2) + ' ' + (p.cdCurrency || '') : null);
+  add(t('d_price'), p.totalPrice != null ? Number(p.totalPrice).toFixed(2) + ' ' + (p.currency || '') : null);
+  add(t('d_routing'), p.routingCode);
+  return rows;
+}
 function parcelCardHTML(p) {
   return `<div class="parcel" data-num="${p.number}">
     <div class="parcel-top"><span class="parcel-num">${p.number}</span><span class="statusb sk" data-status>${t('loading')}</span></div>
-    <div class="parcel-sub">${p.recipient || ''}${p.office ? ' · ' + p.office : ''}</div>
-    <div class="parcel-meta" data-meta>${[p.description, p.weight ? p.weight + ' ' + t('kg') : ''].filter(Boolean).join(' · ')}</div>
+    <div class="parcel-sub" data-sub>${p.recipient || ''}${p.office ? ' · ' + p.office : ''}</div>
+    <div class="parcel-timer t-muted" data-timer></div>
     <div class="parcel-row">
       <button data-copy>${t('copy')}</button>
-      ${p.pdfURL ? `<a href="${p.pdfURL}" target="_blank"><button class="ghost">${t('reprint')}</button></a>` : ''}
-      <button class="ghost" data-events hidden>${t('track_events')}</button>
+      <a data-pdf hidden target="_blank"><button class="ghost">${t('reprint')}</button></a>
+      <button class="ghost" data-toggle>${t('details')}</button>
     </div>
-    <div class="events hide" data-eventbox></div>
+    <div class="details hide" data-details></div>
   </div>`;
 }
 function updateParcelCard(p) {
   const c = $q(`.parcel[data-num="${p.number}"]`); if (!c) return;
+  const local = loadParcels().find((x) => x.number === p.number) || {};
   const s = c.querySelector('[data-status]');
   s.className = 'statusb ' + statusClass(p);
-  s.textContent = p.error ? t('no_status') : (p.status || (p.deliveryTime ? t('status_delivered') : t('status_transit')));
-  const bits = [p.description, p.weight ? p.weight + ' ' + t('kg') : ''].filter(Boolean);
-  if (p.deliveryTime) bits.push(t('status_delivered') + ' ' + fmtDate(p.deliveryTime));
-  else if (p.expectedDeliveryDate) bits.push(t('exp_delivery') + ': ' + fmtDate(p.expectedDeliveryDate));
-  if (p.cdCollected) bits.push(t('collected') + ': ' + Number(p.cdCollected).toFixed(2) + ' ' + (p.cdCurrency || ''));
-  c.querySelector('[data-meta]').innerHTML = bits.join(' · ');
-  const btn = c.querySelector('[data-events]'), box = c.querySelector('[data-eventbox]');
-  if (p.events && p.events.length) {
-    btn.hidden = false;
-    box.innerHTML = p.events.map((ev) => `<div class="event"><span class="dot"></span><span>${[fmtDate(ev.time), ev.office, ev.text].filter(Boolean).join(' · ')}</span></div>`).join('');
-    btn.onclick = () => box.classList.toggle('hide');
-  } else { btn.hidden = true; }
+  s.textContent = p.error ? t('no_status') : (p.status || t('status_transit'));
+  if (p.recipient || p.office) c.querySelector('[data-sub]').textContent = (p.recipient || '') + (p.office ? ' · ' + p.office : '');
+  const pdf = p.pdfURL || local.pdfURL, a = c.querySelector('[data-pdf]');
+  if (pdf) { a.href = pdf; a.hidden = false; } else { a.hidden = true; }
+  renderTimer(p.number, p);
+  const det = c.querySelector('[data-details]');
+  let html = detailRows(p, local).map(([k, v]) => `<div class="drow"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+  if (p.events && p.events.length) html += '<div class="events">' + p.events.map((ev) => `<div class="event"><span class="dot"></span><span>${[fmtDate(ev.time), ev.office, ev.text].filter(Boolean).join(' · ')}</span></div>`).join('') + '</div>';
+  det.innerHTML = html || `<div class="muted">${t('no_status')}</div>`;
+  const tg = c.querySelector('[data-toggle]');
+  tg.onclick = () => { det.classList.toggle('hide'); tg.textContent = det.classList.contains('hide') ? t('details') : t('hide_details'); };
 }
 async function openParcels() {
   const list = loadParcels(), box = $('parcelList');
-  if (!list.length) { box.innerHTML = `<div class="card muted" style="text-align:center">${t('parcels_empty')}</div>`; return; }
+  if (!list.length) { box.innerHTML = `<div class="card muted" style="text-align:center">${t('parcels_empty')}</div>`; stopTimers(); return; }
   box.innerHTML = list.map(parcelCardHTML).join('');
   box.querySelectorAll('[data-copy]').forEach((b) => { const num = b.closest('.parcel').getAttribute('data-num'); b.onclick = () => { navigator.clipboard.writeText(num); toast(t('copied')); }; });
-  refreshParcels();
+  await refreshParcels();
+  startTimers();
 }
-async function refreshParcels(ev) {
+async function refreshParcels() {
   const list = loadParcels();
   list.filter((p) => p.mode !== CONFIG.mode).forEach((p) => { const c = $q(`.parcel[data-num="${p.number}"] [data-status]`); if (c) { c.className = 'statusb s-gray'; c.textContent = t('other_env'); } });
   const nums = list.filter((p) => p.mode === CONFIG.mode).map((p) => p.number);
@@ -411,6 +468,14 @@ async function refreshParcels(ev) {
   } finally { btnBusy(btn, false); }
 }
 $('refreshParcelsBtn').onclick = refreshParcels;
+$('trackNumBtn').onclick = () => {
+  const v = ($('trackNumInput').value || '').replace(/\D/g, '');
+  if (v.length < 8) { toast(t('invalid_number')); return; }
+  if (loadParcels().some((p) => p.number === v)) { toast(t('already_added')); $('trackNumInput').value = ''; return; }
+  addParcel({ number: v, recipient: '', office: '', createdAt: Date.now(), mode: CONFIG.mode, manual: true });
+  $('trackNumInput').value = '';
+  openParcels();
+};
 
 // ---------- landing / language / enter-key ----------
 $('langBg').onclick = () => setLang('bg');
