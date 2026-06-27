@@ -8,12 +8,26 @@
 <title>Econt — съобщение → товарителница</title>
 <style>
   :root {
-    --bg: #eef2f7; --card: #ffffff; --ink: #112138; --muted: #66748d;
+    --bg: #eef2f7; --card: #ffffff; --field: #ffffff; --ink: #112138; --muted: #66748d;
     --line: #e4e9f1; --brand: #003c80; --brand-2: #0a73d6; --brand-soft: #e9f1fb;
     --go: #1e9e57; --go-d: #16894a; --warn: #c0392b;
     --shadow: 0 1px 2px rgba(17,40,80,.06), 0 6px 20px rgba(17,40,80,.07);
     --radius: 16px;
   }
+  :root[data-theme="dark"] {
+    --bg: #0e141b; --card: #161d27; --field: #0f1620; --ink: #e7edf5; --muted: #93a1b5;
+    --line: #273241; --brand: #2f7fd6; --brand-2: #5aa6ee; --brand-soft: #16263a;
+    --go: #29b365; --go-d: #34c374; --warn: #ef6b6b;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+  }
+  :root[data-theme="dark"] .badge.demo { background: #3a2d12; color: #f4c463; }
+  :root[data-theme="dark"] .badge.production { background: #12301f; color: #57d98a; }
+  :root[data-theme="dark"] .s-green { background: #16331f; color: #57d98a; }
+  :root[data-theme="dark"] .s-red { background: #3a1c1c; color: #ff9a9a; }
+  :root[data-theme="dark"] .s-gray { background: #222c39; color: var(--muted); }
+  :root[data-theme="dark"] .hero { background: linear-gradient(180deg, #161d27, #121a24); }
+  :root[data-theme="dark"] .t-amber { color: #f0b659; }
+  :root[data-theme="dark"] #toast { background: #2a3645; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { margin: 0; background: var(--bg); color: var(--ink);
     font: 16px/1.55 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
@@ -25,12 +39,12 @@
   .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px; padding: 12px 2px; background: var(--bg); }
   .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: var(--brand); letter-spacing: -.01em; }
   .spacer { flex: 1; }
-  .langtoggle { display: inline-flex; background: #fff; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .langtoggle { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
   .lang { border: 0; background: transparent; color: var(--muted); padding: 6px 12px; font-weight: 700; font-size: 13px; }
   .lang.active { background: var(--brand); color: #fff; }
-  .icon { border: 1px solid var(--line); background: #fff; color: var(--brand); width: 38px; height: 36px; border-radius: 10px; font-weight: 800; }
+  .icon { border: 1px solid var(--line); background: var(--card); color: var(--brand); width: 38px; height: 36px; border-radius: 10px; font-weight: 800; }
 
-  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 11px; padding: 12px 16px; transition: .12s; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 11px; padding: 12px 16px; transition: .12s; }
   button:hover { border-color: #c9d4e4; }
   button:active { transform: translateY(1px); }
   .primary { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 700; }
@@ -42,7 +56,7 @@
   button:disabled { opacity: .55; cursor: default; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
   textarea { min-height: 120px; resize: vertical; }
-  textarea, input, select { width: 100%; background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 11px; padding: 12px 13px; font: inherit; outline: none; transition: border-color .12s, box-shadow .12s; }
+  textarea, input, select { width: 100%; background: var(--field); color: var(--ink); border: 1px solid var(--line); border-radius: 11px; padding: 12px 13px; font: inherit; outline: none; transition: border-color .12s, box-shadow .12s; }
   textarea:focus, input:focus, select:focus { border-color: var(--brand-2); box-shadow: 0 0 0 3px var(--brand-soft); }
   label { display: block; font-size: 12.5px; color: var(--muted); margin: 13px 0 5px; font-weight: 600; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -71,7 +85,7 @@
   #toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: .26s cubic-bezier(.2,.7,.2,1); z-index: 50; max-width: 90%; }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  .segnav { display: flex; background: #fff; border: 1px solid var(--line); border-radius: 13px; padding: 4px; gap: 4px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .segnav { display: flex; background: var(--card); border: 1px solid var(--line); border-radius: 13px; padding: 4px; gap: 4px; margin-bottom: 14px; box-shadow: var(--shadow); }
   .segnav button { flex: 1; border: 0; background: transparent; border-radius: 10px; padding: 11px; font-weight: 700; color: var(--muted); }
   .segnav button.active { background: var(--brand); color: #fff; }
 
@@ -82,7 +96,7 @@
   .feat { display: flex; gap: 11px; align-items: flex-start; margin: 12px 0; text-align: left; }
   .feat .tick { flex: none; width: 26px; height: 26px; border-radius: 8px; background: var(--brand-soft); color: var(--brand); display: flex; align-items: center; justify-content: center; font-weight: 800; }
 
-  .parcel { border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; background: #fff; box-shadow: var(--shadow); }
+  .parcel { border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; background: var(--card); box-shadow: var(--shadow); }
   .parcel-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .parcel-num { min-width: 0; }
   .parcel-num { font-weight: 800; color: var(--brand); letter-spacing: .3px; }
@@ -120,6 +134,7 @@
       <span>Econt <span style="color:var(--brand-2)">Shipper</span></span>
     </div>
     <div class="spacer"></div>
+    <button id="themeBtn" class="icon" title="Theme">🌙</button>
     <button id="infoBtn" class="icon" title="What is this?">?</button>
     <div class="langtoggle">
       <button id="langBg" class="lang">БГ</button>
@@ -158,8 +173,8 @@
       <h3><span class="step-no">1</span><span data-i18n="setup_s1">Изберете PIN</span></h3>
       <p class="muted" data-i18n="setup_s1_sub">Заключва приложението и криптира паролата ви за Еконт на това устройство.</p>
       <div class="row">
-        <div><label data-i18n="setup_pin">PIN (4+ цифри)</label><input id="suPin" class="pin" type="password" inputmode="numeric" autocomplete="new-password"></div>
-        <div><label data-i18n="setup_pin2">Повторете PIN</label><input id="suPin2" class="pin" type="password" inputmode="numeric" autocomplete="new-password" data-enter="suFinishBtn"></div>
+        <div><label data-i18n="setup_pin">PIN (4–6 цифри)</label><input id="suPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
+        <div><label data-i18n="setup_pin2">Повторете PIN</label><input id="suPin2" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" data-enter="suFinishBtn"></div>
       </div>
     </div>
 
@@ -215,7 +230,7 @@
     <div class="card" style="text-align:center">
       <div style="font-size:34px">🔒</div>
       <h2 data-i18n="lock_title">Въведете PIN</h2>
-      <input id="lockPin" class="pin" type="password" inputmode="numeric" autocomplete="current-password" data-enter="lockBtn" style="margin:14px 0">
+      <input id="lockPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" data-enter="lockBtn" style="margin:14px 0">
       <button class="primary block" id="lockBtn" data-i18n="unlock">Отключи</button>
       <div id="lockMsg" class="err" style="text-align:center"></div>
       <button class="ghost" id="forgetBtn" style="margin-top:14px" data-i18n="forget">Изтрий от това устройство и започни наново</button>

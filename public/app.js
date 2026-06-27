@@ -16,7 +16,7 @@ const I18N = {
     land_f3: 'Жив списък на пратките ви със статус от Еконт', land_f4: 'Евро или лева, наложен платеж, вашите настройки по подразбиране',
     setup_title: 'Настройка на вашия Еконт помощник', setup_sub: 'Еднократна настройка. Всичко, което въведете, остава на това устройство, заключено с PIN. Нищо не се пази на сървър.',
     setup_s1: 'Изберете PIN', setup_s1_sub: 'Заключва приложението и криптира паролата ви за Еконт на това устройство.',
-    setup_pin: 'PIN (4+ цифри)', setup_pin2: 'Повторете PIN', setup_s2: 'Вашият Еконт акаунт', setup_mode: 'Режим', mode_prod: 'Реален', mode_demo: 'Демо',
+    setup_pin: 'PIN (4–6 цифри)', setup_pin2: 'Повторете PIN', setup_s2: 'Вашият Еконт акаунт', setup_mode: 'Режим', mode_prod: 'Реален', mode_demo: 'Демо',
     setup_user: 'Потребителско име в Еконт (точно, с главни/малки букви)', setup_pass: 'Парола за Еконт', setup_test: 'Проверка на входа',
     setup_s3: 'Вие (подателят)', setup_yourname: 'Вашето име', setup_yourphone: 'Вашият телефон', setup_youroffice: 'Вашият офис за подаване',
     setup_search_office: 'търсене по град / име на офис…', find: 'Намери', setup_s4: 'Вашите обичайни настройки', weight: 'Тегло (кг)', contents: 'Съдържание', who_pays: 'Кой плаща',
@@ -65,7 +65,7 @@ const I18N = {
     land_f3: 'A live list of your parcels with status from Econt', land_f4: 'Euro or leva, cash-on-delivery, your default settings',
     setup_title: 'Set up your Econt helper', setup_sub: 'One-time setup. Everything you enter stays on this device, locked by a PIN. Nothing is stored on a server.',
     setup_s1: 'Choose a PIN', setup_s1_sub: 'Locks the app and encrypts your Econt password on this device.',
-    setup_pin: 'PIN (4+ digits)', setup_pin2: 'Repeat PIN', setup_s2: 'Your Econt account', setup_mode: 'Mode', mode_prod: 'Production', mode_demo: 'Demo',
+    setup_pin: 'PIN (4–6 digits)', setup_pin2: 'Repeat PIN', setup_s2: 'Your Econt account', setup_mode: 'Mode', mode_prod: 'Production', mode_demo: 'Demo',
     setup_user: 'Econt username (exact, case-sensitive)', setup_pass: 'Econt password', setup_test: 'Test login',
     setup_s3: 'You (the sender)', setup_yourname: 'Your name', setup_yourphone: 'Your phone', setup_youroffice: 'Your drop-off office',
     setup_search_office: 'search by city / office name…', find: 'Find', setup_s4: 'Your usual options', weight: 'Weight (kg)', contents: 'Contents', who_pays: 'Who pays',
@@ -161,7 +161,7 @@ async function decryptSecret(e, pin) {
 // ---------- storage ----------
 const loadStore = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } };
 const saveStore = (o) => localStorage.setItem(KEY, JSON.stringify(o));
-async function persist() { saveStore({ v: 1, mode: CONFIG.mode, username: CONFIG.username, enc: await encryptSecret(SESSION.password, SESSION.pin), sender: CONFIG.sender, defaults: CONFIG.defaults }); }
+async function persist() { saveStore({ v: 1, mode: CONFIG.mode, username: CONFIG.username, enc: await encryptSecret(SESSION.password, SESSION.pin), sender: CONFIG.sender, defaults: CONFIG.defaults, pinLen: (SESSION.pin || '').length }); }
 const loadParcels = () => { try { return JSON.parse(localStorage.getItem(PKEY)) || []; } catch { return []; } };
 const saveParcels = (a) => localStorage.setItem(PKEY, JSON.stringify(a.slice(0, 300)));
 const addParcel = (p) => { const a = loadParcels(); a.unshift(p); saveParcels(a); };
@@ -212,15 +212,28 @@ $('suFinishBtn').onclick = async () => {
 
 // ===================== LOCK =====================
 function showLock() { show('lock'); $('lockMsg').textContent = ''; $('lockPin').value = ''; setTimeout(() => $('lockPin').focus(), 50); }
-$('lockBtn').onclick = unlock;
-async function unlock() {
+let UNLOCKING = false;
+async function tryUnlock(silentOnFail) {
+  if (UNLOCKING) return;
   const store = loadStore(); if (!store) return show('landing');
+  UNLOCKING = true;
   try {
     SESSION.password = await decryptSecret(store.enc, $('lockPin').value); SESSION.pin = $('lockPin').value;
     CONFIG = { mode: store.mode, username: store.username, sender: store.sender, defaults: store.defaults };
     enterApp();
-  } catch { $('lockMsg').textContent = t('wrong_pin'); }
+  } catch { if (!silentOnFail) $('lockMsg').textContent = t('wrong_pin'); }
+  finally { UNLOCKING = false; }
 }
+const unlock = () => tryUnlock(false);
+$('lockBtn').onclick = unlock;
+// Auto-unlock the moment the full PIN is entered — no button click needed.
+$('lockPin').addEventListener('input', () => {
+  $('lockMsg').textContent = '';
+  const store = loadStore(); if (!store) return;
+  const len = $('lockPin').value.length, expected = store.pinLen || 0;
+  if (expected) { if (len === expected) tryUnlock(false); }
+  else if (len >= 4) tryUnlock(len < 6); // legacy store: only show error at the 6-char cap
+});
 $('forgetBtn').onclick = () => { if (confirm(t('forget_confirm'))) { localStorage.removeItem(KEY); location.reload(); } };
 $('lockNowBtn').onclick = () => { SESSION.password = null; SESSION.pin = null; showLock(); };
 
@@ -478,6 +491,19 @@ $('trackNumBtn').onclick = () => {
 };
 
 // ---------- landing / language / enter-key ----------
+// ---------- theme (light / dark) ----------
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  $('themeBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
+  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = theme === 'dark' ? '#0e141b' : '#003c80';
+}
+function initTheme() {
+  let th = localStorage.getItem('econt_theme');
+  if (!th) th = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  applyTheme(th);
+}
+$('themeBtn').onclick = () => { const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; localStorage.setItem('econt_theme', next); applyTheme(next); };
+
 $('langBg').onclick = () => setLang('bg');
 $('langEn').onclick = () => setLang('en');
 $('getStartedBtn').onclick = () => { if (SESSION.password) show('app'); else if (loadStore()) showLock(); else show('setup'); };
@@ -491,6 +517,7 @@ document.addEventListener('keydown', (e) => {
 
 // ---------- boot ----------
 applyLang();
+initTheme();
 if (!('crypto' in window) || !crypto.subtle) {
   document.body.innerHTML = '<div style="padding:24px">This app needs a secure connection (https) to encrypt your PIN. Open it via the https link or http://localhost.</div>';
 } else if (loadStore()) { showLock(); } else { show('landing'); }
