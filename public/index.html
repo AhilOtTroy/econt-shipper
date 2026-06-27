@@ -37,7 +37,8 @@
   @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
   .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px; padding: 12px 2px; background: var(--bg); }
-  .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: var(--brand); letter-spacing: -.01em; }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: var(--brand); letter-spacing: -.01em; text-decoration: none; cursor: pointer; }
+  .brand:hover { opacity: .85; }
   .spacer { flex: 1; }
   .langtoggle { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
   .lang { border: 0; background: transparent; color: var(--muted); padding: 6px 12px; font-weight: 700; font-size: 13px; }
@@ -129,10 +130,10 @@
 <div class="wrap">
 
   <div class="topbar">
-    <div class="brand">
+    <a id="brandHome" class="brand" href="#" role="button" aria-label="Home" title="Home">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#003c80"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
       <span>Econt <span style="color:var(--brand-2)">Shipper</span></span>
-    </div>
+    </a>
     <div class="spacer"></div>
     <button id="themeBtn" class="icon" title="Theme">🌙</button>
     <button id="infoBtn" class="icon" title="What is this?">?</button>

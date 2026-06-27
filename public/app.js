@@ -508,6 +508,7 @@ $('langBg').onclick = () => setLang('bg');
 $('langEn').onclick = () => setLang('en');
 $('getStartedBtn').onclick = () => { if (SESSION.password) show('app'); else if (loadStore()) showLock(); else show('setup'); };
 $('infoBtn').onclick = () => show('landing');
+$('brandHome').onclick = (e) => { e.preventDefault(); show('landing'); };
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter') return;
   const el = e.target;
