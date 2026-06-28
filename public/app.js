@@ -8,13 +8,13 @@ const PKEY = 'econt_parcels';
 // ===================== i18n =====================
 const I18N = {
   bg: {
-    land_pill: 'За подателите в Еконт', land_title: 'Поставете съобщение. Получавате товарителница.',
-    land_sub: 'Превърнете съобщението на клиента в готов номер на пратка в Еконт — за секунди, с вашите обичайни настройки.',
-    land_cta: 'Започнете', land_what_h: 'Какво е това?',
-    land_what_p: 'Малък помощник за подателите в Еконт. Поставяте съобщението с офис/адрес, което клиентът ви праща, проверявате данните и приложението създава товарителницата във вашия Еконт профил. Данните ви за вход остават на вашето устройство, защитени с PIN.',
-    land_f1: 'Автоматично разпознава офис, име и телефон от текста', land_f2: 'Преглед на цената преди да потвърдите — нищо не се създава по погрешка',
-    land_f3: 'Жив списък на пратките ви със статус от Еконт', land_f4: 'Евро или лева, наложен платеж, вашите настройки по подразбиране',
-    setup_title: 'Настройка на вашия Еконт помощник', setup_sub: 'Еднократна настройка. Всичко, което въведете, остава на това устройство, заключено с PIN. Нищо не се пази на сървър.',
+    land_pill: 'Еконт, опростено', land_title: 'Съобщение. Товарителница. Готово.',
+    land_sub: 'Превърнете чата на клиента в готова пратка. За секунди.',
+    land_cta: 'Започнете', land_what_h: 'Накратко',
+    land_what_p: 'Поставяте съобщението. Проверявате. Готова товарителница във вашия Еконт. Входът остава на устройството, с PIN.',
+    land_f1: 'Разпознава офис, име и телефон.', land_f2: 'Виждате цената преди да потвърдите.',
+    land_f3: 'Жив статус на всяка пратка.', land_f4: 'Евро или лева. Наложен платеж.',
+    setup_title: 'Бърза настройка', setup_sub: 'Еднократно. Всичко остава на устройството, с PIN.',
     setup_s1: 'Изберете PIN', setup_s1_sub: 'Заключва приложението и криптира паролата ви за Еконт на това устройство.',
     setup_pin: 'PIN (4–6 цифри)', setup_pin2: 'Повторете PIN', setup_s2: 'Вашият Еконт акаунт', setup_mode: 'Режим', mode_prod: 'Реален', mode_demo: 'Демо',
     setup_user: 'Потребителско име в Еконт (точно, с главни/малки букви)', setup_pass: 'Парола за Еконт', setup_test: 'Проверка на входа',
@@ -58,13 +58,13 @@ const I18N = {
     no_number: '(няма върнат номер)', econt_prefix: 'Еконт: ', error_prefix: 'Грешка: ',
   },
   en: {
-    land_pill: 'For Econt senders', land_title: 'Paste a message. Get an Econt label.',
-    land_sub: "Turn a customer's chat message into a ready Econt shipment number — in seconds, with your usual settings.",
-    land_cta: 'Get started', land_what_h: 'What is this?',
-    land_what_p: 'A tiny helper for Econt senders. Paste the office/address message your customer sends you, check the details, and it creates the shipment label (товарителница) in your Econt account. Your login stays on your device, locked by a PIN.',
-    land_f1: 'Recognizes the office, name and phone from the text automatically', land_f2: 'Preview the price before you confirm — nothing is created by mistake',
-    land_f3: 'A live list of your parcels with status from Econt', land_f4: 'Euro or leva, cash-on-delivery, your default settings',
-    setup_title: 'Set up your Econt helper', setup_sub: 'One-time setup. Everything you enter stays on this device, locked by a PIN. Nothing is stored on a server.',
+    land_pill: 'Econt, simplified', land_title: 'A message in. A label out.',
+    land_sub: "Turn a customer's chat into a ready shipment. In seconds.",
+    land_cta: 'Get started', land_what_h: 'In short',
+    land_what_p: 'Paste the message. Check it. Get a label in your Econt account. Login stays on this device, behind a PIN.',
+    land_f1: 'Reads the office, name and phone.', land_f2: 'See the price before you confirm.',
+    land_f3: 'Live status for every parcel.', land_f4: 'Euro or leva. Cash on delivery.',
+    setup_title: 'Quick setup', setup_sub: 'One time. Everything stays on this device, behind a PIN.',
     setup_s1: 'Choose a PIN', setup_s1_sub: 'Locks the app and encrypts your Econt password on this device.',
     setup_pin: 'PIN (4–6 digits)', setup_pin2: 'Repeat PIN', setup_s2: 'Your Econt account', setup_mode: 'Mode', mode_prod: 'Production', mode_demo: 'Demo',
     setup_user: 'Econt username (exact, case-sensitive)', setup_pass: 'Econt password', setup_test: 'Test login',
@@ -257,6 +257,8 @@ function switchTab(which) {
   $('navParcels').classList.toggle('active', which === 'parcels');
   $('tab-new').classList.toggle('hide', which !== 'new');
   $('tab-parcels').classList.toggle('hide', which !== 'parcels');
+  const ind = document.querySelector('.seg-ind');
+  if (ind) ind.style.transform = which === 'parcels' ? 'translateX(100%)' : 'translateX(0)';
   if (which === 'parcels') openParcels(); else stopTimers();
 }
 function enterApp() {
@@ -530,7 +532,7 @@ $('trackNumBtn').onclick = () => {
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   $('themeBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
-  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = theme === 'dark' ? '#0e141b' : '#003c80';
+  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = theme === 'dark' ? '#080c12' : '#0a4ea8';
 }
 function initTheme() {
   let th = localStorage.getItem('econt_theme');
@@ -557,3 +559,25 @@ initTheme();
 if (!('crypto' in window) || !crypto.subtle) {
   document.body.innerHTML = '<div style="padding:24px">This app needs a secure connection (https) to encrypt your PIN. Open it via the https link or http://localhost.</div>';
 } else if (loadStore()) { showLock(); } else { show('landing'); }
+
+// ---------- 3D pointer tilt on showcase cards (desktop, fine pointer only) ----------
+(function initTilt() {
+  if (!window.matchMedia) return;
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let active = null;
+  const reset = () => { if (active) { active.style.transform = ''; active = null; } };
+  document.addEventListener('pointermove', (e) => {
+    const card = e.target.closest ? e.target.closest('.tilt') : null;
+    if (active && active !== card) reset();
+    if (!card || card.classList.contains('hide')) return;
+    active = card;
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    const m = 5;
+    card.style.transform = `perspective(1000px) rotateY(${(x * m).toFixed(2)}deg) rotateX(${(-y * m).toFixed(2)}deg) translateY(-4px)`;
+  }, { passive: true });
+  document.addEventListener('pointerleave', reset, true);
+  window.addEventListener('blur', reset);
+})();
