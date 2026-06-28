@@ -268,6 +268,7 @@ function enterApp() {
   $('cfgPayer').value = d.payer || 'receiver'; $('cfgCodOn').checked = !!(d.cod && d.cod.enabled);
   $('cfgCur').value = (d.cod && d.cod.currency) || 'EUR';
   $('cfgReviewMode').value = reviewAnchor(d);
+  applyReviewUI();  // keep the preview's review control in sync after a settings change
   switchTab('new');
   show('app');
 }
