@@ -32,7 +32,7 @@ const I18N = {
     clear: 'Изчисти', preview: 'Преглед →', prev_h: 'Проверете и потвърдете', recipient: 'Име на получателя', deliver_office: 'Доставка до офис',
     wrong_office: 'грешен офис? търсене по име/град…', search_btn: 'Търси', description: 'Описание', pays: 'Плаща',
     cod: 'Нал. платеж', amount: 'сума', recalc: 'Преизчисли', create_btn: '✓ Създай товарителница',
-    res_h: 'Товарителницата е създадена', copy: 'Копирай номера', label_pdf: '🖨 Етикет PDF', new: '+ Нова',
+    res_h: 'Товарителницата е създадена', copy: 'Копирай номера', label_pdf: '🖨 Етикет PDF', view_in_profile: '👤 Виж в профила', new: '+ Нова',
     parcels_h: 'Вашите пратки', parcels_refresh: 'Обнови', parcels_note: 'Показва пратките, създадени през това приложение, с актуален статус от Еконт.',
     parcels_empty: 'Все още няма пратки тук. Създайте първата от раздел „Нова“.', exp_delivery: 'Очаквана доставка', collected: 'Събрано НП',
     track_events: 'Проследяване', reprint: 'Етикет', copied: 'Копирано ✓', need_desc: 'Описанието е задължително за колетни пратки.',
@@ -81,7 +81,7 @@ const I18N = {
     clear: 'Clear', preview: 'Preview →', prev_h: 'Check & confirm', recipient: 'Recipient name', deliver_office: 'Deliver to office',
     wrong_office: 'wrong office? search by name/city…', search_btn: 'Search', description: 'Description', pays: 'Pays',
     cod: 'COD', amount: 'amount', recalc: 'Recalculate', create_btn: '✓ Create shipment number',
-    res_h: 'Shipment created', copy: 'Copy number', label_pdf: '🖨 Label PDF', new: '+ New',
+    res_h: 'Shipment created', copy: 'Copy number', label_pdf: '🖨 Label PDF', view_in_profile: '👤 View in profile', new: '+ New',
     parcels_h: 'Your parcels', parcels_refresh: 'Refresh', parcels_note: 'Shows parcels created through this app, with live status from Econt.',
     parcels_empty: 'No parcels yet. Create your first from the New tab.', exp_delivery: 'Expected delivery', collected: 'COD collected',
     track_events: 'Tracking', reprint: 'Label', copied: 'Copied ✓', need_desc: 'Description is required for parcels.',
@@ -169,6 +169,9 @@ const addParcel = (p) => { const a = loadParcels(); a.unshift(p); saveParcels(a)
 // ---------- views ----------
 function show(view) { for (const v of ['landing', 'setup', 'lock', 'app']) $('view-' + v).classList.toggle('hide', v !== view); }
 const creds = () => ({ mode: CONFIG.mode, username: CONFIG.username, password: SESSION.password });
+// Official e-Econt account ("profile") URL for the active environment, so the
+// user can log in and confirm the shipment really landed in their account.
+const econtProfileUrl = () => (CONFIG.mode === 'production' ? 'https://ee.econt.com/' : 'https://demo.econt.com/ee/');
 const api = async (path, body) => (await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })).json();
 function officeLabel(c) { return `${c.name} — ${c.address}${c.city ? ', ' + c.city : ''}${c.postCode ? ' (' + c.postCode + ')' : ''}`; }
 async function fillOfficeSelect(sel, q, credsObj) {
@@ -365,6 +368,7 @@ async function doCreate() {
     $('shipNum').textContent = num;
     const pdf = st.pdfURL;
     if (pdf) { $('pdfLink').href = pdf; $('pdfLink').style.display = ''; } else { $('pdfLink').style.display = 'none'; }
+    $('profileLink').href = econtProfileUrl();
     $('resultMeta').textContent = st.totalPrice != null ? t('price_label', { v: Number(st.totalPrice).toFixed(2), cur: st.totalPriceCurrency || $('pCodCur').value || 'EUR' }) : '';
     if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, office: o.officeCode, weight: o.weight, description: o.description, cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
     $('preview').classList.add('hide'); $('result').classList.remove('hide');
