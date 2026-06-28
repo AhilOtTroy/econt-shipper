@@ -38,7 +38,8 @@ const I18N = {
     track_events: 'Проследяване', reprint: 'Етикет', copied: 'Копирано ✓', need_desc: 'Описанието е задължително за колетни пратки.',
     loading: 'Зареждане…', no_status: 'няма статус', other_env: 'друга среда', status_delivered: 'Доставена', status_transit: 'В движение', kg: 'кг',
     review_only: 'Преглед', review_test: 'Преглед и тест', review_none: 'Без преглед',
-    review_setting: 'Опция „Преглед“, прикачена към всяка пратка',
+    review_setting: 'Фиксирай „Преглед“ за всяка пратка', review_unanchored: 'Избирам за всяка пратка',
+    review_label: 'Опция „Преглед“', review_from_settings: 'Преглед: {mode} (от настройките)',
     track_ph: 'добави номер на пратка…', track_add: 'Добави', already_added: 'Вече е добавена', invalid_number: 'Невалиден номер на пратка',
     details: 'Детайли', hide_details: 'Скрий детайли', in_operation: 'Във движение от', delivered_ok: 'Доставена успешно', returned_ok: 'Върната към подателя', awaiting_dispatch: 'Очаква изпращане',
     d_status: 'Статус', d_sender: 'Подател', d_recipient: 'Получател', d_phone: 'Телефон', d_office: 'Офис получател', d_sender_office: 'Офис подател', d_storage: 'Съхранява се в', d_type: 'Тип', d_packs: 'Брой', d_weight: 'Тегло', d_contents: 'Съдържание', d_review: 'Преглед', d_created: 'Създадена', d_sent: 'Изпратена', d_expected: 'Очаквана доставка', d_delivered: 'Доставена на', d_cod: 'Наложен платеж', d_price: 'Цена', d_attempts: 'Опити за доставка', d_routing: 'Маршрут',
@@ -87,7 +88,8 @@ const I18N = {
     track_events: 'Tracking', reprint: 'Label', copied: 'Copied ✓', need_desc: 'Description is required for parcels.',
     loading: 'Loading…', no_status: 'no status', other_env: 'other env', status_delivered: 'Delivered', status_transit: 'In transit', kg: 'kg',
     review_only: 'Review', review_test: 'Review & Test', review_none: 'No review',
-    review_setting: 'Review option attached to every parcel',
+    review_setting: 'Fix a review option for every parcel', review_unanchored: 'Choose per shipment',
+    review_label: 'Review option', review_from_settings: 'Review: {mode} (from settings)',
     track_ph: 'add a shipment number…', track_add: 'Add', already_added: 'Already added', invalid_number: 'Invalid shipment number',
     details: 'Details', hide_details: 'Hide details', in_operation: 'In transit for', delivered_ok: 'Delivered successfully', returned_ok: 'Returned to sender', awaiting_dispatch: 'Awaiting dispatch',
     d_status: 'Status', d_sender: 'Sender', d_recipient: 'Recipient', d_phone: 'Phone', d_office: 'Receiver office', d_sender_office: 'Sender office', d_storage: 'Stored at', d_type: 'Type', d_packs: 'Packs', d_weight: 'Weight', d_contents: 'Contents', d_review: 'Review', d_created: 'Created', d_sent: 'Dispatched', d_expected: 'Expected delivery', d_delivered: 'Delivered at', d_cod: 'COD', d_price: 'Price', d_attempts: 'Delivery attempts', d_routing: 'Routing',
@@ -131,8 +133,17 @@ function btnBusy(btn, on, label) {
 }
 function fmtDate(ms) { if (!ms) return ''; let n = Number(ms); if (n < 1e12) n *= 1000; const d = new Date(n); if (isNaN(d.getTime())) return ''; return d.toLocaleDateString(LANG === 'bg' ? 'bg-BG' : 'en-GB', { day: '2-digit', month: 'short' }); }
 // Review service (преглед): one setting, three states — None / Review / Review & Test.
-function reviewModeOf(d) { if (!d) return 'none'; if (d.reviewMode) return d.reviewMode; if (d.payAfterTest) return 'review_test'; if (d.payAfterAccept) return 'review'; return 'none'; }
 function reviewFlags(mode) { return { payAfterAccept: mode === 'review' || mode === 'review_test', payAfterTest: mode === 'review_test' }; }
+// The review mode "anchored" in settings: '' = not anchored (user picks per shipment).
+// Legacy 'none'/unset both mean "not anchored" now that the no-review choice lives on the creation page.
+function reviewAnchor(d) {
+  if (!d) return '';
+  if (d.reviewMode === 'review' || d.reviewMode === 'review_test') return d.reviewMode;
+  if (d.reviewMode === 'none') return '';
+  if (d.payAfterTest) return 'review_test';
+  if (d.payAfterAccept) return 'review';
+  return '';
+}
 
 // ===================== state =====================
 const SESSION = { password: null, pin: null };
@@ -256,7 +267,7 @@ function enterApp() {
   $('cfgWeight').value = d.weight ?? 1; $('cfgDesc').value = d.shipmentDescription || '';
   $('cfgPayer').value = d.payer || 'receiver'; $('cfgCodOn').checked = !!(d.cod && d.cod.enabled);
   $('cfgCur').value = (d.cod && d.cod.currency) || 'EUR';
-  $('cfgReviewMode').value = reviewModeOf(d);
+  $('cfgReviewMode').value = reviewAnchor(d);
   switchTab('new');
   show('app');
 }
@@ -318,13 +329,31 @@ async function doParse(ev) {
       $('pCodOn').checked = !!(d.cod && d.cod.enabled); $('pCodAmount').value = (d.cod && d.cod.amount) || '';
       $('pCodCur').value = (d.cod && d.cod.currency) || 'EUR';
     }
+    applyReviewUI();
     $('preview').classList.remove('hide'); $('result').classList.add('hide');
     $('preview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     doPreview();
   } finally { btnBusy(btn, false); }
 }
+// Show the per-shipment review selector only when settings does NOT anchor a mode.
+// When anchored, hide the selector and show a small read-only note instead.
+function applyReviewUI() {
+  const anchor = reviewAnchor(CONFIG.defaults);
+  if (anchor) {
+    $('reviewRow').classList.add('hide');
+    $('reviewAnchored').classList.remove('hide');
+    $('reviewAnchored').textContent = t('review_from_settings', { mode: reviewLabel(anchor) });
+  } else {
+    $('reviewRow').classList.remove('hide');
+    $('reviewAnchored').classList.add('hide');
+    if (!$('pReviewMode').value) $('pReviewMode').value = 'none';
+  }
+}
 function gatherOverrides() {
-  const mode = reviewModeOf(CONFIG.defaults); const rf = reviewFlags(mode);
+  // Anchored in settings → use it; otherwise the per-shipment choice on this page.
+  const anchor = reviewAnchor(CONFIG.defaults);
+  const mode = anchor || $('pReviewMode').value || 'none';
+  const rf = reviewFlags(mode);
   return {
     recipientName: $('pName').value.trim(), phone: $('pPhone').value.trim(), officeCode: $('pOffice').value,
     weight: Number($('pWeight').value) || undefined, description: $('pDesc').value.trim(), payer: $('pPayer').value,
@@ -379,6 +408,7 @@ async function doCreate() {
 $('clearBtn').onclick = () => { $('msg').value = ''; $('preview').classList.add('hide'); $('result').classList.add('hide'); };
 $('parseBtn').onclick = doParse;
 $('recalcBtn').onclick = doPreview;
+$('pReviewMode').onchange = doPreview;
 $('createBtn').onclick = doCreate;
 $('officeSearchBtn').onclick = async () => { await fillOfficeSelect($('pOffice'), $('officeSearch').value, creds()); doPreview(); };
 $('pOffice').onchange = () => doPreview();
