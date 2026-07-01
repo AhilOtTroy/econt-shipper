@@ -337,6 +337,8 @@ async function doParse(ev) {
       $('pCodCur').value = (d.cod && d.cod.currency) || 'EUR';
     }
     applyReviewUI();
+    // If the message asks for review ("с преглед" / "тест") and settings isn't anchored, pre-select it.
+    if (!reviewAnchor(CONFIG.defaults) && p.reviewMode) $('pReviewMode').value = p.reviewMode;
     $('preview').classList.remove('hide'); $('result').classList.add('hide');
     $('preview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     doPreview();

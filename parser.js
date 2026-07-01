@@ -101,8 +101,19 @@ function detectCod(text, phoneIndex) {
   return { amount: parseFloat(String(amount).replace(',', '.')), currency: currency || null };
 }
 
+// Detect a review request written in the message: "с преглед" → review,
+// "преглед и тест" / "тест" → review & test. Null when not mentioned.
+function detectReview(text) {
+  const s = String(text).toLowerCase();
+  // "тест" as its own word (Cyrillic-safe boundary), or the explicit "преглед и тест".
+  if (/преглед\s+и\s+тест/.test(s) || /(?:^|[^а-яёa-z])тест/.test(s)) return 'review_test';
+  if (/преглед/.test(s)) return 'review';
+  return null;
+}
+
 function parseMessage(text) {
-  const out = { deliveryType: detectDeliveryType(text), recipientName: '', phone: '', phoneRaw: '', locationText: '', cod: null };
+  const out = { deliveryType: detectDeliveryType(text), recipientName: '', phone: '', phoneRaw: '', locationText: '', cod: null, reviewMode: null };
+  out.reviewMode = detectReview(text);
   const m = PHONE_RE.exec(text);
   const phoneIndex = m ? m.index : -1;
   let codText = text;
