@@ -79,9 +79,15 @@ function detectCod(text, phoneIndex) {
   const reCurrAfter = new RegExp(amt + '\\s*(€|евро|eur|лв\\.?|лева|лев|bgn)', 'i');
   const reCurrBefore = new RegExp('(€|евро|eur|лв\\.?|лева|лев|bgn)\\s*' + amt, 'i');
   const reKw = new RegExp('(?:наложен(?:\\s*платеж)?|нал\\.?\\s*платеж|\\bнп\\b|\\bcod\\b|сума(?:та)?|за\\s*получаване)\\D{0,15}?' + amt, 'i');
-  if (m = reCurrAfter.exec(text)) { amount = m[1]; currency = curOf(m[2]); }
+  // Prefer the amount anchored to a COD keyword ("наложен платеж 300") so an
+  // item/listing price stated earlier ("Цена 250 лв") does not win.
+  if (m = reKw.exec(text)) {
+    amount = m[1];
+    const cm = /^\s*(€|евро|eur|лв\.?|лева|лев|bgn)/i.exec(text.slice(m.index + m[0].length));
+    if (cm) currency = curOf(cm[1]);
+  }
+  else if (m = reCurrAfter.exec(text)) { amount = m[1]; currency = curOf(m[2]); }
   else if (m = reCurrBefore.exec(text)) { amount = m[2]; currency = curOf(m[1]); }
-  else if (m = reKw.exec(text)) { amount = m[1]; }
   else {
     const cands = [];
     const re = /\d{1,6}(?:[.,]\d{1,2})?/g; let x;
@@ -105,9 +111,11 @@ function detectCod(text, phoneIndex) {
 // "преглед и тест" / "тест" → review & test. Null when not mentioned.
 function detectReview(text) {
   const s = String(text).toLowerCase();
-  // "тест" as its own word (Cyrillic-safe boundary), or the explicit "преглед и тест".
-  if (/преглед\s+и\s+тест/.test(s) || /(?:^|[^а-яёa-z])тест/.test(s)) return 'review_test';
-  if (/преглед/.test(s)) return 'review';
+  // Cyrillic-safe whole-word matching so inflections like "тествам"/"прегледай"
+  // (I'm testing / look it over) don't trigger the paid review/test service.
+  const B = (w) => new RegExp('(?:^|[^а-яёa-z])' + w + '(?![а-яёa-z])');
+  if (B('преглед\\s+и\\s+тест').test(s) || B('тест').test(s)) return 'review_test';
+  if (B('преглед').test(s)) return 'review';
   return null;
 }
 
@@ -137,7 +145,13 @@ function parseMessage(text) {
   if (nameFrom === 'before' && nameTok.length) officeTokens = officeTokens.slice(0, officeTokens.length - nameTok.length);
   officeTokens = officeTokens.filter((w) => !['тел', 'телефон', 'gsm', 'гсм'].includes(w.toLowerCase()));
   let loc = officeTokens.join(' ');
-  const colon = loc.indexOf(':'); if (colon >= 0 && colon <= 14) loc = loc.slice(colon + 1);  // only a short leading label like "Офис:"
+  // Strip a leading "Label:" (e.g. "Адрес за доставка:") — but only when the prefix is a
+  // short, digit-free label, never a time value like "09:30" or mid-sentence colons.
+  const colon = loc.indexOf(':');
+  if (colon >= 0) {
+    const label = loc.slice(0, colon);
+    if (!/\d/.test(label) && label.trim().split(/\s+/).filter(Boolean).length <= 3) loc = loc.slice(colon + 1);
+  }
   loc = loc.replace(/\s+/g, ' ').trim();
   if (!/[\p{L}]/u.test(loc) && afterTok.length) loc = afterTok.filter((w) => !nameTok.includes(w)).join(' ').trim();
   out.locationText = loc;

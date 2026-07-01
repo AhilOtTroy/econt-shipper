@@ -190,7 +190,13 @@ function serveStatic(req, res, url) {
       : ext === '.css' ? 'text/css; charset=utf-8'
       : ext === '.webmanifest' ? 'application/manifest+json'
       : 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': type });
+    // Safe hardening headers (do not restrict script/style/connect, so OCR and inline styles keep working).
+    res.writeHead(200, {
+      'Content-Type': type,
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'no-referrer',
+      'Content-Security-Policy': "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+    });
     res.end(data);
   });
 }

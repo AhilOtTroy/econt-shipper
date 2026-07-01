@@ -112,21 +112,30 @@ const I18N = {
     no_number: '(no number returned)', econt_prefix: 'Econt: ', error_prefix: 'Error: ',
   },
 };
-let LANG = localStorage.getItem('econt_lang') || 'bg';
+let LANG = ['bg', 'en'].includes(localStorage.getItem('econt_lang')) ? localStorage.getItem('econt_lang') : 'bg';
+// Escape untrusted text before it goes into innerHTML.
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function t(key, params) {
-  let s = (I18N[LANG] && I18N[LANG][key]);
+  const dict = I18N[LANG] || I18N.en;
+  let s = dict[key];
   if (s == null) s = (I18N.en[key] != null ? I18N.en[key] : key);
   if (params) for (const k in params) s = s.split('{' + k + '}').join(params[k]);
   return s;
 }
 function applyLang() {
+  const dict = I18N[LANG] || I18N.en;
   document.documentElement.lang = LANG;
-  document.querySelectorAll('[data-i18n]').forEach((el) => { const k = el.getAttribute('data-i18n'); if (I18N[LANG][k] != null) el.textContent = I18N[LANG][k]; });
-  document.querySelectorAll('[data-i18n-ph]').forEach((el) => { const k = el.getAttribute('data-i18n-ph'); if (I18N[LANG][k] != null) el.placeholder = I18N[LANG][k]; });
+  document.querySelectorAll('[data-i18n]').forEach((el) => { const k = el.getAttribute('data-i18n'); if (dict[k] != null) el.textContent = dict[k]; });
+  document.querySelectorAll('[data-i18n-ph]').forEach((el) => { const k = el.getAttribute('data-i18n-ph'); if (dict[k] != null) el.placeholder = dict[k]; });
   $('langBg').classList.toggle('active', LANG === 'bg');
   $('langEn').classList.toggle('active', LANG === 'en');
 }
-function setLang(l) { LANG = l; localStorage.setItem('econt_lang', l); applyLang(); if (!$('tab-parcels').classList.contains('hide')) openParcels(); }
+function setLang(l) {
+  LANG = l; localStorage.setItem('econt_lang', l); applyLang();
+  if (!$('tab-parcels').classList.contains('hide')) openParcels();
+  // Refresh dynamically-generated strings in an open preview so they follow the language.
+  if (!$('view-app').classList.contains('hide') && !$('preview').classList.contains('hide')) { applyReviewUI(); doPreview(); }
+}
 
 // ===================== helpers =====================
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 2300); }
@@ -192,7 +201,7 @@ function officeLabel(c) { return `${c.name} — ${c.address}${c.city ? ', ' + c.
 async function fillOfficeSelect(sel, q, credsObj) {
   sel.classList.remove('hide'); sel.innerHTML = `<option>${t('searching')}</option>`;
   const r = await api('/api/offices', { creds: credsObj, q });
-  if (!r.ok) { sel.innerHTML = `<option value="">${r.error}</option>`; return; }
+  if (!r.ok) { sel.innerHTML = `<option value="">${esc(r.error)}</option>`; return; }
   sel.innerHTML = '';
   for (const c of (r.candidates || [])) { const o = document.createElement('option'); o.value = c.code; o.textContent = officeLabel(c); sel.appendChild(o); }
   if (!sel.options.length) sel.innerHTML = `<option value="">${t('no_matches')}</option>`;
@@ -262,7 +271,7 @@ function switchTab(which) {
   $('tab-new').classList.toggle('hide', which !== 'new');
   $('tab-parcels').classList.toggle('hide', which !== 'parcels');
   const ind = document.querySelector('.seg-ind');
-  if (ind) ind.style.transform = which === 'parcels' ? 'translateX(100%)' : 'translateX(0)';
+  if (ind) ind.style.transform = which === 'parcels' ? 'translateX(calc(100% + 5px))' : 'translateX(0)';
   if (which === 'parcels') openParcels(); else stopTimers();
 }
 function enterApp() {
@@ -321,8 +330,8 @@ async function doParse(ev) {
     $('pName').value = p.recipientName || ''; $('pPhone').value = p.phone || '';
     CANDIDATES = r.candidates || [];
     const sel = $('pOffice'); sel.innerHTML = '';
-    if (r.officesError) sel.innerHTML = `<option value="">${t('office_err', { err: r.officesError })}</option>`;
-    else if (!CANDIDATES.length) sel.innerHTML = `<option value="">${t('no_match', { q: p.locationText })}</option>`;
+    if (r.officesError) sel.innerHTML = `<option value="">${esc(t('office_err', { err: r.officesError }))}</option>`;
+    else if (!CANDIDATES.length) sel.innerHTML = `<option value="">${esc(t('no_match', { q: p.locationText }))}</option>`;
     else for (const c of CANDIDATES) { const o = document.createElement('option'); o.value = c.code; o.textContent = officeLabel(c); sel.appendChild(o); }
     $('officeHint').innerHTML = CONFIG.mode === 'demo' ? t('demo_hint') : '';
     const d = CONFIG.defaults;
@@ -337,8 +346,9 @@ async function doParse(ev) {
       $('pCodCur').value = (d.cod && d.cod.currency) || 'EUR';
     }
     applyReviewUI();
-    // If the message asks for review ("с преглед" / "тест") and settings isn't anchored, pre-select it.
-    if (!reviewAnchor(CONFIG.defaults) && p.reviewMode) $('pReviewMode').value = p.reviewMode;
+    // Reset the per-shipment review each parse (never leak a prior message's choice),
+    // then apply the review hint detected in THIS message, if any.
+    if (!reviewAnchor(CONFIG.defaults)) $('pReviewMode').value = p.reviewMode || 'none';
     $('preview').classList.remove('hide'); $('result').classList.add('hide');
     $('preview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     doPreview();
@@ -549,9 +559,9 @@ function detailRows(p, local) {
   return rows;
 }
 function parcelCardHTML(p) {
-  return `<div class="parcel" data-num="${p.number}">
-    <div class="parcel-top"><span class="parcel-num">${p.number}</span><span class="statusb sk" data-status>${t('loading')}</span></div>
-    <div class="parcel-sub" data-sub>${p.recipient || ''}${p.office ? ' · ' + p.office : ''}</div>
+  return `<div class="parcel" data-num="${esc(p.number)}">
+    <div class="parcel-top"><span class="parcel-num">${esc(p.number)}</span><span class="statusb sk" data-status>${t('loading')}</span></div>
+    <div class="parcel-sub" data-sub>${esc(p.recipient || '')}${p.office ? ' · ' + esc(p.office) : ''}</div>
     <div class="parcel-timer t-muted" data-timer></div>
     <div class="parcel-row">
       <button data-copy>${t('copy')}</button>
@@ -572,8 +582,8 @@ function updateParcelCard(p) {
   if (pdf) { a.href = pdf; a.hidden = false; } else { a.hidden = true; }
   renderTimer(p.number, p);
   const det = c.querySelector('[data-details]');
-  let html = detailRows(p, local).map(([k, v]) => `<div class="drow"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
-  if (p.events && p.events.length) html += '<div class="events">' + p.events.map((ev) => `<div class="event"><span class="dot"></span><span>${[fmtDate(ev.time), ev.office, ev.text].filter(Boolean).join(' · ')}</span></div>`).join('') + '</div>';
+  let html = detailRows(p, local).map(([k, v]) => `<div class="drow"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('');
+  if (p.events && p.events.length) html += '<div class="events">' + p.events.map((ev) => `<div class="event"><span class="dot"></span><span>${[fmtDate(ev.time), esc(ev.office), esc(ev.text)].filter(Boolean).join(' · ')}</span></div>`).join('') + '</div>';
   det.innerHTML = html || `<div class="muted">${t('no_status')}</div>`;
   const tg = c.querySelector('[data-toggle]');
   tg.onclick = () => { det.classList.toggle('hide'); tg.textContent = det.classList.contains('hide') ? t('details') : t('hide_details'); };
