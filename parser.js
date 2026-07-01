@@ -113,7 +113,9 @@ function parseMessage(text) {
   const after = m ? text.slice(m.index + m[0].length) : '';
   const tok = (s) => s.replace(/[,/]/g, ' ').split(/\s+/).filter(Boolean);
   let beforeTok = tok(before), afterTok = tok(after);
-  while (beforeTok.length && isPunct(beforeTok[beforeTok.length - 1])) beforeTok.pop();   // trailing "-" / ":" before phone
+  // Drop trailing punctuation and phone-label words (тел / GSM …) so the name right before them is found.
+  const TRAIL_LABEL = new Set(['тел', 'телефон', 'gsm', 'гсм']);
+  while (beforeTok.length) { const last = beforeTok[beforeTok.length - 1]; if (isPunct(last) || TRAIL_LABEL.has(bare(last))) beforeTok.pop(); else break; }
   while (afterTok.length && isPunct(afterTok[0])) afterTok.shift();
 
   let nameTok = leadingName(afterTok), nameFrom = 'after';
@@ -124,7 +126,7 @@ function parseMessage(text) {
   if (nameFrom === 'before' && nameTok.length) officeTokens = officeTokens.slice(0, officeTokens.length - nameTok.length);
   officeTokens = officeTokens.filter((w) => !['тел', 'телефон', 'gsm', 'гсм'].includes(w.toLowerCase()));
   let loc = officeTokens.join(' ');
-  const colon = loc.lastIndexOf(':'); if (colon >= 0) loc = loc.slice(colon + 1);
+  const colon = loc.indexOf(':'); if (colon >= 0 && colon <= 14) loc = loc.slice(colon + 1);  // only a short leading label like "Офис:"
   loc = loc.replace(/\s+/g, ' ').trim();
   if (!/[\p{L}]/u.test(loc) && afterTok.length) loc = afterTok.filter((w) => !nameTok.includes(w)).join(' ').trim();
   out.locationText = loc;

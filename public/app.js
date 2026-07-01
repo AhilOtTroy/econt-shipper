@@ -29,6 +29,8 @@ const I18N = {
     set_defaults: 'Настройки по подразбиране', receiver: 'Получател', sender: 'Подател', set_cod_default: 'Наложен платеж по подразбиране',
     refresh_offices: 'Обнови офисите', save: 'Запази',
     paste_label: 'Поставете съобщението на клиента', paste_ph: 'Моля да ги изпратите в Офис на еконт: …  Име – 08xx xxx xxx', paste_hint: 'Съвет: Ctrl+Enter за преглед',
+    img_cta: 'Снимка → товарителница', img_hint: 'Пуснете, поставете или изберете снимка на чата', or_paste: 'или поставете текста',
+    ocr_loading: 'Подготовка на четеца…', ocr_reading: 'Разчитане на снимката… {p}%', ocr_empty: 'Не открих текст в снимката. Опитайте по-ясна снимка.', ocr_fail: 'Неуспешно разчитане. Поставете текста ръчно.',
     clear: 'Изчисти', preview: 'Преглед →', prev_h: 'Проверете и потвърдете', recipient: 'Име на получателя', deliver_office: 'Доставка до офис',
     wrong_office: 'грешен офис? търсене по име/град…', search_btn: 'Търси', description: 'Описание', pays: 'Плаща',
     cod: 'Нал. платеж', amount: 'сума', recalc: 'Преизчисли', create_btn: '✓ Създай товарителница',
@@ -79,6 +81,8 @@ const I18N = {
     set_defaults: 'Default options', receiver: 'Receiver', sender: 'Sender', set_cod_default: 'COD on by default',
     refresh_offices: 'Refresh offices', save: 'Save',
     paste_label: "Paste the customer's message", paste_ph: 'Моля да ги изпратите в Офис на еконт: …  Name – 08xx xxx xxx', paste_hint: 'Tip: Ctrl+Enter to preview',
+    img_cta: 'Screenshot → label', img_hint: 'Drop, paste or pick a screenshot of the chat', or_paste: 'or paste the text',
+    ocr_loading: 'Preparing the reader…', ocr_reading: 'Reading the screenshot… {p}%', ocr_empty: 'No text found in the image. Try a clearer screenshot.', ocr_fail: 'Could not read it. Paste the text manually.',
     clear: 'Clear', preview: 'Preview →', prev_h: 'Check & confirm', recipient: 'Recipient name', deliver_office: 'Deliver to office',
     wrong_office: 'wrong office? search by name/city…', search_btn: 'Search', description: 'Description', pays: 'Pays',
     cod: 'COD', amount: 'amount', recalc: 'Recalculate', create_btn: '✓ Create shipment number',
@@ -410,6 +414,81 @@ async function doCreate() {
 }
 $('clearBtn').onclick = () => { $('msg').value = ''; $('preview').classList.add('hide'); $('result').classList.add('hide'); };
 $('parseBtn').onclick = doParse;
+
+// ---------- screenshot → text (client-side OCR, nothing leaves the device) ----------
+let _tessLoad = null;
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve(window.Tesseract);
+  if (_tessLoad) return _tessLoad;
+  _tessLoad = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+    s.onload = () => resolve(window.Tesseract);
+    s.onerror = () => { _tessLoad = null; reject(new Error('ocr-load-failed')); };
+    document.head.appendChild(s);
+  });
+  return _tessLoad;
+}
+// Isolate the customer's message from a full-chat screenshot: start at the greeting
+// so the listing header/price above it (a false COD) is excluded from parsing.
+function isolateMessage(text) {
+  const m = String(text).match(/(здравей\S*|здрасти|привет|добър\s+ден|добро\s+утро|\bhello\b|\bhi\b)/i);
+  return m ? text.slice(m.index) : text;
+}
+// Best-effort listing description: the longest multi-word line before the greeting,
+// trimmed at a dash/comma and stripped of a trailing price.
+function guessDescription(text) {
+  const stop = /здравей|привет|\bhello\b|\bhi\b/i;
+  let best = '';
+  for (const raw of String(text).split(/\n+/)) {
+    const line = raw.trim();
+    if (stop.test(line)) break;
+    if (line.split(/\s+/).length < 2) continue;
+    if (line.length > best.length) best = line;
+  }
+  if (!best) return '';
+  let d = best.split(/[—–,|]/)[0].trim();
+  d = d.replace(/\s*\d+[.,]?\d*\s*(лв\.?|bgn|eur|€)\b.*$/i, '').trim();
+  return d.slice(0, 40);
+}
+async function runOCR(file) {
+  if (!file || !/^image\//.test(file.type || '')) return;
+  const box = $('ocrBox'), msgEl = $('ocrMsg');
+  $('parseErr').textContent = '';
+  box.classList.remove('hide'); msgEl.textContent = t('ocr_loading');
+  try {
+    const T = await loadTesseract();
+    const { data } = await T.recognize(file, 'bul+eng', {
+      logger: (m) => { if (m && m.status === 'recognizing text') msgEl.textContent = t('ocr_reading', { p: Math.round((m.progress || 0) * 100) }); },
+    });
+    const text = ((data && data.text) || '').replace(/[ \t]+\n/g, '\n').trim();
+    box.classList.add('hide');
+    if (!text) { $('parseErr').textContent = t('ocr_empty'); return; }
+    const desc = guessDescription(text);
+    $('msg').value = isolateMessage(text);
+    await doParse();
+    // The product from the screenshot is the most relevant description for this parcel.
+    if (desc) { $('pDesc').value = desc; if (!$('preview').classList.contains('hide')) doPreview(); }
+  } catch (e) {
+    box.classList.add('hide');
+    $('parseErr').textContent = t('ocr_fail');
+  }
+}
+(function initOCRInputs() {
+  const drop = $('imgDrop'), input = $('imgInput');
+  if (!drop || !input) return;
+  drop.onclick = (e) => { if (e.target !== input) input.click(); };
+  input.onchange = () => { const f = input.files && input.files[0]; if (f) runOCR(f); input.value = ''; };
+  ['dragover', 'dragenter'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('drag'); }));
+  ['dragleave', 'dragend'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('drag'); }));
+  drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('drag'); const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) runOCR(f); });
+  // Paste a screenshot anywhere while the New tab is open.
+  document.addEventListener('paste', (e) => {
+    if ($('view-app').classList.contains('hide') || $('tab-new').classList.contains('hide')) return;
+    const items = (e.clipboardData && e.clipboardData.items) || [];
+    for (const it of items) { if (it.type && it.type.startsWith('image/')) { const f = it.getAsFile(); if (f) { e.preventDefault(); runOCR(f); return; } } }
+  });
+})();
 $('recalcBtn').onclick = doPreview;
 $('pReviewMode').onchange = doPreview;
 $('createBtn').onclick = doCreate;
