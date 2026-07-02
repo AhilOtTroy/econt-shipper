@@ -9,10 +9,10 @@ const PKEY = 'econt_parcels';
 // Shown on the About page and in the © footer. Fill in your real handles —
 // empty fields are simply hidden, so the page always looks complete.
 const CREATOR = {
-  name: '',                              // your public name (© line + About page)
-  instagram: '',                         // instagram username, without @
-  facebook: '',                          // facebook username or full profile URL
-  email: 'savovaborana38@gmail.com',     // public contact email
+  name: 'Ivan Manastirsky',              // public name (© line + About page)
+  instagram: 'ivnmky',                   // instagram username, without @
+  facebook: 'https://www.facebook.com/profile.php?id=100022967482779',
+  email: 'contact@ivanmanastirsky.xyz',  // public contact email
   paypal: '',                            // paypal.me handle → https://paypal.me/<handle>
   buymeacoffee: '',                      // buymeacoffee.com handle
   revolut: '',                           // revolut.me handle
