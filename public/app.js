@@ -35,6 +35,9 @@ const I18N = {
     wrong_office: 'грешен офис? търсене по име/град…', search_btn: 'Търси', description: 'Описание', pays: 'Плаща',
     cod: 'Нал. платеж', amount: 'сума', recalc: 'Преизчисли', create_btn: '✓ Създай товарителница',
     res_h: 'Товарителницата е създадена', copy: 'Копирай номера', label_pdf: '🖨 Етикет PDF', view_in_profile: '👤 Виж в профила', new: '+ Нова',
+    reply_copy: '📋 Отговор за клиента', reply_copied: 'Отговорът е копиран ✓', track_link: '🔎 Проследи',
+    reply_template: 'Готово! 📦 Пратката е подадена.\nТоварителница: {num}\nПроследяване: {url}\nНа гише отваряш, проверяваш и плащаш само ако всичко е наред.',
+    match_high: '✓ сигурно съвпадение', match_mid: 'вероятно съвпадение', match_lo: '⚠ провери офиса',
     parcels_h: 'Вашите пратки', parcels_refresh: 'Обнови', parcels_note: 'Показва пратките, създадени през това приложение, с актуален статус от Еконт.',
     parcels_empty: 'Все още няма пратки тук. Създайте първата от раздел „Нова“.', exp_delivery: 'Очаквана доставка', collected: 'Събрано НП',
     track_events: 'Проследяване', reprint: 'Етикет', copied: 'Копирано ✓', need_desc: 'Описанието е задължително за колетни пратки.',
@@ -87,6 +90,9 @@ const I18N = {
     wrong_office: 'wrong office? search by name/city…', search_btn: 'Search', description: 'Description', pays: 'Pays',
     cod: 'COD', amount: 'amount', recalc: 'Recalculate', create_btn: '✓ Create shipment number',
     res_h: 'Shipment created', copy: 'Copy number', label_pdf: '🖨 Label PDF', view_in_profile: '👤 View in profile', new: '+ New',
+    reply_copy: '📋 Customer reply', reply_copied: 'Reply copied ✓', track_link: '🔎 Track',
+    reply_template: 'Done! 📦 Your parcel is on its way.\nTracking number: {num}\nTrack it: {url}\nAt the counter you can open, check and pay only if everything is fine.',
+    match_high: '✓ strong match', match_mid: 'likely match', match_lo: '⚠ check the office',
     parcels_h: 'Your parcels', parcels_refresh: 'Refresh', parcels_note: 'Shows parcels created through this app, with live status from Econt.',
     parcels_empty: 'No parcels yet. Create your first from the New tab.', exp_delivery: 'Expected delivery', collected: 'COD collected',
     track_events: 'Tracking', reprint: 'Label', copied: 'Copied ✓', need_desc: 'Description is required for parcels.',
@@ -196,6 +202,10 @@ const creds = () => ({ mode: CONFIG.mode, username: CONFIG.username, password: S
 // Official e-Econt account ("profile") URL for the active environment, so the
 // user can log in and confirm the shipment really landed in their account.
 const econtProfileUrl = () => (CONFIG.mode === 'production' ? 'https://ee.econt.com/' : 'https://demo.econt.com/ee/');
+// Public tracking page for a shipment number (locale-aware), for seller + customer.
+const econtTrackUrl = (num) => `https://www.econt.com/${LANG === 'en' ? 'en/' : ''}services/track-shipment/${encodeURIComponent(String(num))}`;
+// Ready-to-send reply for the customer: number + tracking link + counter note.
+const buildReply = (num) => t('reply_template', { num, url: econtTrackUrl(num) });
 const api = async (path, body) => (await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })).json();
 function officeLabel(c) { return `${c.name} — ${c.address}${c.city ? ', ' + c.city : ''}${c.postCode ? ' (' + c.postCode + ')' : ''}`; }
 async function fillOfficeSelect(sel, q, credsObj) {
@@ -333,7 +343,7 @@ async function doParse(ev) {
     if (r.officesError) sel.innerHTML = `<option value="">${esc(t('office_err', { err: r.officesError }))}</option>`;
     else if (!CANDIDATES.length) sel.innerHTML = `<option value="">${esc(t('no_match', { q: p.locationText }))}</option>`;
     else for (const c of CANDIDATES) { const o = document.createElement('option'); o.value = c.code; o.textContent = officeLabel(c); sel.appendChild(o); }
-    $('officeHint').innerHTML = CONFIG.mode === 'demo' ? t('demo_hint') : '';
+    renderOfficeHint();
     const d = CONFIG.defaults;
     $('pWeight').value = d.weight ?? 1; $('pDesc').value = d.shipmentDescription || '';
     $('pPayer').value = d.payer || 'receiver';
@@ -386,8 +396,41 @@ function showPrice(resp) {
   const cur = st.totalPriceCurrency || st.currency || $('pCodCur').value || 'EUR';
   return total != null ? t('est_price', { v: Number(total).toFixed(2), cur }) : t('validated');
 }
+function currentReviewMode() { return reviewAnchor(CONFIG.defaults) || $('pReviewMode').value || 'none'; }
+// One-glance confirmation chip-line so the user verifies the whole shipment in ~1s.
+function updateSummary() {
+  const name = $('pName').value.trim();
+  const opt = $('pOffice').selectedOptions[0];
+  const office = opt && $('pOffice').value ? opt.textContent.split(' — ')[0] : '';
+  const cod = $('pCodOn').checked && Number($('pCodAmount').value) > 0 ? `${Number($('pCodAmount').value)} ${$('pCodCur').value}` : '';
+  const rl = reviewLabel(currentReviewMode());
+  const parts = [];
+  if (name) parts.push(`<b>${esc(name)}</b>`);
+  if (office) parts.push(`📍 ${esc(office)}`);
+  if (cod) parts.push(`💰 ${esc(cod)}`);
+  if (rl) parts.push(`👁 ${esc(rl)}`);
+  const box = $('prevSummary');
+  if (parts.length) { box.innerHTML = parts.join('<span class="dot-sep">·</span>'); box.classList.remove('hide'); }
+  else box.classList.add('hide');
+}
+// Confidence that the auto-picked office is right, from the match score.
+function officeMatchHint() {
+  if (!CANDIDATES.length || !$('pOffice').value) return '';
+  const top = CANDIDATES[0].score || 0;
+  const onTop = $('pOffice').value === String(CANDIDATES[0].code);
+  if (onTop && top >= 12) return `<span class="match match-hi">${t('match_high')}</span>`;
+  if (top >= 6) return `<span class="match match-mid">${t('match_mid')}</span>`;
+  return `<span class="match match-lo">${t('match_lo')}</span>`;
+}
+function renderOfficeHint() {
+  const hints = [];
+  if (CONFIG.mode === 'demo') hints.push(t('demo_hint'));
+  const mh = officeMatchHint(); if (mh) hints.push(mh);
+  $('officeHint').innerHTML = hints.join(' ');
+}
 async function doPreview(ev) {
   $('previewErr').textContent = '';
+  updateSummary(); renderOfficeHint();
   const o = gatherOverrides();
   if (!o.officeCode) { $('priceBox').textContent = ''; $('previewErr').textContent = t('pick_office'); return; }
   const btn = ev && ev.currentTarget && ev.currentTarget.id === 'recalcBtn' ? $('recalcBtn') : null;
@@ -417,6 +460,7 @@ async function doCreate() {
     const pdf = st.pdfURL;
     if (pdf) { $('pdfLink').href = pdf; $('pdfLink').style.display = ''; } else { $('pdfLink').style.display = 'none'; }
     $('profileLink').href = econtProfileUrl();
+    if (st.shipmentNumber) { $('trackLink').href = econtTrackUrl(num); $('trackLink').style.display = ''; } else { $('trackLink').style.display = 'none'; }
     $('resultMeta').textContent = st.totalPrice != null ? t('price_label', { v: Number(st.totalPrice).toFixed(2), cur: st.totalPriceCurrency || $('pCodCur').value || 'EUR' }) : '';
     if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, office: o.officeCode, weight: o.weight, description: o.description, cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
     $('preview').classList.add('hide'); $('result').classList.remove('hide');
@@ -507,7 +551,15 @@ $('createBtn').onclick = doCreate;
 $('officeSearchBtn').onclick = async () => { await fillOfficeSelect($('pOffice'), $('officeSearch').value, creds()); doPreview(); };
 $('pOffice').onchange = () => doPreview();
 $('copyBtn').onclick = () => { navigator.clipboard.writeText($('shipNum').textContent); toast(t('copied')); };
+$('replyBtn').onclick = async () => {
+  const num = $('shipNum').textContent.trim(); if (!num) return;
+  try { await navigator.clipboard.writeText(buildReply(num)); } catch (e) {}
+  toast(t('reply_copied'));
+};
 $('newBtn').onclick = () => { $('msg').value = ''; $('result').classList.add('hide'); $('preview').classList.add('hide'); $('msg').focus(); };
+// Instant: pasting the message auto-parses (no extra click). Live summary follows edits.
+$('msg').addEventListener('paste', () => setTimeout(() => { if ($('msg').value.trim()) doParse(); }, 60));
+['pName', 'pCodOn', 'pCodAmount', 'pCodCur'].forEach((id) => $(id).addEventListener('input', updateSummary));
 
 // ---------- parcels (live status + operation timer) ----------
 const toMs = (v) => { if (v == null) return null; let n = Number(v); if (!n) return null; if (n < 1e12) n *= 1000; return n; };
@@ -565,6 +617,7 @@ function parcelCardHTML(p) {
     <div class="parcel-timer t-muted" data-timer></div>
     <div class="parcel-row">
       <button data-copy>${t('copy')}</button>
+      <a href="${esc(econtTrackUrl(p.number))}" target="_blank" rel="noopener"><button class="ghost">${t('track_link')}</button></a>
       <a data-pdf hidden target="_blank"><button class="ghost">${t('reprint')}</button></a>
       <button class="ghost" data-toggle>${t('details')}</button>
     </div>
