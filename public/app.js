@@ -5,6 +5,19 @@ const $q = (sel) => document.querySelector(sel);
 const KEY = 'econt_shipper_v1';
 const PKEY = 'econt_parcels';
 
+// ===================== creator / credits =====================
+// Shown on the About page and in the © footer. Fill in your real handles —
+// empty fields are simply hidden, so the page always looks complete.
+const CREATOR = {
+  name: '',                              // your public name (© line + About page)
+  instagram: '',                         // instagram username, without @
+  facebook: '',                          // facebook username or full profile URL
+  email: 'savovaborana38@gmail.com',     // public contact email
+  paypal: '',                            // paypal.me handle → https://paypal.me/<handle>
+  buymeacoffee: '',                      // buymeacoffee.com handle
+  revolut: '',                           // revolut.me handle
+};
+
 // ===================== i18n =====================
 const I18N = {
   bg: {
@@ -34,7 +47,8 @@ const I18N = {
     clear: 'Изчисти', preview: 'Преглед →', prev_h: 'Проверете и потвърдете', recipient: 'Име на получателя', deliver_office: 'Доставка до офис',
     wrong_office: 'грешен офис? търсене по име/град…', search_btn: 'Търси', description: 'Описание', pays: 'Плаща',
     cod: 'Нал. платеж', amount: 'сума', recalc: 'Преизчисли', create_btn: '✓ Създай товарителница',
-    res_h: 'Товарителницата е създадена', copy: 'Копирай номера', label_pdf: '🖨 Етикет PDF', view_in_profile: '👤 Виж в профила', new: '+ Нова',
+    res_h: 'Товарителницата е създадена', copy: 'Копирай номера', label_pdf: '🖨 Етикет PDF', view_in_profile: 'Виж в профила', new: '+ Нова',
+    dd_site: 'econt.com', dd_site_sub: 'Официалният сайт на Еконт', dd_profile: 'e-Econt профил', dd_profile_sub: 'Пратките във вашия акаунт',
     reply_copy: '📋 Отговор за клиента', reply_copied: 'Отговорът е копиран ✓', track_link: '🔎 Проследи',
     reply_template: 'Готово! 📦 Пратката е подадена.\nТоварителница: {num}\nПроследяване: {url}\nНа гише отваряш, проверяваш и плащаш само ако всичко е наред.',
     match_high: '✓ сигурно съвпадение', match_mid: 'вероятно съвпадение', match_lo: '⚠ провери офиса',
@@ -61,6 +75,18 @@ const I18N = {
     wrong_pin: 'Грешен PIN.', forget_confirm: 'Да премахна ли запазения Еконт вход и настройки от това устройство?',
     refreshing: 'Обновяване…', offices_loaded: 'Заредени {n} офиса ✓', searching: 'търсене…', no_matches: 'няма резултати',
     no_number: '(няма върнат номер)', econt_prefix: 'Еконт: ', error_prefix: 'Грешка: ',
+    land_trust: 'Безплатно · Без сървърна регистрация · Данните остават при вас',
+    step1_t: 'Постави', step1_s: 'съобщението от клиента', step2_t: 'Провери', step2_s: 'име, офис и цена', step3_t: 'Изпрати', step3_s: 'готов номер за секунди',
+    about_sub: 'Съобщение → товарителница. Направено с грижа, за да ви спестява време всеки ден.',
+    about_app_h: 'Полезно да знаете',
+    about_app_p: 'Приложението превръща съобщението на клиента в готова товарителница във вашия Еконт акаунт. Реален и демо режим, евро и лева, наложен платеж, опция „Преглед“, снимка → пратка и живо проследяване.',
+    about_priv: 'Поверителност: входът ви за Еконт остава на вашето устройство, криптиран с PIN. Няма база данни, няма следене, няма реклами.',
+    about_free: 'Безплатно за всички податели в Еконт.',
+    about_creator_h: 'Създател', about_creator_role: 'Идея, дизайн и разработка',
+    donate_h: '☕ Подкрепи проекта',
+    donate_p: 'Econt Shipper е безплатен и без реклами. Ако днес ти спести няколко минути — почерпи ме едно кафе. Отнема 30 секунди, държи сървъра включен и новите функции идват по-бързо. 💙',
+    donate_setup: 'Линковете за дарения се добавят съвсем скоро.',
+    about_back: '← Назад', footer_about: 'За приложението · Контакти · Подкрепа', rights: 'Всички права запазени.',
   },
   en: {
     land_pill: 'Econt, simplified', land_title: 'A message in. A label out.',
@@ -89,7 +115,8 @@ const I18N = {
     clear: 'Clear', preview: 'Preview →', prev_h: 'Check & confirm', recipient: 'Recipient name', deliver_office: 'Deliver to office',
     wrong_office: 'wrong office? search by name/city…', search_btn: 'Search', description: 'Description', pays: 'Pays',
     cod: 'COD', amount: 'amount', recalc: 'Recalculate', create_btn: '✓ Create shipment number',
-    res_h: 'Shipment created', copy: 'Copy number', label_pdf: '🖨 Label PDF', view_in_profile: '👤 View in profile', new: '+ New',
+    res_h: 'Shipment created', copy: 'Copy number', label_pdf: '🖨 Label PDF', view_in_profile: 'View in profile', new: '+ New',
+    dd_site: 'econt.com', dd_site_sub: 'Official Econt website', dd_profile: 'e-Econt profile', dd_profile_sub: 'Shipments in your account',
     reply_copy: '📋 Customer reply', reply_copied: 'Reply copied ✓', track_link: '🔎 Track',
     reply_template: 'Done! 📦 Your parcel is on its way.\nTracking number: {num}\nTrack it: {url}\nAt the counter you can open, check and pay only if everything is fine.',
     match_high: '✓ strong match', match_mid: 'likely match', match_lo: '⚠ check the office',
@@ -116,6 +143,18 @@ const I18N = {
     wrong_pin: 'Wrong PIN.', forget_confirm: 'Remove your saved Econt login and settings from this device?',
     refreshing: 'Refreshing…', offices_loaded: 'Loaded {n} offices ✓', searching: 'searching…', no_matches: 'no matches',
     no_number: '(no number returned)', econt_prefix: 'Econt: ', error_prefix: 'Error: ',
+    land_trust: 'Free · No server accounts · Your data stays with you',
+    step1_t: 'Paste', step1_s: "the customer's message", step2_t: 'Check', step2_s: 'name, office and price', step3_t: 'Send', step3_s: 'a ready number in seconds',
+    about_sub: 'A message in, a label out. Built with care to save you time every day.',
+    about_app_h: 'Good to know',
+    about_app_p: "The app turns a customer's message into a ready shipment label in your Econt account. Production and demo modes, euro and leva, cash-on-delivery, the Review option, screenshot → parcel and live tracking.",
+    about_priv: 'Privacy: your Econt login stays on your device, encrypted with a PIN. No database, no tracking, no ads.',
+    about_free: 'Free for every Econt sender.',
+    about_creator_h: 'Creator', about_creator_role: 'Idea, design & development',
+    donate_h: '☕ Support the project',
+    donate_p: 'Econt Shipper is free and ad-free. If it saved you a few minutes today — buy me a coffee. It takes 30 seconds, keeps the server running and brings new features faster. 💙',
+    donate_setup: 'Donation links are coming very soon.',
+    about_back: '← Back', footer_about: 'About · Contact · Support', rights: 'All rights reserved.',
   },
 };
 let LANG = ['bg', 'en'].includes(localStorage.getItem('econt_lang')) ? localStorage.getItem('econt_lang') : 'bg';
@@ -135,10 +174,13 @@ function applyLang() {
   document.querySelectorAll('[data-i18n-ph]').forEach((el) => { const k = el.getAttribute('data-i18n-ph'); if (dict[k] != null) el.placeholder = dict[k]; });
   $('langBg').classList.toggle('active', LANG === 'bg');
   $('langEn').classList.toggle('active', LANG === 'en');
+  $('footerCopy').textContent = `© ${new Date().getFullYear()} ${CREATOR.name || 'Econt Shipper'}`;
+  $('footerAbout').textContent = dict.footer_about || I18N.en.footer_about;
 }
 function setLang(l) {
   LANG = l; localStorage.setItem('econt_lang', l); applyLang();
   if (!$('tab-parcels').classList.contains('hide')) openParcels();
+  if (!$('view-about').classList.contains('hide')) renderAbout();
   // Refresh dynamically-generated strings in an open preview so they follow the language.
   if (!$('view-app').classList.contains('hide') && !$('preview').classList.contains('hide')) { applyReviewUI(); doPreview(); }
 }
@@ -197,7 +239,7 @@ const saveParcels = (a) => localStorage.setItem(PKEY, JSON.stringify(a.slice(0, 
 const addParcel = (p) => { const a = loadParcels(); a.unshift(p); saveParcels(a); };
 
 // ---------- views ----------
-function show(view) { for (const v of ['landing', 'setup', 'lock', 'app']) $('view-' + v).classList.toggle('hide', v !== view); }
+function show(view) { for (const v of ['landing', 'setup', 'lock', 'app', 'about']) $('view-' + v).classList.toggle('hide', v !== view); }
 const creds = () => ({ mode: CONFIG.mode, username: CONFIG.username, password: SESSION.password });
 // Official e-Econt account ("profile") URL for the active environment, so the
 // user can log in and confirm the shipment really landed in their account.
@@ -670,6 +712,42 @@ $('trackNumBtn').onclick = () => {
   $('trackNumInput').value = '';
   openParcels();
 };
+
+// ---------- about / credits page ----------
+const fbUrl = (v) => (/^https?:/i.test(v) ? v : 'https://facebook.com/' + v);
+function donateBtn(url, label, primary) {
+  return `<a class="donate-btn" target="_blank" rel="noopener noreferrer" href="${esc(url)}"><button class="${primary ? 'primary' : 'ghost'}" type="button">${label}</button></a>`;
+}
+function renderAbout() {
+  const name = CREATOR.name || 'Econt Shipper';
+  $('creatorName').textContent = name;
+  $('creatorAvatar').textContent = name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+  const s = [];
+  if (CREATOR.instagram) s.push(`<a class="social" target="_blank" rel="noopener noreferrer" href="https://instagram.com/${esc(CREATOR.instagram)}">📸 Instagram</a>`);
+  if (CREATOR.facebook) s.push(`<a class="social" target="_blank" rel="noopener noreferrer" href="${esc(fbUrl(CREATOR.facebook))}">📘 Facebook</a>`);
+  if (CREATOR.email) s.push(`<a class="social" href="mailto:${esc(CREATOR.email)}">✉️ ${esc(CREATOR.email)}</a>`);
+  $('socialRow').innerHTML = s.join('');
+  const d = [];
+  if (CREATOR.buymeacoffee) d.push(donateBtn('https://buymeacoffee.com/' + encodeURIComponent(CREATOR.buymeacoffee), '☕ Buy Me a Coffee', true));
+  if (CREATOR.paypal) d.push(donateBtn('https://paypal.me/' + encodeURIComponent(CREATOR.paypal), '💙 PayPal', !d.length));
+  if (CREATOR.revolut) d.push(donateBtn('https://revolut.me/' + encodeURIComponent(CREATOR.revolut), '⚡ Revolut', !d.length));
+  $('donateRow').innerHTML = d.length ? d.join('') : `<span class="muted">${t('donate_setup')}</span>`;
+  $('copyLine').textContent = `© ${new Date().getFullYear()} ${name} · ${t('rights')}`;
+}
+let PREV_VIEW = 'landing';
+function openAbout() {
+  for (const v of ['landing', 'setup', 'lock', 'app']) if (!$('view-' + v).classList.contains('hide')) PREV_VIEW = v;
+  renderAbout(); show('about');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+$('footerAbout').onclick = (e) => { e.preventDefault(); openAbout(); };
+$('aboutBack').onclick = () => show(PREV_VIEW);
+
+// ---------- profile dropdown (econt.com / e-Econt) ----------
+$('profileBtn').onclick = (e) => { e.stopPropagation(); $('profileDD').classList.toggle('open'); };
+document.querySelectorAll('#profileDD .dd-menu a').forEach((a) => a.addEventListener('click', () => $('profileDD').classList.remove('open')));
+document.addEventListener('click', (e) => { const dd = $('profileDD'); if (dd && !dd.contains(e.target)) dd.classList.remove('open'); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('profileDD').classList.remove('open'); });
 
 // ---------- landing / language / enter-key ----------
 // ---------- theme (light / dark) ----------
