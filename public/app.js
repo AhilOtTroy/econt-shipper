@@ -744,7 +744,15 @@ $('footerAbout').onclick = (e) => { e.preventDefault(); openAbout(); };
 $('aboutBack').onclick = () => show(PREV_VIEW);
 
 // ---------- profile dropdown (econt.com / e-Econt) ----------
-$('profileBtn').onclick = (e) => { e.stopPropagation(); $('profileDD').classList.toggle('open'); };
+$('profileBtn').onclick = (e) => {
+  e.stopPropagation();
+  const dd = $('profileDD'); dd.classList.toggle('open');
+  // Anchor the menu to whichever side keeps it inside the viewport.
+  if (dd.classList.contains('open')) {
+    dd.classList.remove('flip');
+    if (dd.querySelector('.dd-menu').getBoundingClientRect().right > window.innerWidth - 8) dd.classList.add('flip');
+  }
+};
 document.querySelectorAll('#profileDD .dd-menu a').forEach((a) => a.addEventListener('click', () => $('profileDD').classList.remove('open')));
 document.addEventListener('click', (e) => { const dd = $('profileDD'); if (dd && !dd.contains(e.target)) dd.classList.remove('open'); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('profileDD').classList.remove('open'); });
