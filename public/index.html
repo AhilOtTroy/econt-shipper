@@ -61,7 +61,9 @@ try {
   ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--muted) 65%, transparent); border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
   ::selection { background: color-mix(in srgb, var(--brand-2) 28%, transparent); }
   :root[data-theme="dark"] ::selection { background: color-mix(in srgb, var(--brand-2) 42%, transparent); }
-  body { margin: 0; background: var(--bg); color: var(--ink); overflow-x: hidden;
+  /* Transparent so the fixed gradient-mesh (body::before, z-index:-2) shows through;
+     html carries --bg as the base colour (also fills the overscroll area). */
+  body { margin: 0; background: transparent; color: var(--ink); overflow-x: hidden;
     font: 16px/1.55 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
   /* Living gradient-mesh backdrop for depth. Pre-softened gradients (no filter blur):
      a 30px blur over a viewport-sized layer forced every glass surface above it to
@@ -192,7 +194,7 @@ try {
   .feat { display: flex; gap: 12px; align-items: center; margin: 14px 0; text-align: left; }
   .feat .tick { flex: none; width: 30px; height: 30px; border-radius: 10px; background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: var(--shadow-brand); }
 
-  .parcel { border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 12px; background: var(--card); box-shadow: var(--shadow); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+  .parcel { border: 1px solid transparent; border-radius: 16px; padding: 16px; margin-bottom: 12px; background: var(--card); box-shadow: var(--shadow); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); transition: transform .35s var(--ease), box-shadow .35s var(--ease);
     content-visibility: auto; contain-intrinsic-size: auto 150px; }
   @media (hover: hover) { .parcel:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); } }
   .parcel-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -262,7 +264,7 @@ try {
 
   /* Landing: 3-step strip */
   .steps { display: flex; gap: 10px; margin: 0 0 18px; }
-  .step { flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 12px; text-align: center; box-shadow: var(--shadow); transition: transform .35s var(--spring), box-shadow .35s; }
+  .step { flex: 1; background: var(--card); border: 1px solid transparent; border-radius: 16px; padding: 14px 12px; text-align: center; box-shadow: var(--shadow); transition: transform .35s var(--spring), box-shadow .35s; }
   @media (hover: hover) { .step:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); } }
   .step .s-ico { font-size: 24px; line-height: 1; filter: drop-shadow(0 4px 8px rgba(10,78,168,.25)); }
   .step b { display: block; font-size: 13.5px; margin-top: 8px; color: var(--ink); }
@@ -327,7 +329,6 @@ try {
   /* Phones: full-width action rows instead of ragged wraps; compact topbar. */
   @media (max-width: 480px) {
     .toolbar > button, .toolbar > a, .toolbar > .dd, .toolbar > .dd > button { flex: 1 1 auto; }
-    .toolbar > a { display: flex; }
     .toolbar > .dd > button { width: 100%; }
   }
   @media (max-width: 429px) { #infoBtn { display: none; } }
@@ -360,7 +361,7 @@ try {
     .wrap { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
   }
   @media (prefers-reduced-motion: reduce) {
-    *, body::before { animation: none !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
+    *, body::before, .primary::after, .go::after, #result::after { animation: none !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
     .tilt { transform: none !important; }
     html { scroll-behavior: auto; }
   }

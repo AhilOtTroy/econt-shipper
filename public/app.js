@@ -833,7 +833,7 @@ if (!('crypto' in window) || !crypto.subtle) {
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   let active = null, rect = null, raf = 0, lastEv = null;
-  const reset = () => { if (active) active.style.transform = ''; active = null; rect = null; };
+  const reset = () => { if (active) active.style.transform = ''; active = null; rect = null; lastEv = null; if (raf) { cancelAnimationFrame(raf); raf = 0; } };
   const apply = () => {
     raf = 0;
     const e = lastEv; if (!e) return;
