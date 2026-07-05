@@ -2,17 +2,31 @@
 <html lang="bg">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#003c80">
+<script>
+/* Stamp the theme before first paint — no light-theme flash for dark users. */
+try {
+  var _t = localStorage.getItem('econt_theme');
+  if (_t !== 'dark' && _t !== 'light') _t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', _t);
+} catch (e) {}
+</script>
 <link rel="manifest" href="/manifest.webmanifest">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://tessdata.projectnaptha.com" crossorigin>
+<link rel="dns-prefetch" href="https://tessdata.projectnaptha.com">
 <title>Econt — съобщение → товарителница</title>
 <style>
   :root {
+    color-scheme: light;
     --bg: #e9eef6; --bg-2: #dce6f3;
     --card: rgba(255,255,255,.72); --card-solid: #ffffff;
-    --field: rgba(255,255,255,.9); --ink: #0c1b30; --muted: #5c6b82;
+    --field: rgba(255,255,255,.9); --ink: #0c1b30; --muted: #52617a;
     --line: rgba(16,38,75,.10); --brand: #0a4ea8; --brand-2: #0a73d6; --brand-3: #46a6ff; --brand-soft: rgba(10,115,214,.12);
     --go: #1e9e57; --go-d: #16894a; --warn: #c0392b;
+    --ring-hi: rgba(255,255,255,.85); --ring-lo: rgba(16,38,75,.14);
     --shadow: 0 1px 2px rgba(13,27,46,.05), 0 10px 30px rgba(13,27,46,.09);
     --shadow-lg: 0 6px 16px rgba(13,27,46,.10), 0 30px 60px rgba(13,27,46,.16);
     --shadow-brand: 0 10px 26px rgba(10,115,214,.38);
@@ -20,11 +34,13 @@
     --radius: 20px; --radius-sm: 13px;
   }
   :root[data-theme="dark"] {
+    color-scheme: dark;
     --bg: #080c12; --bg-2: #0c131d;
     --card: rgba(22,30,42,.66); --card-solid: #161e2a;
     --field: rgba(16,24,35,.85); --ink: #e8eef7; --muted: #92a2b8;
     --line: rgba(255,255,255,.08); --brand: #3f8fe0; --brand-2: #5aa6ee; --brand-3: #7cc0ff; --brand-soft: rgba(90,166,238,.14);
     --go: #29b365; --go-d: #34c374; --warn: #ef6b6b;
+    --ring-hi: rgba(255,255,255,.22); --ring-lo: rgba(255,255,255,.05);
     --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.5);
     --shadow-lg: 0 6px 16px rgba(0,0,0,.5), 0 30px 60px rgba(0,0,0,.6);
     --shadow-brand: 0 10px 26px rgba(10,80,170,.5);
@@ -37,17 +53,28 @@
   :root[data-theme="dark"] .t-amber { color: #f0b659; }
   :root[data-theme="dark"] #toast { background: #243244; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; background: var(--bg); overscroll-behavior-y: contain;
+    scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--muted) 40%, transparent); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--muted) 65%, transparent); border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
+  ::selection { background: color-mix(in srgb, var(--brand-2) 28%, transparent); }
+  :root[data-theme="dark"] ::selection { background: color-mix(in srgb, var(--brand-2) 42%, transparent); }
   body { margin: 0; background: var(--bg); color: var(--ink); overflow-x: hidden;
     font: 16px/1.55 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
-  /* Living gradient-mesh backdrop for depth */
-  body::before { content: ""; position: fixed; inset: -25%; z-index: -2; pointer-events: none;
+  /* Living gradient-mesh backdrop for depth. Pre-softened gradients (no filter blur):
+     a 30px blur over a viewport-sized layer forced every glass surface above it to
+     re-blur its backdrop each animation frame — visibly janky on mid-range phones. */
+  body::before { content: ""; position: fixed; inset: -12%; z-index: -2; pointer-events: none;
     background:
-      radial-gradient(38% 38% at 16% 18%, rgba(10,115,214,.22), transparent 62%),
-      radial-gradient(42% 42% at 86% 12%, rgba(70,166,255,.20), transparent 62%),
-      radial-gradient(46% 46% at 82% 88%, rgba(30,158,87,.14), transparent 62%),
-      radial-gradient(40% 40% at 10% 92%, rgba(10,78,168,.18), transparent 62%);
-    filter: blur(30px) saturate(1.1); animation: mesh 26s var(--ease) infinite alternate; }
+      radial-gradient(42% 42% at 16% 18%, rgba(10,115,214,.21), transparent 70%),
+      radial-gradient(46% 46% at 86% 12%, rgba(70,166,255,.19), transparent 70%),
+      radial-gradient(50% 50% at 82% 88%, rgba(30,158,87,.13), transparent 70%),
+      radial-gradient(44% 44% at 10% 92%, rgba(10,78,168,.17), transparent 70%);
+    will-change: transform; animation: mesh 26s var(--ease) infinite alternate; }
+  /* Phones/tablets: same mesh, static — saves continuous GPU blur + battery. */
+  @media (hover: none), (pointer: coarse) { body::before { animation: none; } }
   @keyframes mesh { from { transform: translate3d(0,0,0) rotate(0deg) scale(1); } to { transform: translate3d(0,-3%,0) rotate(3deg) scale(1.08); } }
   .wrap { max-width: 680px; margin: 0 auto; padding: 0 14px 90px; }
   .view.hide, .hide { display: none !important; }
@@ -57,8 +84,10 @@
   .topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; padding: 12px 8px; margin: 0 -8px 4px;
     background: var(--bg);
     background: color-mix(in srgb, var(--bg) 70%, transparent);
+    box-shadow: 0 1px 0 var(--line);
     -webkit-backdrop-filter: saturate(1.6) blur(16px); backdrop-filter: saturate(1.6) blur(16px); }
   .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--brand); letter-spacing: -.02em; text-decoration: none; cursor: pointer; transition: transform .35s var(--spring); }
+  .brand > span { white-space: nowrap; }
   .brand svg { border-radius: 8px; filter: drop-shadow(0 4px 8px rgba(10,78,168,.4)); }
   .brand:hover { transform: translateY(-1px); }
   .brand:active { transform: scale(.95); }
@@ -71,21 +100,43 @@
   .icon:active { transform: scale(.9); }
 
   button { font: inherit; font-weight: 600; cursor: pointer; border: 1px solid var(--line); background: var(--card-solid); color: var(--ink); border-radius: 13px; padding: 12px 18px;
-    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     transition: transform .3s var(--spring), box-shadow .3s var(--ease), background .2s, border-color .2s, color .2s; }
   @media (hover: hover) { button:hover { border-color: var(--brand-2); transform: translateY(-2px); box-shadow: var(--shadow); } }
   button:active { transform: translateY(0) scale(.97); }
-  .primary { background: linear-gradient(135deg, var(--brand-2), var(--brand)); border-color: transparent; color: #fff; font-weight: 700; box-shadow: var(--shadow-brand); }
-  @media (hover: hover) { .primary:hover { box-shadow: 0 14px 32px rgba(10,115,214,.45); } }
-  .go { background: linear-gradient(135deg, #24b568, var(--go-d)); border-color: transparent; color: #fff; font-weight: 800; box-shadow: 0 10px 26px rgba(30,158,87,.4); }
-  @media (hover: hover) { .go:hover { box-shadow: 0 14px 32px rgba(30,158,87,.5); } }
-  .ghost { background: var(--card); }
+  /* Lit-from-above key highlight + one-shot hover sheen on the two CTA styles. */
+  .primary { background: linear-gradient(135deg, var(--brand-2), var(--brand)); border-color: transparent; color: #fff; font-weight: 700; box-shadow: inset 0 1px 0 rgba(255,255,255,.25), var(--shadow-brand); position: relative; overflow: hidden; }
+  @media (hover: hover) { .primary:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 14px 32px rgba(10,115,214,.45); } }
+  .go { background: linear-gradient(135deg, #24b568, var(--go-d)); border-color: transparent; color: #fff; font-weight: 800; box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 10px 26px rgba(30,158,87,.4); position: relative; overflow: hidden; }
+  @media (hover: hover) { .go:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 14px 32px rgba(30,158,87,.5); } }
+  .primary::after, .go::after { content: ""; position: absolute; inset: 0; pointer-events: none; transform: translateX(-130%) skewX(-18deg);
+    background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.35) 50%, transparent 65%); }
+  @media (hover: hover) { .primary:hover::after, .go:hover::after { animation: sheen .65s var(--ease); } }
+  @keyframes sheen { to { transform: translateX(130%) skewX(-18deg); } }
+  .ghost { background: var(--card); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  /* Link styled as a button — replaces invalid <a><button> nesting (one tab stop, one announced role). */
+  .btnlink { display: inline-block; font: inherit; font-weight: 600; text-decoration: none; text-align: center; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 13px; padding: 12px 18px;
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    transition: transform .3s var(--spring), box-shadow .3s var(--ease), border-color .2s, color .2s; }
+  @media (hover: hover) { .btnlink:hover { border-color: var(--brand-2); transform: translateY(-2px); box-shadow: var(--shadow); color: var(--ink); } }
+  .btnlink:active { transform: translateY(0) scale(.97); }
+  .btnlink[hidden] { display: none; }
   .block { width: 100%; }
   button:disabled { opacity: .5; cursor: default; transform: none !important; box-shadow: none !important; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
   .card { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow);
     -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
     transition: transform .4s var(--ease), box-shadow .4s var(--ease); transform-style: preserve-3d; }
   @media (hover: hover) { .card:hover { box-shadow: var(--shadow-lg); } }
+  /* Gradient hairline ring — light catches the top edge of the glass. */
+  .card, .parcel, .step { border-color: transparent; position: relative; }
+  .card::before, .parcel::before, .step::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(170deg, var(--ring-hi), var(--ring-lo) 40%, var(--ring-lo));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
   .tilt { will-change: transform; transition: transform .25s var(--ease), box-shadow .4s var(--ease); }
   textarea { min-height: 120px; resize: vertical; }
   textarea, input, select { width: 100%; background: var(--field); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 13px 14px; font: inherit; outline: none; transition: border-color .2s, box-shadow .25s var(--ease); }
@@ -98,16 +149,20 @@
   .muted { color: var(--muted); font-size: 13.5px; }
   .err { color: var(--warn); white-space: pre-wrap; font-size: 13.5px; margin-top: 8px; }
   .good { color: var(--go-d); font-size: 13.5px; margin-top: 8px; font-weight: 600; }
-  .ok-num { font-size: 32px; font-weight: 900; letter-spacing: .5px; word-break: break-all; color: var(--brand); }
+  .ok-num { font-size: 32px; font-weight: 900; letter-spacing: .5px; word-break: break-all; color: var(--brand);
+    background: linear-gradient(135deg, var(--brand-2), var(--brand-3)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   .price { font-size: 24px; font-weight: 800; color: var(--brand); }
   a { color: var(--brand-2); }
   .toolbar { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
   h2 { font-size: 21px; margin: 0 0 6px; letter-spacing: -.01em; }
   h3 { margin: 2px 0 4px; font-size: 12px; color: var(--brand); text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
+  h1, h2 { text-wrap: balance; }
+  .hero p, .muted, .parcel-sub { text-wrap: pretty; }
+  .ok-num, .price, .parcel-num, .pin, .drow .v { font-variant-numeric: tabular-nums; }
   hr { border: none; border-top: 1px solid var(--line); margin: 16px 0; }
   .pin { letter-spacing: 10px; text-align: center; font-size: 26px; font-weight: 700; }
   .badge { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 800; }
-  .badge.demo { background: #fff4d6; color: #9a6700; }
+  .badge.demo { background: #fff4d6; color: #7a5200; }
   .badge.production { background: #def5e6; color: var(--go-d); }
   .step-no { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-weight: 800; font-size: 12px; margin-right: 6px; }
 
@@ -137,7 +192,8 @@
   .feat { display: flex; gap: 12px; align-items: center; margin: 14px 0; text-align: left; }
   .feat .tick { flex: none; width: 30px; height: 30px; border-radius: 10px; background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: var(--shadow-brand); }
 
-  .parcel { border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 12px; background: var(--card); box-shadow: var(--shadow); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); transition: transform .35s var(--ease), box-shadow .35s var(--ease); }
+  .parcel { border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 12px; background: var(--card); box-shadow: var(--shadow); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+    content-visibility: auto; contain-intrinsic-size: auto 150px; }
   @media (hover: hover) { .parcel:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); } }
   .parcel-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .parcel-num { min-width: 0; }
@@ -148,10 +204,10 @@
   .parcel-sub { color: var(--ink); font-size: 13.5px; margin-top: 6px; }
   .parcel-meta { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
   .parcel-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-  .parcel-row button { padding: 7px 12px; font-size: 13px; }
+  .parcel-row button, .parcel-row .btnlink { padding: 7px 12px; font-size: 13px; }
   .parcel-timer { margin-top: 8px; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
   .parcel-timer .clk { font-variant-numeric: tabular-nums; letter-spacing: .3px; }
-  .t-blue { color: var(--brand); } .t-green { color: var(--go-d); } .t-amber { color: #9a6700; } .t-muted { color: var(--muted); font-weight: 600; }
+  .t-blue { color: var(--brand); } .t-green { color: var(--go-d); } .t-amber { color: #7a5200; } .t-muted { color: var(--muted); font-weight: 600; }
   .details { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
   .drow { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; padding: 3px 0; }
   .drow .k { color: var(--muted); flex: none; } .drow .v { color: var(--ink); text-align: right; font-weight: 600; word-break: break-word; }
@@ -174,7 +230,7 @@
   .match { display: inline-block; font-size: 11.5px; font-weight: 800; padding: 2px 9px; border-radius: 999px; margin-left: 4px; }
   .match-hi { background: #def5e6; color: var(--go-d); }
   .match-mid { background: var(--brand-soft); color: var(--brand); }
-  .match-lo { background: #fff4d6; color: #9a6700; }
+  .match-lo { background: #fff4d6; color: #7a5200; }
   :root[data-theme="dark"] .match-hi { background: #16331f; color: #57d98a; }
   :root[data-theme="dark"] .match-lo { background: #3a2d12; color: #f4c463; }
 
@@ -196,8 +252,9 @@
   /* Dropdown menu (profile → econt.com / e-Econt) */
   .dd { position: relative; display: inline-block; }
   .dd .caret { font-size: 10px; opacity: .65; margin-left: 2px; }
-  .dd-menu { position: absolute; bottom: calc(100% + 8px); left: 0; min-width: 240px; background: var(--card-solid); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-lg); padding: 6px; z-index: 40; opacity: 0; transform: translateY(6px) scale(.97); transform-origin: bottom left; pointer-events: none; transition: opacity .25s var(--ease), transform .3s var(--spring); }
-  .dd.open .dd-menu { opacity: 1; transform: none; pointer-events: auto; }
+  .dd-menu { position: absolute; bottom: calc(100% + 8px); left: 0; min-width: 240px; background: var(--card-solid); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-lg); padding: 6px; z-index: 40; opacity: 0; transform: translateY(6px) scale(.97); transform-origin: bottom left; pointer-events: none; visibility: hidden;
+    transition: opacity .25s var(--ease), transform .3s var(--spring), visibility 0s linear .3s; }
+  .dd.open .dd-menu { opacity: 1; transform: none; pointer-events: auto; visibility: visible; transition-delay: 0s; }
   .dd.flip .dd-menu { left: auto; right: 0; transform-origin: bottom right; }
   .dd-menu a { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 10px; color: var(--ink); text-decoration: none; font-weight: 700; font-size: 14px; line-height: 1.3; transition: background .15s, color .15s; }
   .dd-menu a:hover { background: var(--brand-soft); color: var(--brand); }
@@ -219,10 +276,31 @@
   .socials { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
   .social { display: inline-flex; align-items: center; gap: 8px; padding: 10px 15px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); text-decoration: none; color: var(--ink); font-weight: 700; font-size: 13.5px; box-shadow: var(--shadow); transition: transform .3s var(--spring), box-shadow .3s, border-color .2s, color .2s; }
   .social:hover { transform: translateY(-2px); border-color: var(--brand-2); color: var(--brand); box-shadow: var(--shadow-lg); }
-  .donate-card { background: linear-gradient(160deg, var(--brand-soft), transparent 70%), var(--card); }
-  .donate-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-  .donate-btn { flex: 1; min-width: 150px; text-decoration: none; }
-  .donate-btn button { width: 100%; }
+
+  /* Landing entrance choreography — icon, pill, headline, copy, CTA, then steps. */
+  @keyframes riseIn { from { opacity: 0; transform: translateY(16px); } }
+  #view-landing .hero > * { animation: riseIn .55s var(--ease) both; }
+  #view-landing .hero > :nth-child(2) { animation-delay: .06s; }
+  #view-landing .hero > :nth-child(3) { animation-delay: .12s; }
+  #view-landing .hero > :nth-child(4) { animation-delay: .18s; }
+  #view-landing .hero > :nth-child(5) { animation-delay: .24s; }
+  #view-landing .hero > :nth-child(6) { animation-delay: .30s; }
+  #view-landing .steps .step { animation: riseIn .5s var(--ease) both; }
+  #view-landing .steps .step:nth-child(1) { animation-delay: .30s; }
+  #view-landing .steps .step:nth-child(2) { animation-delay: .38s; }
+  #view-landing .steps .step:nth-child(3) { animation-delay: .46s; }
+  /* .appicon keeps its float loop AND gets the entrance (the .hero > * rule would otherwise override float). */
+  #view-landing .appicon { animation: riseIn .55s var(--ease) both, float 5.5s .6s var(--ease) infinite; }
+
+  /* Success screen: green-tinted glass, one-shot halo bloom, staggered actions. */
+  #result { background: linear-gradient(160deg, color-mix(in srgb, var(--go) 9%, transparent), transparent 50%), var(--card); }
+  #result:not(.hide) { animation: resultIn .6s var(--spring); }
+  @keyframes resultIn { from { opacity: 0; transform: translateY(14px) scale(.97); } }
+  #result::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+    background: radial-gradient(190px 190px at 26px 26px, color-mix(in srgb, var(--go) 30%, transparent), transparent 70%); }
+  #result:not(.hide)::after { animation: halo 1.2s .25s var(--ease) forwards; }
+  @keyframes halo { 0% { opacity: 0; } 35% { opacity: 1; } 100% { opacity: 0; } }
+  #result .toolbar, #resultMeta { animation: riseIn .5s .3s var(--ease) both; }
 
   /* Global footer */
   .footer { text-align: center; color: var(--muted); font-size: 12.5px; padding: 28px 0 0; }
@@ -231,6 +309,29 @@
 
   /* Keyboard a11y: clear focus ring on interactive elements */
   :where(button, a, .lang):focus-visible { outline: 2px solid var(--brand-2); outline-offset: 2px; }
+
+  /* Touch ergonomics: no 300ms double-tap delay; ≥44px targets on touch screens. */
+  :where(button, a, select, input, textarea, label) { touch-action: manipulation; }
+  @media (pointer: coarse) {
+    .icon { width: 44px; height: 44px; }
+    .brand { padding: 8px; margin: -8px; }
+    .lang { padding: 12px 16px; }
+    .parcel-row button, .parcel-row .btnlink { padding: 12px 14px; }
+    .dd-menu a { padding: 13px 12px; }
+    .social { padding: 12px 16px; }
+    .footer a { display: inline-block; padding: 10px 2px; }
+    [data-i18n="paste_hint"] { display: none; }
+  }
+  /* Search fields share a row with their button instead of orphaning it below. */
+  #suSenderOfficeSearch, #cfgSenderSearch, #officeSearch, #trackNumInput { flex: 1 1 140px; width: auto; min-width: 0; }
+  /* Phones: full-width action rows instead of ragged wraps; compact topbar. */
+  @media (max-width: 480px) {
+    .toolbar > button, .toolbar > a, .toolbar > .dd, .toolbar > .dd > button { flex: 1 1 auto; }
+    .toolbar > a { display: flex; }
+    .toolbar > .dd > button { width: 100%; }
+  }
+  @media (max-width: 429px) { #infoBtn { display: none; } }
+  @media (max-width: 359px) { .brand > span { display: none; } }
 
   /* Larger screens (laptop / desktop): more room, bigger hero, comfy spacing. */
   @media (min-width: 820px) {
@@ -251,9 +352,17 @@
   @media (min-width: 1180px) {
     .wrap { max-width: 840px; }
   }
+  /* Notched phones / installed PWA: keep content out of the unsafe areas. */
+  .wrap { padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+  .topbar { padding-top: max(12px, env(safe-area-inset-top)); }
+  #toast { bottom: calc(26px + env(safe-area-inset-bottom)); }
+  @media (min-width: 820px) {
+    .wrap { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+  }
   @media (prefers-reduced-motion: reduce) {
-    *, body::before { animation: none !important; transition-duration: .01ms !important; }
+    *, body::before { animation: none !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
     .tilt { transform: none !important; }
+    html { scroll-behavior: auto; }
   }
 </style>
 </head>
@@ -261,7 +370,7 @@
 <div class="wrap">
 
   <div class="topbar">
-    <a id="brandHome" class="brand" href="#" role="button" aria-label="Home" title="Home">
+    <a id="brandHome" class="brand" href="#">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#003c80"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
       <span>Econt <span style="color:var(--brand-2)">Shipper</span></span>
     </a>
@@ -315,7 +424,7 @@
       <p class="muted" data-i18n="setup_s1_sub">Заключва приложението и криптира паролата ви за Еконт на това устройство.</p>
       <div class="row">
         <div><label data-i18n="setup_pin">PIN (4–6 цифри)</label><input id="suPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
-        <div><label data-i18n="setup_pin2">Повторете PIN</label><input id="suPin2" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" data-enter="suFinishBtn"></div>
+        <div><label data-i18n="setup_pin2">Повторете PIN</label><input id="suPin2" class="pin" type="password" inputmode="numeric" enterkeyhint="go" maxlength="6" autocomplete="new-password" data-enter="suFinishBtn"></div>
       </div>
     </div>
 
@@ -327,11 +436,11 @@
         <option value="demo" data-i18n="mode_demo">Демо (тест — нищо не се създава)</option>
       </select>
       <div class="row">
-        <div><label data-i18n="setup_user">Потребителско име в Еконт (точно, с главни/малки букви)</label><input id="suUser" autocomplete="username" data-enter="suTestBtn"></div>
+        <div><label data-i18n="setup_user">Потребителско име в Еконт (точно, с главни/малки букви)</label><input id="suUser" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" data-enter="suTestBtn"></div>
         <div><label data-i18n="setup_pass">Парола за Еконт</label><input id="suPass" type="password" autocomplete="current-password" data-enter="suTestBtn"></div>
       </div>
       <button class="primary" id="suTestBtn" style="margin-top:12px" data-i18n="setup_test">Проверка на входа</button>
-      <div id="suTestMsg" class="muted"></div>
+      <div id="suTestMsg" class="muted" role="status"></div>
     </div>
 
     <div class="card">
@@ -342,7 +451,7 @@
       </div>
       <label data-i18n="setup_youroffice">Вашият офис за подаване</label>
       <div class="inline">
-        <input id="suSenderOfficeSearch" data-i18n-ph="setup_search_office" data-enter="suSenderSearchBtn" placeholder="търсене по град / име на офис…">
+        <input id="suSenderOfficeSearch" enterkeyhint="search" data-i18n-ph="setup_search_office" data-enter="suSenderSearchBtn" placeholder="търсене по град / име на офис…">
         <button class="ghost" id="suSenderSearchBtn" data-i18n="find">Намери</button>
       </div>
       <select id="suSenderOffice" class="hide" style="margin-top:8px"></select>
@@ -351,7 +460,7 @@
     <div class="card">
       <h3><span class="step-no">4</span><span data-i18n="setup_s4">Вашите обичайни настройки</span></h3>
       <div class="row">
-        <div><label data-i18n="weight">Тегло (кг)</label><input id="suWeight" type="number" step="0.1" min="0.1" value="1"></div>
+        <div><label data-i18n="weight">Тегло (кг)</label><input id="suWeight" type="number" inputmode="decimal" step="0.1" min="0.1" value="1"></div>
         <div><label data-i18n="contents">Съдържание</label><input id="suDesc" placeholder="напр. слушалки"></div>
         <div><label data-i18n="who_pays">Кой плаща</label>
           <select id="suPayer"><option value="receiver" data-i18n="receiver_pays">Получателят плаща</option><option value="sender" data-i18n="i_pay">Аз плащам</option></select>
@@ -363,7 +472,7 @@
     </div>
 
     <button class="go block" id="suFinishBtn" disabled data-i18n="setup_finish">Завършете настройката →</button>
-    <div id="suFinishMsg" class="err"></div>
+    <div id="suFinishMsg" class="err" role="alert"></div>
   </div>
 
   <!-- ===================== LOCK ===================== -->
@@ -371,9 +480,9 @@
     <div class="card tilt" style="text-align:center">
       <div style="font-size:34px">🔒</div>
       <h2 data-i18n="lock_title">Въведете PIN</h2>
-      <input id="lockPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" data-enter="lockBtn" style="margin:14px 0">
+      <input id="lockPin" class="pin" type="password" inputmode="numeric" enterkeyhint="go" maxlength="6" autocomplete="current-password" data-enter="lockBtn" style="margin:14px 0">
       <button class="primary block" id="lockBtn" data-i18n="unlock">Отключи</button>
-      <div id="lockMsg" class="err" style="text-align:center"></div>
+      <div id="lockMsg" class="err" role="alert" style="text-align:center"></div>
       <button class="ghost" id="forgetBtn" style="margin-top:14px" data-i18n="forget">Изтрий от това устройство и започни наново</button>
     </div>
   </div>
@@ -409,12 +518,6 @@
       <div class="socials" id="socialRow"></div>
     </div>
 
-    <div class="card tilt donate-card">
-      <h3 data-i18n="donate_h">☕ Подкрепи проекта</h3>
-      <p class="muted" data-i18n="donate_p">Econt Shipper е безплатен и без реклами. Ако днес ти спести няколко минути — почерпи ме едно кафе. Отнема 30 секунди, държи сървъра включен и новите функции идват по-бързо. 💙</p>
-      <div class="donate-row" id="donateRow"></div>
-    </div>
-
     <button class="ghost block" id="aboutBack" data-i18n="about_back">← Назад</button>
     <div class="muted" id="copyLine" style="text-align:center; margin-top:16px; font-size:12.5px"></div>
   </div>
@@ -428,13 +531,13 @@
       <button class="ghost icon" id="lockNowBtn" title="Lock">🔒</button>
     </div>
 
-    <div class="segnav">
+    <div class="segnav" role="tablist">
       <span class="seg-ind" aria-hidden="true"></span>
-      <button id="navNew" class="active" data-i18n="nav_new">Нова</button>
-      <button id="navParcels" data-i18n="nav_parcels">Пратки</button>
+      <button id="navNew" class="active" role="tab" aria-selected="true" aria-controls="tab-new" data-i18n="nav_new">Нова</button>
+      <button id="navParcels" role="tab" aria-selected="false" aria-controls="tab-parcels" data-i18n="nav_parcels">Пратки</button>
     </div>
 
-    <div id="tab-new">
+    <div id="tab-new" role="tabpanel" aria-labelledby="navNew">
       <!-- SETTINGS -->
       <div id="settings" class="card hide">
         <h3 data-i18n="set_account">Еконт акаунт</h3>
@@ -444,7 +547,7 @@
           <option value="demo" data-i18n="mode_demo">Демо</option>
         </select>
         <div class="row">
-          <div><label data-i18n="username">Потребител</label><input id="cfgUser" autocomplete="off" data-enter="saveCfgBtn"></div>
+          <div><label data-i18n="username">Потребител</label><input id="cfgUser" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-enter="saveCfgBtn"></div>
           <div><label data-i18n="pass_keep">Парола (празно = без промяна)</label><input id="cfgPass" type="password" placeholder="••••" autocomplete="off" data-enter="saveCfgBtn"></div>
         </div>
         <button class="ghost" id="cfgTestBtn" style="margin-top:10px" data-i18n="setup_test">Проверка на входа</button>
@@ -453,12 +556,12 @@
         <h3 data-i18n="set_sender">Подател</h3>
         <div class="row">
           <div><label data-i18n="name">Име</label><input id="cfgSenderName"></div>
-          <div><label data-i18n="phone">Телефон</label><input id="cfgSenderPhone"></div>
+          <div><label data-i18n="phone">Телефон</label><input id="cfgSenderPhone" inputmode="tel" autocomplete="tel"></div>
         </div>
         <label data-i18n="set_office_code">Код на вашия офис за подаване</label>
         <div class="inline">
-          <input id="cfgSenderOffice" placeholder="напр. 9049" style="max-width:120px">
-          <input id="cfgSenderSearch" data-i18n-ph="search" data-enter="cfgSenderSearchBtn" placeholder="търсене…">
+          <input id="cfgSenderOffice" inputmode="numeric" placeholder="напр. 9049" style="max-width:120px">
+          <input id="cfgSenderSearch" enterkeyhint="search" data-i18n-ph="search" data-enter="cfgSenderSearchBtn" placeholder="търсене…">
           <button class="ghost" id="cfgSenderSearchBtn" data-i18n="find">Намери</button>
         </div>
         <select id="cfgSenderOfficeSel" class="hide" style="margin-top:8px"></select>
@@ -466,7 +569,7 @@
         <hr>
         <h3 data-i18n="set_defaults">Настройки по подразбиране</h3>
         <div class="row">
-          <div><label data-i18n="weight">Тегло (кг)</label><input id="cfgWeight" type="number" step="0.1" min="0.1"></div>
+          <div><label data-i18n="weight">Тегло (кг)</label><input id="cfgWeight" type="number" inputmode="decimal" step="0.1" min="0.1"></div>
           <div><label data-i18n="contents">Съдържание</label><input id="cfgDesc"></div>
           <div><label data-i18n="who_pays">Кой плаща</label>
             <select id="cfgPayer"><option value="receiver" data-i18n="receiver">Получател</option><option value="sender" data-i18n="sender">Подател</option></select>
@@ -487,7 +590,7 @@
           <button class="ghost" id="refreshOfficesBtn" data-i18n="refresh_offices">Обнови офисите</button>
           <button class="primary" id="saveCfgBtn" data-i18n="save">Запази</button>
         </div>
-        <div id="cfgMsg" class="muted"></div>
+        <div id="cfgMsg" class="muted" role="status"></div>
       </div>
 
       <!-- PASTE -->
@@ -498,7 +601,7 @@
           <span class="drop-txt"><strong data-i18n="img_cta">Снимка → товарителница</strong><span class="muted" data-i18n="img_hint">Пуснете, поставете или изберете снимка на чата</span></span>
           <input type="file" id="imgInput" accept="image/*" hidden>
         </button>
-        <div id="ocrBox" class="ocr hide"><span class="spin"></span><span id="ocrMsg"></span></div>
+        <div id="ocrBox" class="ocr hide" role="status"><span class="spin" aria-hidden="true"></span><span id="ocrMsg"></span></div>
         <div class="or-sep" data-i18n="or_paste">или поставете текста</div>
         <textarea id="msg" data-i18n-ph="paste_ph" placeholder="Моля да ги изпратите в Офис на еконт: …  Име – 08xx xxx xxx"></textarea>
         <div class="muted" style="margin-top:6px; font-size:12px" data-i18n="paste_hint">Съвет: Ctrl+Enter за преглед</div>
@@ -506,7 +609,7 @@
           <button class="ghost" id="clearBtn" data-i18n="clear">Изчисти</button>
           <button class="primary" id="parseBtn" data-i18n="preview">Преглед →</button>
         </div>
-        <div id="parseErr" class="err"></div>
+        <div id="parseErr" class="err" role="alert"></div>
       </div>
 
       <!-- PREVIEW -->
@@ -520,19 +623,19 @@
         <label data-i18n="deliver_office">Доставка до офис</label>
         <select id="pOffice"></select>
         <div class="inline" style="margin-top:6px">
-          <input id="officeSearch" data-i18n-ph="wrong_office" data-enter="officeSearchBtn" placeholder="грешен офис? търсене по име/град…">
+          <input id="officeSearch" enterkeyhint="search" data-i18n-ph="wrong_office" data-enter="officeSearchBtn" placeholder="грешен офис? търсене по име/град…">
           <button class="ghost" id="officeSearchBtn" data-i18n="search_btn">Търси</button>
         </div>
         <div id="officeHint" class="muted" style="margin-top:6px"></div>
         <div class="row" style="margin-top:8px">
-          <div><label data-i18n="weight">Тегло (кг)</label><input id="pWeight" type="number" step="0.1" min="0.1" data-enter="recalcBtn"></div>
+          <div><label data-i18n="weight">Тегло (кг)</label><input id="pWeight" type="number" inputmode="decimal" step="0.1" min="0.1" data-enter="recalcBtn"></div>
           <div><label data-i18n="description">Описание</label><input id="pDesc" data-enter="recalcBtn"></div>
           <div><label data-i18n="pays">Плаща</label>
             <select id="pPayer"><option value="receiver" data-i18n="receiver">Получател</option><option value="sender" data-i18n="sender">Подател</option></select>
           </div>
         </div>
         <label class="inline" style="margin-top:12px"><input type="checkbox" id="pCodOn"> <span data-i18n="cod">Нал. платеж</span>
-          <input id="pCodAmount" type="number" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" style="width:100px; margin-left:6px">
+          <input id="pCodAmount" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" style="width:100px; margin-left:6px">
           <select id="pCodCur" style="width:auto"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select></label>
         <div id="reviewRow">
           <label data-i18n="review_label">Опция „Преглед“</label>
@@ -544,8 +647,8 @@
         </div>
         <div id="reviewAnchored" class="muted hide" style="margin-top:10px"></div>
         <hr>
-        <div id="priceBox" class="muted"></div>
-        <div id="previewErr" class="err"></div>
+        <div id="priceBox" class="muted" role="status"></div>
+        <div id="previewErr" class="err" role="alert"></div>
         <div class="toolbar" style="margin-top:12px">
           <button class="ghost" id="recalcBtn" data-i18n="recalc">Преизчисли</button>
           <button class="go" id="createBtn" data-i18n="create_btn">✓ Създай товарителница</button>
@@ -562,11 +665,11 @@
         <div class="toolbar" style="justify-content:flex-start; margin:12px 0">
           <button class="primary" id="replyBtn" data-i18n="reply_copy">📋 Отговор за клиента</button>
           <button class="ghost" id="copyBtn" data-i18n="copy">Копирай номера</button>
-          <a id="trackLink" href="#" target="_blank" rel="noopener noreferrer"><button class="ghost" data-i18n="track_link">🔎 Проследи</button></a>
-          <a id="pdfLink" href="#" target="_blank"><button class="ghost" data-i18n="label_pdf">🖨 Етикет PDF</button></a>
+          <a id="trackLink" class="btnlink" href="#" target="_blank" rel="noopener noreferrer" data-i18n="track_link">🔎 Проследи</a>
+          <a id="pdfLink" class="btnlink" href="#" target="_blank" data-i18n="label_pdf">🖨 Етикет PDF</a>
           <div class="dd" id="profileDD">
-            <button class="ghost" id="profileBtn">👤 <span data-i18n="view_in_profile">Виж в профила</span> <span class="caret">▾</span></button>
-            <div class="dd-menu">
+            <button class="ghost" id="profileBtn" aria-haspopup="true" aria-expanded="false" aria-controls="profileMenu">👤 <span data-i18n="view_in_profile">Виж в профила</span> <span class="caret" aria-hidden="true">▾</span></button>
+            <div class="dd-menu" id="profileMenu">
               <a href="https://www.econt.com/" target="_blank" rel="noopener noreferrer">🌐 <span><span data-i18n="dd_site">econt.com</span><span class="sub" data-i18n="dd_site_sub">Официалният сайт на Еконт</span></span></a>
               <a id="profileLink" href="https://ee.econt.com/" target="_blank" rel="noopener noreferrer">👤 <span><span data-i18n="dd_profile">e-Econt профил</span><span class="sub" data-i18n="dd_profile_sub">Пратките във вашия акаунт</span></span></a>
             </div>
@@ -577,7 +680,7 @@
       </div>
     </div>
 
-    <div id="tab-parcels" class="hide">
+    <div id="tab-parcels" class="hide" role="tabpanel" aria-labelledby="navParcels">
       <div class="card">
         <div style="display:flex; align-items:center; gap:8px">
           <strong data-i18n="parcels_h">Вашите пратки</strong>
@@ -586,7 +689,7 @@
         </div>
         <div class="muted" style="margin-top:6px" data-i18n="parcels_note">Показва пратките с актуален статус и време в движение от Еконт.</div>
         <div class="inline" style="margin-top:10px">
-          <input id="trackNumInput" data-i18n-ph="track_ph" data-enter="trackNumBtn" placeholder="добави номер на пратка…" inputmode="numeric">
+          <input id="trackNumInput" enterkeyhint="go" data-i18n-ph="track_ph" data-enter="trackNumBtn" placeholder="добави номер на пратка…" inputmode="numeric">
           <button class="primary" id="trackNumBtn" data-i18n="track_add">Добави</button>
         </div>
       </div>
@@ -596,7 +699,7 @@
 
   <div class="footer"><span id="footerCopy"></span> · <a href="#" id="footerAbout"></a></div>
 </div>
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script src="/app.js"></script>
 </body>

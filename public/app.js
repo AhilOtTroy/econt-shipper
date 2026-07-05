@@ -2,6 +2,8 @@
 
 const $ = (id) => document.getElementById(id);
 const $q = (sel) => document.querySelector(sel);
+// Respect the OS reduce-motion setting in JS-driven scrolls too.
+const scrollBehavior = () => (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'auto' : 'smooth';
 const KEY = 'econt_shipper_v1';
 const PKEY = 'econt_parcels';
 
@@ -13,9 +15,6 @@ const CREATOR = {
   instagram: 'ivnmky',                   // instagram username, without @
   facebook: 'https://www.facebook.com/profile.php?id=100022967482779',
   email: 'contact@ivanmanastirsky.xyz',  // public contact email
-  paypal: '',                            // paypal.me handle → https://paypal.me/<handle>
-  buymeacoffee: '',                      // buymeacoffee.com handle
-  revolut: '',                           // revolut.me handle
 };
 
 // ===================== i18n =====================
@@ -83,10 +82,9 @@ const I18N = {
     about_priv: 'Поверителност: входът ви за Еконт остава на вашето устройство, криптиран с PIN. Няма база данни, няма следене, няма реклами.',
     about_free: 'Безплатно за всички податели в Еконт.',
     about_creator_h: 'Създател', about_creator_role: 'Идея, дизайн и разработка',
-    donate_h: '☕ Подкрепи проекта',
-    donate_p: 'Econt Shipper е безплатен и без реклами. Ако днес ти спести няколко минути — почерпи ме едно кафе. Отнема 30 секунди, държи сървъра включен и новите функции идват по-бързо. 💙',
-    donate_setup: 'Линковете за дарения се добавят съвсем скоро.',
-    about_back: '← Назад', footer_about: 'За приложението · Контакти · Подкрепа', rights: 'Всички права запазени.',
+    about_back: '← Назад', footer_about: 'За приложението · Контакти', rights: 'Всички права запазени.',
+    a11y_theme_dark: 'Превключи към тъмна тема', a11y_theme_light: 'Превключи към светла тема',
+    a11y_info: 'За приложението', a11y_settings: 'Настройки', a11y_lock: 'Заключи', a11y_home: 'Начало',
   },
   en: {
     land_pill: 'Econt, simplified', land_title: 'A message in. A label out.',
@@ -151,10 +149,9 @@ const I18N = {
     about_priv: 'Privacy: your Econt login stays on your device, encrypted with a PIN. No database, no tracking, no ads.',
     about_free: 'Free for every Econt sender.',
     about_creator_h: 'Creator', about_creator_role: 'Idea, design & development',
-    donate_h: '☕ Support the project',
-    donate_p: 'Econt Shipper is free and ad-free. If it saved you a few minutes today — buy me a coffee. It takes 30 seconds, keeps the server running and brings new features faster. 💙',
-    donate_setup: 'Donation links are coming very soon.',
-    about_back: '← Back', footer_about: 'About · Contact · Support', rights: 'All rights reserved.',
+    about_back: '← Back', footer_about: 'About · Contact', rights: 'All rights reserved.',
+    a11y_theme_dark: 'Switch to dark theme', a11y_theme_light: 'Switch to light theme',
+    a11y_info: 'About this app', a11y_settings: 'Settings', a11y_lock: 'Lock', a11y_home: 'Home',
   },
 };
 let LANG = ['bg', 'en'].includes(localStorage.getItem('econt_lang')) ? localStorage.getItem('econt_lang') : 'bg';
@@ -176,6 +173,16 @@ function applyLang() {
   $('langEn').classList.toggle('active', LANG === 'en');
   $('footerCopy').textContent = `© ${new Date().getFullYear()} ${CREATOR.name || 'Econt Shipper'}`;
   $('footerAbout').textContent = dict.footer_about || I18N.en.footer_about;
+  // Translated accessible names for the emoji-only controls.
+  for (const [id, k] of [['infoBtn', 'a11y_info'], ['settingsBtn', 'a11y_settings'], ['lockNowBtn', 'a11y_lock'], ['brandHome', 'a11y_home']]) {
+    const el = $(id); if (el) { el.setAttribute('aria-label', t(k)); el.title = t(k); }
+  }
+  syncThemeBtnLabel();
+}
+function syncThemeBtnLabel() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const label = t(dark ? 'a11y_theme_light' : 'a11y_theme_dark');
+  $('themeBtn').setAttribute('aria-label', label); $('themeBtn').title = label;
 }
 function setLang(l) {
   LANG = l; localStorage.setItem('econt_lang', l); applyLang();
@@ -189,8 +196,14 @@ function setLang(l) {
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 2300); }
 function btnBusy(btn, on, label) {
   if (!btn) return;
-  if (on) { btn.disabled = true; if (btn.dataset.html == null) btn.dataset.html = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>' + (label || ''); }
-  else { btn.disabled = false; if (btn.dataset.html != null) { btn.innerHTML = btn.dataset.html; delete btn.dataset.html; } }
+  if (on) {
+    btn.disabled = true; btn.setAttribute('aria-busy', 'true');
+    if (btn.dataset.html == null) btn.dataset.html = btn.innerHTML;
+    btn.innerHTML = '<span class="spin" aria-hidden="true"></span>' + (label ? esc(label) : '<span class="sr-only">' + esc(t('loading')) + '</span>');
+  } else {
+    btn.disabled = false; btn.removeAttribute('aria-busy');
+    if (btn.dataset.html != null) { btn.innerHTML = btn.dataset.html; delete btn.dataset.html; }
+  }
 }
 function fmtDate(ms) { if (!ms) return ''; let n = Number(ms); if (n < 1e12) n *= 1000; const d = new Date(n); if (isNaN(d.getTime())) return ''; return d.toLocaleDateString(LANG === 'bg' ? 'bg-BG' : 'en-GB', { day: '2-digit', month: 'short' }); }
 // Review service (преглед): one setting, three states — None / Review / Review & Test.
@@ -320,6 +333,8 @@ $('lockNowBtn').onclick = () => { SESSION.password = null; SESSION.pin = null; s
 function switchTab(which) {
   $('navNew').classList.toggle('active', which === 'new');
   $('navParcels').classList.toggle('active', which === 'parcels');
+  $('navNew').setAttribute('aria-selected', String(which === 'new'));
+  $('navParcels').setAttribute('aria-selected', String(which === 'parcels'));
   $('tab-new').classList.toggle('hide', which !== 'new');
   $('tab-parcels').classList.toggle('hide', which !== 'parcels');
   const ind = document.querySelector('.seg-ind');
@@ -402,7 +417,7 @@ async function doParse(ev) {
     // then apply the review hint detected in THIS message, if any.
     if (!reviewAnchor(CONFIG.defaults)) $('pReviewMode').value = p.reviewMode || 'none';
     $('preview').classList.remove('hide'); $('result').classList.add('hide');
-    $('preview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    $('preview').scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
     doPreview();
   } finally { btnBusy(btn, false); }
 }
@@ -507,7 +522,7 @@ async function doCreate() {
     if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, office: o.officeCode, weight: o.weight, description: o.description, cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
     $('preview').classList.add('hide'); $('result').classList.remove('hide');
     playCheck();
-    $('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    $('result').scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
   } finally { btnBusy(btn, false); }
 }
 $('clearBtn').onclick = () => { $('msg').value = ''; $('preview').classList.add('hide'); $('result').classList.add('hide'); };
@@ -575,6 +590,11 @@ async function runOCR(file) {
 (function initOCRInputs() {
   const drop = $('imgDrop'), input = $('imgInput');
   if (!drop || !input) return;
+  // Warm the OCR engine on first intent so the download overlaps the user picking a file.
+  const warmOCR = () => { loadTesseract().catch(() => {}); };
+  drop.addEventListener('pointerenter', warmOCR, { once: true });
+  drop.addEventListener('dragenter', warmOCR, { once: true });
+  drop.addEventListener('click', warmOCR, { once: true });
   drop.onclick = (e) => { if (e.target !== input) input.click(); };
   input.onchange = () => { const f = input.files && input.files[0]; if (f) runOCR(f); input.value = ''; };
   ['dragover', 'dragenter'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('drag'); }));
@@ -622,14 +642,22 @@ function classify(p) {
 function statusClass(p) { const st = classify(p); return st === 'returned' ? 's-red' : st === 'delivered' ? 's-green' : st === 'transit' ? 's-blue' : 's-gray'; }
 
 const TICK = {}; let TIMER_INT = null;
-function startTimers() { stopTimers(); TIMER_INT = setInterval(() => { const now = Date.now(); for (const num in TICK) { const c = $q(`.parcel[data-num="${num}"] [data-timer] .clk`); if (c) c.textContent = fmtDuration(now - TICK[num]); } }, 1000); }
+// Each entry caches its .clk node — one DOM write per tick, no per-second selector scans.
+function startTimers() {
+  stopTimers();
+  TIMER_INT = setInterval(() => {
+    if (document.hidden) return;
+    const now = Date.now();
+    for (const num in TICK) { const tk = TICK[num]; if (tk && tk.el && tk.el.isConnected) tk.el.textContent = fmtDuration(now - tk.start); }
+  }, 1000);
+}
 function stopTimers() { if (TIMER_INT) { clearInterval(TIMER_INT); TIMER_INT = null; } }
 function renderTimer(num, p) {
   const cell = $q(`.parcel[data-num="${num}"] [data-timer]`); if (!cell) return;
   const st = classify(p), sent = toMs(p.sendTime); delete TICK[num];
   if (st === 'delivered') { const dt = toMs(p.deliveryTime); cell.className = 'parcel-timer t-green'; cell.innerHTML = '✓ ' + t('delivered_ok') + (sent && dt ? ' <span class="clk">· ' + fmtDuration(dt - sent) + '</span>' : ''); }
   else if (st === 'returned') { const dt = toMs(p.deliveryTime) || Date.now(); cell.className = 'parcel-timer t-amber'; cell.innerHTML = '↩ ' + t('returned_ok') + (sent ? ' <span class="clk">· ' + fmtDuration(dt - sent) + '</span>' : ''); }
-  else if (st === 'transit' && sent) { cell.className = 'parcel-timer t-blue'; cell.innerHTML = '⏱ ' + t('in_operation') + ' <span class="clk">' + fmtDuration(Date.now() - sent) + '</span>'; TICK[num] = sent; }
+  else if (st === 'transit' && sent) { cell.className = 'parcel-timer t-blue'; cell.innerHTML = '⏱ ' + t('in_operation') + ' <span class="clk">' + fmtDuration(Date.now() - sent) + '</span>'; TICK[num] = { start: sent, el: cell.querySelector('.clk') }; }
   else { cell.className = 'parcel-timer t-muted'; cell.textContent = '• ' + t('awaiting_dispatch'); }
 }
 
@@ -659,8 +687,8 @@ function parcelCardHTML(p) {
     <div class="parcel-timer t-muted" data-timer></div>
     <div class="parcel-row">
       <button data-copy>${t('copy')}</button>
-      <a href="${esc(econtTrackUrl(p.number))}" target="_blank" rel="noopener"><button class="ghost">${t('track_link')}</button></a>
-      <a data-pdf hidden target="_blank"><button class="ghost">${t('reprint')}</button></a>
+      <a class="btnlink" href="${esc(econtTrackUrl(p.number))}" target="_blank" rel="noopener">${t('track_link')}</a>
+      <a class="btnlink" data-pdf hidden target="_blank">${t('reprint')}</a>
       <button class="ghost" data-toggle>${t('details')}</button>
     </div>
     <div class="details hide" data-details></div>
@@ -715,9 +743,6 @@ $('trackNumBtn').onclick = () => {
 
 // ---------- about / credits page ----------
 const fbUrl = (v) => (/^https?:/i.test(v) ? v : 'https://facebook.com/' + v);
-function donateBtn(url, label, primary) {
-  return `<a class="donate-btn" target="_blank" rel="noopener noreferrer" href="${esc(url)}"><button class="${primary ? 'primary' : 'ghost'}" type="button">${label}</button></a>`;
-}
 function renderAbout() {
   const name = CREATOR.name || 'Econt Shipper';
   $('creatorName').textContent = name;
@@ -727,41 +752,42 @@ function renderAbout() {
   if (CREATOR.facebook) s.push(`<a class="social" target="_blank" rel="noopener noreferrer" href="${esc(fbUrl(CREATOR.facebook))}">📘 Facebook</a>`);
   if (CREATOR.email) s.push(`<a class="social" href="mailto:${esc(CREATOR.email)}">✉️ ${esc(CREATOR.email)}</a>`);
   $('socialRow').innerHTML = s.join('');
-  const d = [];
-  if (CREATOR.buymeacoffee) d.push(donateBtn('https://buymeacoffee.com/' + encodeURIComponent(CREATOR.buymeacoffee), '☕ Buy Me a Coffee', true));
-  if (CREATOR.paypal) d.push(donateBtn('https://paypal.me/' + encodeURIComponent(CREATOR.paypal), '💙 PayPal', !d.length));
-  if (CREATOR.revolut) d.push(donateBtn('https://revolut.me/' + encodeURIComponent(CREATOR.revolut), '⚡ Revolut', !d.length));
-  $('donateRow').innerHTML = d.length ? d.join('') : `<span class="muted">${t('donate_setup')}</span>`;
   $('copyLine').textContent = `© ${new Date().getFullYear()} ${name} · ${t('rights')}`;
 }
 let PREV_VIEW = 'landing';
 function openAbout() {
   for (const v of ['landing', 'setup', 'lock', 'app']) if (!$('view-' + v).classList.contains('hide')) PREV_VIEW = v;
   renderAbout(); show('about');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: scrollBehavior() });
 }
 $('footerAbout').onclick = (e) => { e.preventDefault(); openAbout(); };
 $('aboutBack').onclick = () => show(PREV_VIEW);
 
 // ---------- profile dropdown (econt.com / e-Econt) ----------
-$('profileBtn').onclick = (e) => {
-  e.stopPropagation();
-  const dd = $('profileDD'); dd.classList.toggle('open');
+function setProfileDD(open) {
+  const dd = $('profileDD');
+  dd.classList.toggle('open', open);
+  $('profileBtn').setAttribute('aria-expanded', String(open));
   // Anchor the menu to whichever side keeps it inside the viewport.
-  if (dd.classList.contains('open')) {
+  if (open) {
     dd.classList.remove('flip');
     if (dd.querySelector('.dd-menu').getBoundingClientRect().right > window.innerWidth - 8) dd.classList.add('flip');
   }
-};
-document.querySelectorAll('#profileDD .dd-menu a').forEach((a) => a.addEventListener('click', () => $('profileDD').classList.remove('open')));
-document.addEventListener('click', (e) => { const dd = $('profileDD'); if (dd && !dd.contains(e.target)) dd.classList.remove('open'); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('profileDD').classList.remove('open'); });
+}
+$('profileBtn').onclick = (e) => { e.stopPropagation(); setProfileDD(!$('profileDD').classList.contains('open')); };
+document.querySelectorAll('#profileDD .dd-menu a').forEach((a) => a.addEventListener('click', () => setProfileDD(false)));
+document.addEventListener('click', (e) => { const dd = $('profileDD'); if (dd && !dd.contains(e.target)) setProfileDD(false); });
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if ($('profileDD').classList.contains('open')) { setProfileDD(false); $('profileBtn').focus(); }
+});
 
 // ---------- landing / language / enter-key ----------
 // ---------- theme (light / dark) ----------
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   $('themeBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
+  syncThemeBtnLabel();
   const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = theme === 'dark' ? '#080c12' : '#0a4ea8';
 }
 function initTheme() {
@@ -784,6 +810,15 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ---------- boot ----------
+// a11y: associate every bare <label> with the field it describes.
+document.querySelectorAll('label:not([for])').forEach((l) => {
+  if (l.querySelector('input,select,textarea')) return; // wrapping label: already associated
+  const CTL = 'input:not([hidden]):not([type=hidden]),select,textarea';
+  let ctl = l.nextElementSibling;
+  if (ctl && !ctl.matches(CTL)) ctl = ctl.querySelector(CTL);
+  if (!ctl && l.parentElement) ctl = l.parentElement.querySelector(CTL);
+  if (ctl && ctl.id) l.setAttribute('for', ctl.id);
+});
 applyLang();
 initTheme();
 if (!('crypto' in window) || !crypto.subtle) {
@@ -791,23 +826,29 @@ if (!('crypto' in window) || !crypto.subtle) {
 } else if (loadStore()) { showLock(); } else { show('landing'); }
 
 // ---------- 3D pointer tilt on showcase cards (desktop, fine pointer only) ----------
+// rAF-coalesced (trackpads fire 120+ events/frame) with the rect cached per card —
+// re-reading it after our own transform write both thrashes layout and skews the pivot.
 (function initTilt() {
   if (!window.matchMedia) return;
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  let active = null;
-  const reset = () => { if (active) { active.style.transform = ''; active = null; } };
-  document.addEventListener('pointermove', (e) => {
+  let active = null, rect = null, raf = 0, lastEv = null;
+  const reset = () => { if (active) active.style.transform = ''; active = null; rect = null; };
+  const apply = () => {
+    raf = 0;
+    const e = lastEv; if (!e) return;
     const card = e.target.closest ? e.target.closest('.tilt') : null;
     if (active && active !== card) reset();
     if (!card || card.classList.contains('hide')) return;
-    active = card;
-    const r = card.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
+    if (card !== active || !rect) { active = card; rect = card.getBoundingClientRect(); }
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
     const m = 5;
     card.style.transform = `perspective(1000px) rotateY(${(x * m).toFixed(2)}deg) rotateX(${(-y * m).toFixed(2)}deg) translateY(-4px)`;
-  }, { passive: true });
+  };
+  document.addEventListener('pointermove', (e) => { lastEv = e; if (!raf) raf = requestAnimationFrame(apply); }, { passive: true });
+  window.addEventListener('scroll', () => { rect = null; }, { passive: true });
+  window.addEventListener('resize', () => { rect = null; });
   document.addEventListener('pointerleave', reset, true);
   window.addEventListener('blur', reset);
 })();
