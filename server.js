@@ -7,6 +7,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const econt = require('./econt');
 const { parseMessage, matchOffices } = require('./parser');
 
@@ -190,9 +191,17 @@ function serveStatic(req, res, url) {
       : ext === '.css' ? 'text/css; charset=utf-8'
       : ext === '.webmanifest' ? 'application/manifest+json'
       : 'application/octet-stream';
+    // Content-hash ETag + no-cache: the browser must revalidate every load, so a
+    // new deploy is picked up immediately (no stale app.js), but unchanged files
+    // still return a cheap 304 instead of re-downloading.
+    const etag = '"' + crypto.createHash('sha1').update(data).digest('base64').slice(0, 22) + '"';
+    if (req.headers['if-none-match'] === etag) { res.writeHead(304, { ETag: etag, 'Cache-Control': 'no-cache' }); return res.end(); }
     // Safe hardening headers (do not restrict script/style/connect, so OCR and inline styles keep working).
     res.writeHead(200, {
       'Content-Type': type,
+      'Content-Length': data.length,
+      'Cache-Control': 'no-cache',
+      'ETag': etag,
       'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'no-referrer',
       'Content-Security-Policy': "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
