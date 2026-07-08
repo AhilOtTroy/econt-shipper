@@ -94,15 +94,11 @@ function buildLabel(sender, defaults, o) {
   if (review) label.payAfterAccept = true;
   if (test) label.payAfterTest = true;
 
-  // SMS notification to the receiver (per-parcel override falls back to the default).
-  const sms = o.smsNotification != null ? o.smsNotification : d.smsNotification;
-  if (sms) label.smsNotification = true;
-
   // Sender drop-off location
   if (sender.officeCode) label.senderOfficeCode = String(sender.officeCode);
   else if (sender.address) label.senderAddress = toAddress(sender.address);
 
-  // Receiver location
+  // Receiver location — office OR door (address) delivery.
   if (o.officeCode) label.receiverOfficeCode = String(o.officeCode);
   else if (o.address) label.receiverAddress = toAddress(o.address);
 
@@ -111,15 +107,18 @@ function buildLabel(sender, defaults, o) {
   if (payer === 'sender') label.paymentSenderMethod = 'cash';
   else label.paymentReceiverMethod = 'cash';
 
-  // Cash on delivery (наложен платеж) collected from receiver, sent to sender
+  // Services: cash-on-delivery + SMS notification, both nested under `services`
+  // exactly as Econt's API expects (cdAmount/cdType/cdCurrency + smsNotification).
+  const services = {};
   const cod = o.cod || d.cod;
   if (cod && cod.enabled && Number(cod.amount) > 0) {
-    label.services = Object.assign(label.services || {}, {
-      cdAmount: Number(cod.amount),
-      cdType: 'get',
-      cdCurrency: cod.currency || 'BGN',
-    });
+    services.cdAmount = Number(cod.amount);
+    services.cdType = 'get';
+    services.cdCurrency = cod.currency || 'BGN';
   }
+  const sms = o.smsNotification != null ? o.smsNotification : d.smsNotification;
+  if (sms) services.smsNotification = true;
+  if (Object.keys(services).length) label.services = Object.assign(label.services || {}, services);
 
   return label;
 }

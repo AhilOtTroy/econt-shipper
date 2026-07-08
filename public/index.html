@@ -235,6 +235,11 @@ try {
   .match-lo { background: #fff4d6; color: #7a5200; }
   :root[data-theme="dark"] .match-hi { background: #16331f; color: #57d98a; }
   :root[data-theme="dark"] .match-lo { background: #3a2d12; color: #f4c463; }
+  /* Small segmented toggle (office ↔ address delivery) */
+  .segmini { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; margin: 0 0 10px; }
+  .segmini button { border: 0; background: transparent; color: var(--muted); font-weight: 700; font-size: 13px; padding: 8px 16px; border-radius: 9px; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; transition: color .25s var(--ease); }
+  @media (hover: hover) { .segmini button:hover { transform: none; box-shadow: none; border-color: transparent; color: var(--ink); } }
+  .segmini button.active { background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; box-shadow: var(--shadow-brand); }
   /* Inline caution note (e.g. no cash-on-delivery on this parcel) */
   .warn-box { margin-top: 10px; padding: 9px 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: #7a5200; background: #fff4d6; border: 1px solid rgba(154,103,0,.25); animation: warnIn .3s var(--spring); }
   :root[data-theme="dark"] .warn-box { color: #f4c463; background: #3a2d12; border-color: rgba(244,196,99,.22); }
@@ -632,13 +637,31 @@ try {
           <div><label data-i18n="recipient">Име на получателя</label><input id="pName" data-enter="recalcBtn"></div>
           <div><label data-i18n="phone">Телефон</label><input id="pPhone" inputmode="tel" data-enter="recalcBtn"></div>
         </div>
-        <label data-i18n="deliver_office">Доставка до офис</label>
-        <select id="pOffice"></select>
-        <div class="inline" style="margin-top:6px">
-          <input id="officeSearch" enterkeyhint="search" data-i18n-ph="wrong_office" data-enter="officeSearchBtn" placeholder="грешен офис? търсене по име/град…">
-          <button class="ghost" id="officeSearchBtn" data-i18n="search_btn">Търси</button>
+        <label data-i18n="deliver_to">Доставка</label>
+        <div class="segmini" id="deliverToggle" role="tablist">
+          <button type="button" id="modeOfficeBtn" class="active" role="tab" aria-selected="true" data-i18n="to_office">До офис</button>
+          <button type="button" id="modeAddressBtn" role="tab" aria-selected="false" data-i18n="to_address">До адрес</button>
         </div>
-        <div id="officeHint" class="muted" style="margin-top:6px"></div>
+        <div id="officeBlock">
+          <select id="pOffice"></select>
+          <div class="inline" style="margin-top:6px">
+            <input id="officeSearch" enterkeyhint="search" data-i18n-ph="wrong_office" data-enter="officeSearchBtn" placeholder="грешен офис? търсене по име/град…">
+            <button class="ghost" id="officeSearchBtn" data-i18n="search_btn">Търси</button>
+          </div>
+          <div id="officeHint" class="muted" style="margin-top:6px"></div>
+        </div>
+        <div id="addrBlock" class="hide">
+          <div class="row">
+            <div><label data-i18n="addr_city">Град</label><input id="pAddrCity" data-enter="recalcBtn"></div>
+            <div style="flex:0 0 120px"><label data-i18n="addr_post">Пощ. код</label><input id="pAddrPost" inputmode="numeric" data-enter="recalcBtn"></div>
+          </div>
+          <div class="row">
+            <div><label data-i18n="addr_street">Улица / квартал</label><input id="pAddrStreet" data-enter="recalcBtn"></div>
+            <div style="flex:0 0 90px"><label data-i18n="addr_num">№</label><input id="pAddrNum" data-enter="recalcBtn"></div>
+          </div>
+          <label data-i18n="addr_note">Ориентир (по избор)</label>
+          <input id="pAddrNote" data-enter="recalcBtn">
+        </div>
         <div class="row" style="margin-top:8px">
           <div><label data-i18n="weight">Тегло (кг)</label><input id="pWeight" type="number" inputmode="decimal" step="0.1" min="0.1" data-enter="recalcBtn"></div>
           <div><label data-i18n="description">Описание</label><input id="pDesc" data-enter="recalcBtn"></div>

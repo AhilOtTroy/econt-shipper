@@ -46,6 +46,8 @@ const I18N = {
     img_cta: 'Снимка → товарителница', img_hint: 'Пуснете, поставете или изберете снимка на чата', or_paste: 'или поставете текста',
     ocr_loading: 'Подготовка на четеца…', ocr_reading: 'Разчитане на снимката… {p}%', ocr_empty: 'Не открих текст в снимката. Опитайте по-ясна снимка.', ocr_fail: 'Неуспешно разчитане. Поставете текста ръчно.',
     clear: 'Изчисти', preview: 'Преглед →', prev_h: 'Проверете и потвърдете', recipient: 'Име на получателя', deliver_office: 'Доставка до офис',
+    deliver_to: 'Доставка', to_office: 'До офис', to_address: 'До адрес',
+    addr_city: 'Град', addr_post: 'Пощ. код', addr_street: 'Улица / квартал', addr_num: '№', addr_note: 'Ориентир (по избор)', need_addr: 'Нужни са град и улица/квартал за доставка до адрес.',
     wrong_office: 'грешен офис? търсене по име/град…', search_btn: 'Търси', description: 'Описание', pays: 'Плаща',
     cod: 'Нал. платеж', amount: 'сума', recalc: 'Преизчисли', create_btn: '✓ Създай товарителница',
     res_h: 'Товарителницата е създадена', copy: 'Копирай номера', label_pdf: '🖨 Етикет PDF', view_in_profile: 'Виж в профила', new: '+ Нова',
@@ -115,6 +117,8 @@ const I18N = {
     img_cta: 'Screenshot → label', img_hint: 'Drop, paste or pick a screenshot of the chat', or_paste: 'or paste the text',
     ocr_loading: 'Preparing the reader…', ocr_reading: 'Reading the screenshot… {p}%', ocr_empty: 'No text found in the image. Try a clearer screenshot.', ocr_fail: 'Could not read it. Paste the text manually.',
     clear: 'Clear', preview: 'Preview →', prev_h: 'Check & confirm', recipient: 'Recipient name', deliver_office: 'Deliver to office',
+    deliver_to: 'Delivery', to_office: 'To office', to_address: 'To address',
+    addr_city: 'City', addr_post: 'Post code', addr_street: 'Street / quarter', addr_num: 'No.', addr_note: 'Landmark (optional)', need_addr: 'City and street/quarter are required for address delivery.',
     wrong_office: 'wrong office? search by name/city…', search_btn: 'Search', description: 'Description', pays: 'Pays',
     cod: 'COD', amount: 'amount', recalc: 'Recalculate', create_btn: '✓ Create shipment number',
     res_h: 'Shipment created', copy: 'Copy number', label_pdf: '🖨 Label PDF', view_in_profile: 'View in profile', new: '+ New',
@@ -397,6 +401,33 @@ $('saveCfgBtn').onclick = async () => {
 
 // ---------- parse / preview / create ----------
 let CANDIDATES = [];
+let deliverMode = 'office';   // 'office' | 'address' (door)
+let PARSED_ADDR = null;       // last address parsed from a message, for the toggle
+// Switch between office and address (door) delivery, showing the matching fields.
+function setDeliverMode(mode, skipPreview) {
+  deliverMode = mode === 'address' ? 'address' : 'office';
+  const isOffice = deliverMode === 'office';
+  $('officeBlock').classList.toggle('hide', !isOffice);
+  $('addrBlock').classList.toggle('hide', isOffice);
+  $('modeOfficeBtn').classList.toggle('active', isOffice);
+  $('modeAddressBtn').classList.toggle('active', !isOffice);
+  $('modeOfficeBtn').setAttribute('aria-selected', String(isOffice));
+  $('modeAddressBtn').setAttribute('aria-selected', String(!isOffice));
+  if (!skipPreview && !$('preview').classList.contains('hide')) doPreview();
+}
+// Fill the address form from a parsed address (quarter used as the street line only
+// when no real street was found; otherwise it goes in the landmark note).
+function fillAddress(a) {
+  a = a || {};
+  $('pAddrCity').value = a.city || '';
+  $('pAddrPost').value = a.postCode || '';
+  $('pAddrStreet').value = a.street || a.quarter || '';
+  $('pAddrNum').value = a.num || '';
+  $('pAddrNote').value = [(a.street && a.quarter) ? a.quarter : '', a.other].filter(Boolean).join(', ');
+}
+function gatherAddress() {
+  return { city: $('pAddrCity').value.trim(), postCode: $('pAddrPost').value.trim(), street: $('pAddrStreet').value.trim(), num: $('pAddrNum').value.trim(), other: $('pAddrNote').value.trim(), countryCode: 'BGR' };
+}
 async function doParse(ev) {
   $('parseErr').textContent = '';
   const text = $('msg').value.trim();
@@ -428,6 +459,10 @@ async function doParse(ev) {
     // Reset the per-shipment review each parse (never leak a prior message's choice),
     // then apply the review hint detected in THIS message, if any.
     if (!reviewAnchor(CONFIG.defaults)) $('pReviewMode').value = p.reviewMode || 'none';
+    // Office vs address (door) delivery: pick the detected mode and pre-fill the form.
+    PARSED_ADDR = p.address || null;
+    fillAddress(p.address);
+    setDeliverMode(p.deliveryType === 'door' ? 'address' : 'office', true);
     $('preview').classList.remove('hide'); $('result').classList.add('hide');
     $('preview').scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
     doPreview();
@@ -452,12 +487,15 @@ function gatherOverrides() {
   const anchor = reviewAnchor(CONFIG.defaults);
   const mode = anchor || $('pReviewMode').value || 'none';
   const rf = reviewFlags(mode);
-  return {
-    recipientName: $('pName').value.trim(), phone: $('pPhone').value.trim(), officeCode: $('pOffice').value,
+  const o = {
+    recipientName: $('pName').value.trim(), phone: $('pPhone').value.trim(),
     weight: Number($('pWeight').value) || undefined, description: $('pDesc').value.trim(), payer: $('pPayer').value,
     cod: { enabled: $('pCodOn').checked, amount: Number($('pCodAmount').value) || 0, currency: $('pCodCur').value },
     payAfterAccept: rf.payAfterAccept, payAfterTest: rf.payAfterTest, reviewMode: mode,
   };
+  if (deliverMode === 'address') o.address = gatherAddress();
+  else o.officeCode = $('pOffice').value;
+  return o;
 }
 const shipBody = (overrides) => ({ creds: creds(), sender: CONFIG.sender, defaults: CONFIG.defaults, overrides });
 function showPrice(resp) {
@@ -471,14 +509,20 @@ function currentReviewMode() { return reviewAnchor(CONFIG.defaults) || $('pRevie
 function updateSummary() {
   const sel = $('pOffice');
   const name = $('pName').value.trim();
-  const opt = sel.selectedOptions[0];
-  const office = opt && sel.value ? opt.textContent.split(' — ')[0] : '';
+  let dest = '';
+  if (deliverMode === 'address') {
+    const c = $('pAddrCity').value.trim(), st = [$('pAddrStreet').value.trim(), $('pAddrNum').value.trim()].filter(Boolean).join(' ');
+    dest = [c, st].filter(Boolean).join(', ');
+  } else {
+    const opt = sel.selectedOptions[0];
+    dest = opt && sel.value ? opt.textContent.split(' — ')[0] : '';
+  }
   const codOn = $('pCodOn').checked, codAmt = Number($('pCodAmount').value);
   const cod = codOn && codAmt > 0 ? `${codAmt} ${$('pCodCur').value}` : '';
   const rl = reviewLabel(currentReviewMode());
   const parts = [];
   if (name) parts.push(`<b>${esc(name)}</b>`);
-  if (office) parts.push(`📍 ${esc(office)}`);
+  if (dest) parts.push(`📍 ${esc(dest)}`);
   if (cod) parts.push(`💰 ${esc(cod)}`);
   if (rl) parts.push(`👁 ${esc(rl)}`);
   const box = $('prevSummary');
@@ -509,7 +553,9 @@ async function doPreview(ev) {
   $('previewErr').textContent = '';
   updateSummary(); renderOfficeHint();
   const o = gatherOverrides();
-  if (!o.officeCode) { $('priceBox').textContent = ''; $('previewErr').textContent = t('pick_office'); return; }
+  if (deliverMode === 'address') {
+    if (!o.address.city || !o.address.street) { $('priceBox').textContent = ''; $('previewErr').textContent = t('need_addr'); return; }
+  } else if (!o.officeCode) { $('priceBox').textContent = ''; $('previewErr').textContent = t('pick_office'); return; }
   const btn = ev && ev.currentTarget && ev.currentTarget.id === 'recalcBtn' ? $('recalcBtn') : null;
   btnBusy(btn, true); $('priceBox').innerHTML = '<span class="sk">price price price</span>';
   const r = await api('/api/preview', shipBody(o));
@@ -524,7 +570,10 @@ function playCheck() {
 async function doCreate() {
   $('previewErr').textContent = '';
   const o = gatherOverrides();
-  if (!o.recipientName || !o.phone || !o.officeCode) { $('previewErr').textContent = t('need_recip'); return; }
+  if (!o.recipientName || !o.phone) { $('previewErr').textContent = t('need_recip'); return; }
+  if (deliverMode === 'address' ? (!o.address.city || !o.address.street) : !o.officeCode) {
+    $('previewErr').textContent = deliverMode === 'address' ? t('need_addr') : t('need_recip'); return;
+  }
   if (!o.description) { $('previewErr').textContent = t('need_desc'); $('pDesc').focus(); return; }
   if (o.cod.enabled && !(o.cod.amount > 0)) { $('previewErr').textContent = t('cod_blank'); return; }
   const btn = $('createBtn'); btnBusy(btn, true, t('creating'));
@@ -539,7 +588,8 @@ async function doCreate() {
     $('profileLink').href = econtProfileUrl();
     if (st.shipmentNumber) { $('trackLink').href = econtTrackUrl(num); $('trackLink').style.display = ''; } else { $('trackLink').style.display = 'none'; }
     $('resultMeta').textContent = st.totalPrice != null ? t('price_label', { v: Number(st.totalPrice).toFixed(2), cur: st.totalPriceCurrency || $('pCodCur').value || 'EUR' }) : '';
-    if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, office: o.officeCode, weight: o.weight, description: o.description, cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
+    const destLabel = deliverMode === 'address' ? [o.address.city, o.address.street, o.address.num].filter(Boolean).join(' ') : o.officeCode;
+    if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, office: destLabel, weight: o.weight, description: o.description, cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
     $('preview').classList.add('hide'); $('result').classList.remove('hide');
     playCheck();
     $('result').scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
@@ -641,7 +691,11 @@ $('replyBtn').onclick = async () => {
 $('newBtn').onclick = () => { $('msg').value = ''; $('result').classList.add('hide'); $('preview').classList.add('hide'); $('msg').focus(); };
 // Instant: pasting the message auto-parses (no extra click). Live summary follows edits.
 $('msg').addEventListener('paste', () => setTimeout(() => { if ($('msg').value.trim()) doParse(); }, 60));
-['pName', 'pCodOn', 'pCodAmount', 'pCodCur'].forEach((id) => $(id).addEventListener('input', scheduleSummary));
+['pName', 'pCodOn', 'pCodAmount', 'pCodCur', 'pAddrCity', 'pAddrStreet', 'pAddrNum'].forEach((id) => $(id).addEventListener('input', scheduleSummary));
+// Office ↔ address delivery toggle. When switching to address with empty fields,
+// pre-fill from the last parsed address.
+$('modeOfficeBtn').onclick = () => setDeliverMode('office');
+$('modeAddressBtn').onclick = () => { if (!$('pAddrCity').value.trim() && PARSED_ADDR) fillAddress(PARSED_ADDR); setDeliverMode('address'); };
 
 // ---------- parcels (live status + operation timer) ----------
 const toMs = (v) => { if (v == null) return null; let n = Number(v); if (!n) return null; if (n < 1e12) n *= 1000; return n; };

@@ -47,12 +47,16 @@ function normalizePhone(raw) {
 
 function detectDeliveryType(text) {
   const t = text.toLowerCase();
-  if (/(до\s*)?адрес|до\s*врата|до\s*мен|courier|куриер/.test(t)) { if (/офис|office/.test(t)) return 'office'; return 'door'; }
+  // A concrete street/complex/number next to an address word is a strong "door"
+  // signal that wins even if "офис" appears elsewhere (e.g. the seller's own pitch).
+  const strongAddr = /адрес/.test(t) && /(ул\.?\s|бул\.?\s|ж\.?\s*к|жк\s|кв\.?\s|№|\sдо\s+(?:училище|блок|бл\.?))/.test(t);
+  if (strongAddr) return 'door';
+  if (/(до\s*)?адрес|до\s*врата|до\s*мен|courier|куриер/.test(t)) { if (/офис|office|\bапс\b|\baps\b/.test(t)) return 'office'; return 'door'; }
   return 'office';
 }
 
 const isPunct = (s) => /^[^\p{L}\p{N}]+$/u.test(s);
-function bare(tok) { return tok.toLowerCase().replace(/[.'’-]/g, ''); }
+function bare(tok) { return tok.toLowerCase().replace(/[.'’:-]/g, ''); }
 // A name word: starts uppercase, not all-caps, no digit, not a filler/city.
 function isNameWord(tok) {
   if (!/^[А-ЯЁA-Z][\p{L}'’.-]*$/u.test(tok)) return false;
@@ -116,11 +120,42 @@ function detectReview(text) {
   const B = (w) => new RegExp('(?:^|[^а-яёa-z])' + w + '(?![а-яёa-z])');
   if (B('преглед\\s+и\\s+тест').test(s) || B('тест').test(s)) return 'review_test';
   if (B('преглед').test(s)) return 'review';
+  // The classic seller offer of the review service, phrased without the keyword:
+  // "отваряш на гишето, проверяваш и плащаш само ако е наред". \w does not match
+  // Cyrillic in JS, so use an explicit Cyrillic class.
+  if (/плаща[а-яё]*\s+само\s+ако/.test(s)) return 'review';
+  if (/провер[а-яё]+[^.!?]{0,20}плаща[а-яё]*/.test(s)) return 'review';
   return null;
 }
 
+// Best-effort structured address for a door (address) delivery. Every field is
+// editable in the UI afterwards, so this only has to get close.
+function extractAddress(text) {
+  let s = String(text || '').replace(/\s+/g, ' ').trim();
+  s = s.replace(/^.{0,40}?адрес[^:]{0,20}:\s*/i, '').trim(); // drop a leading "адрес …:" label
+  const addr = {};
+  const pc = s.match(/\b(\d{4})\b/);
+  if (pc) addr.postCode = pc[1];
+  // City: last token that is a known city (case-insensitive), else "гр. Xxx".
+  const toks = s.replace(/[.,]/g, ' ').split(/\s+/).filter(Boolean);
+  for (let i = toks.length - 1; i >= 0; i--) { if (CITIES.has(toks[i].toLowerCase())) { addr.city = toks[i]; break; } }
+  const gr = s.match(/\bгр\.?\s*([А-ЯЁ][а-яё]+)/);
+  if (!addr.city && gr) addr.city = gr[1];
+  // Street + number: "ул. Радост 8", "бул. ... 12А".
+  const st = s.match(/(?:ул|бул|булевард|улица)\.?\s+([^,\d]{2,30}?)\s+(\d+[А-Яа-яA-Za-z]?)\b/i);
+  if (st) { addr.street = st[1].trim(); addr.num = st[2]; }
+  // Residential complex / quarter: "ж.к Трошево", "кв. Младост".
+  const q = s.match(/(?:ж\.?\s*к\.?|жк|кв|квартал)\.?\s+([А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+)?)/);
+  if (q) addr.quarter = q[1].trim();
+  // Landmark note ("до училище …") — stop before any digits so the postcode is not
+  // swallowed. Cyrillic-safe left boundary (\b does not work before Cyrillic in JS).
+  const near = s.match(/(?:^|[^а-яёa-z])(до|срещу|зад|при|блок|бл\.)\s+([^,\n\d]{2,40})/i);
+  if (near) addr.other = (near[1] + ' ' + near[2]).replace(/\s+/g, ' ').trim();
+  return addr;
+}
+
 function parseMessage(text) {
-  const out = { deliveryType: detectDeliveryType(text), recipientName: '', phone: '', phoneRaw: '', locationText: '', cod: null, reviewMode: null };
+  const out = { deliveryType: detectDeliveryType(text), recipientName: '', phone: '', phoneRaw: '', locationText: '', address: null, cod: null, reviewMode: null };
   out.reviewMode = detectReview(text);
   const m = PHONE_RE.exec(text);
   const phoneIndex = m ? m.index : -1;
@@ -132,8 +167,8 @@ function parseMessage(text) {
   const after = m ? text.slice(m.index + m[0].length) : '';
   const tok = (s) => s.replace(/[,/]/g, ' ').split(/\s+/).filter(Boolean);
   let beforeTok = tok(before), afterTok = tok(after);
-  // Drop trailing punctuation and phone-label words (тел / GSM …) so the name right before them is found.
-  const TRAIL_LABEL = new Set(['тел', 'телефон', 'gsm', 'гсм']);
+  // Drop trailing punctuation and label words (тел / GSM / номер …) so the name right before them is found.
+  const TRAIL_LABEL = new Set(['тел', 'телефон', 'gsm', 'гсм', 'номер', 'номера', '№', 'тлф']);
   while (beforeTok.length) { const last = beforeTok[beforeTok.length - 1]; if (isPunct(last) || TRAIL_LABEL.has(bare(last))) beforeTok.pop(); else break; }
   while (afterTok.length && isPunct(afterTok[0])) afterTok.shift();
 
@@ -155,6 +190,16 @@ function parseMessage(text) {
   loc = loc.replace(/\s+/g, ' ').trim();
   if (!/[\p{L}]/u.test(loc) && afterTok.length) loc = afterTok.filter((w) => !nameTok.includes(w)).join(' ').trim();
   out.locationText = loc;
+  // Parse an address into editable fields whenever the message carries one, so the
+  // door-delivery form is pre-filled even if the type guess was "office" and the
+  // user toggles to address delivery. The address commonly follows the phone (and
+  // an "адрес:" label), so read from there rather than the office-location text.
+  let addrSrc = loc;
+  const am = text.match(/адрес(?:\s*на\s*еконт)?\s*:?\s*(.+)$/is);
+  if (am) addrSrc = am[1];
+  else if (after && /\d{4}|ул\.?\s|ж\.?\s*к|кв\.?\s/i.test(after)) addrSrc = after;
+  const addr = extractAddress(addrSrc);
+  if (addr.city || addr.street || addr.quarter || addr.postCode) out.address = addr;
   return out;
 }
 
