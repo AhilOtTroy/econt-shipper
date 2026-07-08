@@ -94,6 +94,10 @@ function buildLabel(sender, defaults, o) {
   if (review) label.payAfterAccept = true;
   if (test) label.payAfterTest = true;
 
+  // SMS notification to the receiver (per-parcel override falls back to the default).
+  const sms = o.smsNotification != null ? o.smsNotification : d.smsNotification;
+  if (sms) label.smsNotification = true;
+
   // Sender drop-off location
   if (sender.officeCode) label.senderOfficeCode = String(sender.officeCode);
   else if (sender.address) label.senderAddress = toAddress(sender.address);

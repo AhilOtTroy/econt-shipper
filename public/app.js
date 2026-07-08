@@ -39,6 +39,8 @@ const I18N = {
     set_account: 'Еконт акаунт', username: 'Потребител', pass_keep: 'Парола (празно = без промяна)',
     set_sender: 'Подател', name: 'Име', phone: 'Телефон', set_office_code: 'Код на вашия офис за подаване', search: 'търсене…',
     set_defaults: 'Настройки по подразбиране', receiver: 'Получател', sender: 'Подател', set_cod_default: 'Наложен платеж по подразбиране',
+    set_shiptype: 'Тип пратка', shiptype_pack: 'Колет', shiptype_doc: 'Документи', set_packcount: 'Брой пакети',
+    set_sms: 'SMS известие до получателя за всяка пратка', cod_warn: '⚠ Няма наложен платеж на тази пратка',
     refresh_offices: 'Обнови офисите', save: 'Запази',
     paste_label: 'Поставете съобщението на клиента', paste_ph: 'Моля да ги изпратите в Офис на еконт: …  Име – 08xx xxx xxx', paste_hint: 'Съвет: Ctrl+Enter за преглед',
     img_cta: 'Снимка → товарителница', img_hint: 'Пуснете, поставете или изберете снимка на чата', or_paste: 'или поставете текста',
@@ -106,6 +108,8 @@ const I18N = {
     set_account: 'Econt account', username: 'Username', pass_keep: 'Password (blank = keep)',
     set_sender: 'Sender', name: 'Name', phone: 'Phone', set_office_code: 'Your drop-off office code', search: 'search…',
     set_defaults: 'Default options', receiver: 'Receiver', sender: 'Sender', set_cod_default: 'COD on by default',
+    set_shiptype: 'Shipment type', shiptype_pack: 'Parcel', shiptype_doc: 'Documents', set_packcount: 'Number of packs',
+    set_sms: 'SMS notification to the recipient for every parcel', cod_warn: '⚠ No cash-on-delivery on this parcel',
     refresh_offices: 'Refresh offices', save: 'Save',
     paste_label: "Paste the customer's message", paste_ph: 'Моля да ги изпратите в Офис на еконт: …  Name – 08xx xxx xxx', paste_hint: 'Tip: Ctrl+Enter to preview',
     img_cta: 'Screenshot → label', img_hint: 'Drop, paste or pick a screenshot of the chat', or_paste: 'or paste the text',
@@ -297,7 +301,7 @@ $('suFinishBtn').onclick = async () => {
   CONFIG = {
     mode: c.mode, username: c.username,
     sender: { name: $('suSenderName').value.trim(), phone: $('suSenderPhone').value.trim(), officeCode: office, address: null },
-    defaults: { shipmentType: 'pack', packCount: 1, weight: Number($('suWeight').value) || 1, shipmentDescription: $('suDesc').value.trim(), payer: $('suPayer').value, payAfterAccept: false, payAfterTest: false, cod: { enabled: $('suCod').checked, amount: 0, currency: $('suCur').value }, countryCode: 'BGR' },
+    defaults: { shipmentType: 'pack', packCount: 1, weight: Number($('suWeight').value) || 1, shipmentDescription: $('suDesc').value.trim(), payer: $('suPayer').value, payAfterAccept: false, payAfterTest: false, smsNotification: false, cod: { enabled: $('suCod').checked, amount: 0, currency: $('suCur').value }, countryCode: 'BGR' },
   };
   await persist(); enterApp();
 };
@@ -349,6 +353,8 @@ function enterApp() {
   $('cfgWeight').value = d.weight ?? 1; $('cfgDesc').value = d.shipmentDescription || '';
   $('cfgPayer').value = d.payer || 'receiver'; $('cfgCodOn').checked = !!(d.cod && d.cod.enabled);
   $('cfgCur').value = (d.cod && d.cod.currency) || 'EUR';
+  $('cfgShipType').value = d.shipmentType || 'pack'; $('cfgPackCount').value = d.packCount || 1;
+  $('cfgSms').checked = !!d.smsNotification;
   $('cfgReviewMode').value = reviewAnchor(d);
   applyReviewUI();  // keep the preview's review control in sync after a settings change
   switchTab('new');
@@ -379,7 +385,13 @@ $('saveCfgBtn').onclick = async () => {
   if ($('cfgPass').value) SESSION.password = $('cfgPass').value;
   CONFIG.sender = { name: $('cfgSenderName').value.trim(), phone: $('cfgSenderPhone').value.trim(), officeCode: $('cfgSenderOffice').value.trim(), address: CONFIG.sender.address || null };
   const rm = $('cfgReviewMode').value, rf = reviewFlags(rm);
-  CONFIG.defaults = Object.assign({}, CONFIG.defaults, { weight: Number($('cfgWeight').value) || 1, shipmentDescription: $('cfgDesc').value.trim(), payer: $('cfgPayer').value, reviewMode: rm, payAfterAccept: rf.payAfterAccept, payAfterTest: rf.payAfterTest, cod: Object.assign({}, CONFIG.defaults.cod, { enabled: $('cfgCodOn').checked, currency: $('cfgCur').value }) });
+  CONFIG.defaults = Object.assign({}, CONFIG.defaults, {
+    weight: Number($('cfgWeight').value) || 1, shipmentDescription: $('cfgDesc').value.trim(), payer: $('cfgPayer').value,
+    shipmentType: $('cfgShipType').value, packCount: Math.max(1, parseInt($('cfgPackCount').value, 10) || 1),
+    smsNotification: $('cfgSms').checked,
+    reviewMode: rm, payAfterAccept: rf.payAfterAccept, payAfterTest: rf.payAfterTest,
+    cod: Object.assign({}, CONFIG.defaults.cod, { enabled: $('cfgCodOn').checked, currency: $('cfgCur').value }),
+  });
   await persist(); enterApp(); toast(t('saved'));
 };
 
@@ -454,12 +466,15 @@ function showPrice(resp) {
   return total != null ? t('est_price', { v: Number(total).toFixed(2), cur }) : t('validated');
 }
 function currentReviewMode() { return reviewAnchor(CONFIG.defaults) || $('pReviewMode').value || 'none'; }
-// One-glance confirmation chip-line so the user verifies the whole shipment in ~1s.
+// One-glance confirmation chip-line so the user verifies the whole shipment in ~1s,
+// plus a caution note when the parcel carries no cash-on-delivery.
 function updateSummary() {
+  const sel = $('pOffice');
   const name = $('pName').value.trim();
-  const opt = $('pOffice').selectedOptions[0];
-  const office = opt && $('pOffice').value ? opt.textContent.split(' — ')[0] : '';
-  const cod = $('pCodOn').checked && Number($('pCodAmount').value) > 0 ? `${Number($('pCodAmount').value)} ${$('pCodCur').value}` : '';
+  const opt = sel.selectedOptions[0];
+  const office = opt && sel.value ? opt.textContent.split(' — ')[0] : '';
+  const codOn = $('pCodOn').checked, codAmt = Number($('pCodAmount').value);
+  const cod = codOn && codAmt > 0 ? `${codAmt} ${$('pCodCur').value}` : '';
   const rl = reviewLabel(currentReviewMode());
   const parts = [];
   if (name) parts.push(`<b>${esc(name)}</b>`);
@@ -469,7 +484,12 @@ function updateSummary() {
   const box = $('prevSummary');
   if (parts.length) { box.innerHTML = parts.join('<span class="dot-sep">·</span>'); box.classList.remove('hide'); }
   else box.classList.add('hide');
+  // Warn when there is no cash-on-delivery on this parcel.
+  $('codWarn').classList.toggle('hide', codOn && codAmt > 0);
 }
+// Coalesce bursts of input events into a single summary update per frame.
+let _sumRaf = 0;
+function scheduleSummary() { if (!_sumRaf) _sumRaf = requestAnimationFrame(() => { _sumRaf = 0; updateSummary(); }); }
 // Confidence that the auto-picked office is right, from the match score.
 function officeMatchHint() {
   if (!CANDIDATES.length || !$('pOffice').value) return '';
@@ -621,7 +641,7 @@ $('replyBtn').onclick = async () => {
 $('newBtn').onclick = () => { $('msg').value = ''; $('result').classList.add('hide'); $('preview').classList.add('hide'); $('msg').focus(); };
 // Instant: pasting the message auto-parses (no extra click). Live summary follows edits.
 $('msg').addEventListener('paste', () => setTimeout(() => { if ($('msg').value.trim()) doParse(); }, 60));
-['pName', 'pCodOn', 'pCodAmount', 'pCodCur'].forEach((id) => $(id).addEventListener('input', updateSummary));
+['pName', 'pCodOn', 'pCodAmount', 'pCodCur'].forEach((id) => $(id).addEventListener('input', scheduleSummary));
 
 // ---------- parcels (live status + operation timer) ----------
 const toMs = (v) => { if (v == null) return null; let n = Number(v); if (!n) return null; if (n < 1e12) n *= 1000; return n; };

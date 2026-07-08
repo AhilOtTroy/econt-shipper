@@ -235,6 +235,10 @@ try {
   .match-lo { background: #fff4d6; color: #7a5200; }
   :root[data-theme="dark"] .match-hi { background: #16331f; color: #57d98a; }
   :root[data-theme="dark"] .match-lo { background: #3a2d12; color: #f4c463; }
+  /* Inline caution note (e.g. no cash-on-delivery on this parcel) */
+  .warn-box { margin-top: 10px; padding: 9px 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: #7a5200; background: #fff4d6; border: 1px solid rgba(154,103,0,.25); animation: warnIn .3s var(--spring); }
+  :root[data-theme="dark"] .warn-box { color: #f4c463; background: #3a2d12; border-color: rgba(244,196,99,.22); }
+  @keyframes warnIn { from { opacity: 0; transform: translateY(-4px); } }
 
   /* Screenshot → parcel dropzone */
   .drop { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 16px; border: 1.5px dashed var(--line); border-radius: var(--radius-sm); background: var(--brand-soft); color: var(--ink); box-shadow: none; transition: transform .3s var(--spring), border-color .2s, background .2s; }
@@ -576,9 +580,16 @@ try {
             <select id="cfgPayer"><option value="receiver" data-i18n="receiver">Получател</option><option value="sender" data-i18n="sender">Подател</option></select>
           </div>
         </div>
+        <div class="row">
+          <div><label data-i18n="set_shiptype">Тип пратка</label>
+            <select id="cfgShipType"><option value="pack" data-i18n="shiptype_pack">Колет</option><option value="document" data-i18n="shiptype_doc">Документи</option></select>
+          </div>
+          <div><label data-i18n="set_packcount">Брой пакети</label><input id="cfgPackCount" type="number" inputmode="numeric" min="1" step="1" value="1"></div>
+        </div>
         <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgCodOn"> <span data-i18n="set_cod_default">Наложен платеж по подразбиране</span></label>
         <label data-i18n="cod_currency">Валута на наложен платеж</label>
         <select id="cfgCur"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
+        <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgSms"> <span data-i18n="set_sms">SMS известие до получателя за всяка пратка</span></label>
         <label data-i18n="review_setting">Фиксирай „Преглед“ за всяка пратка</label>
         <select id="cfgReviewMode">
           <option value="" data-i18n="review_unanchored">Избирам за всяка пратка</option>
@@ -638,6 +649,7 @@ try {
         <label class="inline" style="margin-top:12px"><input type="checkbox" id="pCodOn"> <span data-i18n="cod">Нал. платеж</span>
           <input id="pCodAmount" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" style="width:100px; margin-left:6px">
           <select id="pCodCur" style="width:auto"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select></label>
+        <div id="codWarn" class="warn-box hide" role="status" data-i18n="cod_warn">⚠ Няма наложен платеж на тази пратка</div>
         <div id="reviewRow">
           <label data-i18n="review_label">Опция „Преглед“</label>
           <select id="pReviewMode">
