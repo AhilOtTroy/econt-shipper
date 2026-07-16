@@ -22,8 +22,8 @@ try {
   :root {
     color-scheme: light;
     --bg: #e9eef6; --bg-2: #dce6f3;
-    --card: rgba(255,255,255,.72); --card-solid: #ffffff;
-    --field: rgba(255,255,255,.9); --ink: #0c1b30; --muted: #52617a;
+    --card: rgba(255,255,255,.9); --card-solid: #ffffff;
+    --field: rgba(255,255,255,.94); --ink: #0c1b30; --muted: #52617a;
     --line: rgba(16,38,75,.10); --brand: #0a4ea8; --brand-2: #0a73d6; --brand-3: #46a6ff; --brand-soft: rgba(10,115,214,.12);
     --go: #1e9e57; --go-d: #16894a; --warn: #c0392b;
     --ring-hi: rgba(255,255,255,.85); --ring-lo: rgba(16,38,75,.14);
@@ -36,8 +36,8 @@ try {
   :root[data-theme="dark"] {
     color-scheme: dark;
     --bg: #080c12; --bg-2: #0c131d;
-    --card: rgba(22,30,42,.66); --card-solid: #161e2a;
-    --field: rgba(16,24,35,.85); --ink: #e8eef7; --muted: #92a2b8;
+    --card: rgba(22,30,42,.9); --card-solid: #161e2a;
+    --field: rgba(16,24,35,.92); --ink: #e8eef7; --muted: #92a2b8;
     --line: rgba(255,255,255,.08); --brand: #3f8fe0; --brand-2: #5aa6ee; --brand-3: #7cc0ff; --brand-soft: rgba(90,166,238,.14);
     --go: #29b365; --go-d: #34c374; --warn: #ef6b6b;
     --ring-hi: rgba(255,255,255,.22); --ring-lo: rgba(255,255,255,.05);
@@ -65,19 +65,15 @@ try {
      html carries --bg as the base colour (also fills the overscroll area). */
   body { margin: 0; background: transparent; color: var(--ink); overflow-x: hidden;
     font: 16px/1.55 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
-  /* Living gradient-mesh backdrop for depth. Pre-softened gradients (no filter blur):
-     a 30px blur over a viewport-sized layer forced every glass surface above it to
-     re-blur its backdrop each animation frame — visibly janky on mid-range phones. */
+  /* Static gradient-mesh backdrop for depth. Kept still (no drift animation) so the
+     sticky topbar's blur never has to re-sample a moving layer every frame — the
+     gradient itself is the premium touch, not the motion. */
   body::before { content: ""; position: fixed; inset: -12%; z-index: -2; pointer-events: none;
     background:
       radial-gradient(42% 42% at 16% 18%, rgba(10,115,214,.21), transparent 70%),
       radial-gradient(46% 46% at 86% 12%, rgba(70,166,255,.19), transparent 70%),
       radial-gradient(50% 50% at 82% 88%, rgba(30,158,87,.13), transparent 70%),
-      radial-gradient(44% 44% at 10% 92%, rgba(10,78,168,.17), transparent 70%);
-    will-change: transform; animation: mesh 26s var(--ease) infinite alternate; }
-  /* Phones/tablets: same mesh, static — saves continuous GPU blur + battery. */
-  @media (hover: none), (pointer: coarse) { body::before { animation: none; } }
-  @keyframes mesh { from { transform: translate3d(0,0,0) rotate(0deg) scale(1); } to { transform: translate3d(0,-3%,0) rotate(3deg) scale(1.08); } }
+      radial-gradient(44% 44% at 10% 92%, rgba(10,78,168,.17), transparent 70%); }
   .wrap { max-width: 680px; margin: 0 auto; padding: 0 14px 90px; }
   .view.hide, .hide { display: none !important; }
   .view:not(.hide) { animation: viewIn .55s var(--ease); }
@@ -94,10 +90,10 @@ try {
   .brand:hover { transform: translateY(-1px); }
   .brand:active { transform: scale(.95); }
   .spacer { flex: 1; }
-  .langtoggle { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; box-shadow: var(--shadow); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .langtoggle { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; box-shadow: var(--shadow); }
   .lang { border: 0; background: transparent; color: var(--muted); padding: 7px 13px; font-weight: 700; font-size: 13px; transition: color .25s, background .35s var(--ease); }
   .lang.active { background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; }
-  .icon { display: inline-flex; align-items: center; justify-content: center; flex: none; padding: 0; border: 1px solid var(--line); background: var(--card); color: var(--brand); width: 40px; height: 40px; border-radius: 13px; font-weight: 800; font-size: 18px; line-height: 1; box-shadow: var(--shadow); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); transition: transform .3s var(--spring), border-color .2s, color .2s, box-shadow .3s; }
+  .icon { display: inline-flex; align-items: center; justify-content: center; flex: none; padding: 0; border: 1px solid var(--line); background: var(--card); color: var(--brand); width: 40px; height: 40px; border-radius: 13px; font-weight: 800; font-size: 18px; line-height: 1; box-shadow: var(--shadow); transition: transform .3s var(--spring), border-color .2s, color .2s, box-shadow .3s; }
   .icon:hover { border-color: var(--brand-2); color: var(--brand-2); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
   .icon:active { transform: scale(.9); }
 
@@ -114,10 +110,9 @@ try {
     background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.35) 50%, transparent 65%); }
   @media (hover: hover) { .primary:hover::after, .go:hover::after { animation: sheen .65s var(--ease); } }
   @keyframes sheen { to { transform: translateX(130%) skewX(-18deg); } }
-  .ghost { background: var(--card); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .ghost { background: var(--card); }
   /* Link styled as a button — replaces invalid <a><button> nesting (one tab stop, one announced role). */
   .btnlink { display: inline-block; font: inherit; font-weight: 600; text-decoration: none; text-align: center; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 13px; padding: 12px 18px;
-    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     transition: transform .3s var(--spring), box-shadow .3s var(--ease), border-color .2s, color .2s; }
   @media (hover: hover) { .btnlink:hover { border-color: var(--brand-2); transform: translateY(-2px); box-shadow: var(--shadow); color: var(--ink); } }
   .btnlink:active { transform: translateY(0) scale(.97); }
@@ -125,20 +120,12 @@ try {
   .block { width: 100%; }
   button:disabled { opacity: .5; cursor: default; transform: none !important; box-shadow: none !important; }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-  .card { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow);
-    -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
-    transition: transform .4s var(--ease), box-shadow .4s var(--ease); transform-style: preserve-3d; }
-  @media (hover: hover) { .card:hover { box-shadow: var(--shadow-lg); } }
-  /* Gradient hairline ring — light catches the top edge of the glass. */
-  .card, .parcel, .step { border-color: transparent; position: relative; }
-  .card::before, .parcel::before, .step::before {
-    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
-    background: linear-gradient(170deg, var(--ring-hi), var(--ring-lo) 40%, var(--ring-lo));
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    mask-composite: exclude;
-  }
+  /* Glass panels: an opaque-enough fill + a lit top edge (cheap inset highlight)
+     reads as frosted glass WITHOUT a per-card backdrop-filter (the main lag source). */
+  .card { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+    box-shadow: inset 0 1px 0 var(--ring-hi), var(--shadow);
+    transition: transform .4s var(--ease), box-shadow .4s var(--ease); }
+  @media (hover: hover) { .card:hover { box-shadow: inset 0 1px 0 var(--ring-hi), var(--shadow-lg); } }
   .tilt { will-change: transform; transition: transform .25s var(--ease), box-shadow .4s var(--ease); }
   textarea { min-height: 120px; resize: vertical; }
   textarea, input, select { width: 100%; background: var(--field); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 13px 14px; font: inherit; outline: none; transition: border-color .2s, box-shadow .25s var(--ease); }
@@ -174,7 +161,7 @@ try {
   #toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(24px) scale(.96); background: var(--ink); color: #fff; padding: 13px 20px; border-radius: 14px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none; transition: .4s var(--spring); z-index: 60; max-width: 90%; }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 
-  .segnav { position: relative; display: flex; background: var(--card); border: 1px solid var(--line); border-radius: 15px; padding: 5px; gap: 5px; margin-bottom: 16px; box-shadow: var(--shadow); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .segnav { position: relative; display: flex; background: var(--card); border: 1px solid var(--line); border-radius: 15px; padding: 5px; gap: 5px; margin-bottom: 16px; box-shadow: var(--shadow); }
   .seg-ind { position: absolute; top: 5px; bottom: 5px; left: 5px; width: calc(50% - 7.5px); border-radius: 11px; background: linear-gradient(135deg, var(--brand-2), var(--brand)); box-shadow: var(--shadow-brand); transition: transform .5s var(--spring); z-index: 0; }
   .segnav button { position: relative; z-index: 1; flex: 1; border: 0; background: transparent; border-radius: 11px; padding: 12px; font-weight: 700; color: var(--muted); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; transition: color .3s var(--ease); }
   .segnav button:hover { transform: none; box-shadow: none; border-color: transparent; }
@@ -194,7 +181,7 @@ try {
   .feat { display: flex; gap: 12px; align-items: center; margin: 14px 0; text-align: left; }
   .feat .tick { flex: none; width: 30px; height: 30px; border-radius: 10px; background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: var(--shadow-brand); }
 
-  .parcel { border: 1px solid transparent; border-radius: 16px; padding: 16px; margin-bottom: 12px; background: var(--card); box-shadow: var(--shadow); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+  .parcel { border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 12px; background: var(--card); box-shadow: inset 0 1px 0 var(--ring-hi), var(--shadow); transition: transform .35s var(--ease), box-shadow .35s var(--ease);
     content-visibility: auto; contain-intrinsic-size: auto 150px; }
   @media (hover: hover) { .parcel:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); } }
   .parcel-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -273,7 +260,7 @@ try {
 
   /* Landing: 3-step strip */
   .steps { display: flex; gap: 10px; margin: 0 0 18px; }
-  .step { flex: 1; background: var(--card); border: 1px solid transparent; border-radius: 16px; padding: 14px 12px; text-align: center; box-shadow: var(--shadow); transition: transform .35s var(--spring), box-shadow .35s; }
+  .step { flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 12px; text-align: center; box-shadow: inset 0 1px 0 var(--ring-hi), var(--shadow); transition: transform .35s var(--spring), box-shadow .35s; }
   @media (hover: hover) { .step:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); } }
   .step .s-ico { font-size: 24px; line-height: 1; filter: drop-shadow(0 4px 8px rgba(10,78,168,.25)); }
   .step b { display: block; font-size: 13.5px; margin-top: 8px; color: var(--ink); }
