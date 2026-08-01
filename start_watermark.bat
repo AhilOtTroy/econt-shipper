@@ -1,168 +1,172 @@
 @echo off
-REM Batch watermark remover - Windows one-click start.
+REM ===========================================================================
+REM  Batch watermark remover - Windows. Double-click this file.
 REM
-REM Double-click this file. First run installs everything and downloads the
-REM models (a few GB, several minutes). Later runs start in seconds.
+REM  This does NOT use, need, or touch any Python you have installed. It
+REM  downloads its own private Python into a "python" folder next to this file
+REM  and uses only that. Nothing is installed system-wide, nothing is added to
+REM  PATH, no admin rights are needed, and no Python version on your machine
+REM  can break it.
 REM
-REM The fussy part is the Python version. torch and scipy only publish
-REM prebuilt Windows wheels for a range of Python versions; on anything newer,
-REM pip tries to COMPILE them from source and fails. So this picks a known-good
-REM Python rather than whatever happens to be first on PATH.
+REM  To uninstall completely: delete this folder. That is all.
+REM
+REM  First run downloads about 2.5 GB and takes several minutes. Later runs
+REM  start in seconds.
+REM ===========================================================================
 setlocal EnableDelayedExpansion
 cd /d "%~dp0"
 
-echo ============================================
-echo   Batch watermark remover - starting up
-echo ============================================
-echo.
+set "PYDIR=%~dp0python"
+set "PYEXE=%PYDIR%\python.exe"
+set "MODELS=%~dp0models"
+set "TARBALL=%~dp0python-download.tar.gz"
 
-call :findpython
-if not defined PY goto nopython
-
-echo Using: %PY%
-%PY% -c "import sys,struct; print('   Python', sys.version.split()[0], struct.calcsize('P')*8, 'bit')"
-echo.
-
-REM Install into a private virtual environment next to this file rather than
-REM the system Python. It keeps this project's packages away from whatever
-REM else is installed, so a stray second copy of a package cannot win the
-REM import and break things in a way that is very hard to diagnose.
-set "VENV=%~dp0.venv"
-set "VPY=%VENV%\Scripts\python.exe"
-if not exist "%VPY%" (
-    echo Creating a private environment in .venv ...
-    %PY% -m venv "%VENV%"
-    if errorlevel 1 goto installfailed
+REM Pinned build. Verified to exist and to run this project end to end.
+set "PYVER=cpython-3.12.13+20260728"
+set "PYTAG=20260728"
+if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
+    set "PYPLAT=aarch64-pc-windows-msvc"
+) else (
+    set "PYPLAT=x86_64-pc-windows-msvc"
 )
+set "PYURL=https://github.com/astral-sh/python-build-standalone/releases/download/%PYTAG%/%PYVER%-%PYPLAT%-install_only.tar.gz"
 
-REM Only install when something is actually missing, so restarts stay fast.
-"%VPY%" -c "import flask, cv2, easyocr, iopaint" >nul 2>&1
+echo ============================================
+echo   Batch watermark remover
+echo ============================================
+echo.
+
+REM ---------------------------------------------------------------- Python --
+if exist "%PYEXE%" goto haspython
+
+echo Step 1 of 3: downloading a private Python (about 45 MB).
+echo This is not installed on your system - it lives in this folder only.
+echo.
+where curl.exe >nul 2>&1
+if errorlevel 1 goto usepowershell
+curl.exe -L --fail --progress-bar -o "%TARBALL%" "%PYURL%"
+if errorlevel 1 goto usepowershell
+goto extract
+
+:usepowershell
+echo (using PowerShell to download)
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '%PYURL%' -OutFile '%TARBALL%' -UseBasicParsing"
+if errorlevel 1 goto downloadfailed
+
+:extract
+if not exist "%TARBALL%" goto downloadfailed
+echo Extracting ...
+where tar.exe >nul 2>&1
+if errorlevel 1 goto notar
+tar -xf "%TARBALL%" -C "%~dp0"
+if errorlevel 1 goto extractfailed
+del "%TARBALL%" >nul 2>&1
+if not exist "%PYEXE%" goto extractfailed
+echo Private Python ready.
+echo.
+
+:haspython
+"%PYEXE%" -c "import sys; print('   using', sys.version.split()[0], 'from this folder')"
+if errorlevel 1 goto pythonbroken
+
+REM ---------------------------------------------------------- Dependencies --
+"%PYEXE%" -c "import flask, cv2, easyocr, iopaint" >nul 2>&1
 if errorlevel 1 (
-    echo Installing dependencies. First time only - this takes a few minutes.
     echo.
-    "%VPY%" -m pip install --upgrade pip setuptools wheel
-    REM --no-deps on purpose: IOPaint pins Pillow==9.5.0 and gradio==4.21.0.
-    REM Installing those pins drags in numpy 1.x, and on a current Python none
-    REM of them have prebuilt files, so pip tries to compile them and fails.
-    REM That is the real cause of the "failed to build scipy" error: scipy is
-    REM innocent, it is numpy 1.x being compiled inside scipy's build step.
-    "%VPY%" -m pip install --no-deps iopaint==1.6.0
+    echo Step 2 of 3: installing components, about 2.5 GB. First run only,
+    echo this takes several minutes. Leave it alone until it finishes.
+    echo.
+    "%PYEXE%" -m pip install --upgrade --no-warn-script-location pip setuptools wheel
+    REM --no-deps on purpose: IOPaint pins Pillow==9.5.0 and gradio==4.21.0,
+    REM and gradio drags in numpy 1.x. On current Python none of those have
+    REM prebuilt files, so pip would try to compile them and fail. That is the
+    REM real cause of the "failed to build scipy" error - scipy is innocent,
+    REM it is numpy 1.x being compiled inside scipy's build step that dies.
+    "%PYEXE%" -m pip install --no-warn-script-location --no-deps iopaint==1.6.0
     if errorlevel 1 goto installfailed
-    REM --only-binary turns a doomed ten-minute compile into an instant, clear
-    REM "no matching distribution" message naming the guilty package.
-    "%VPY%" -m pip install --only-binary=numpy,scipy,scikit-image,pillow,torch,torchvision,opencv-python-headless,python-bidi -r requirements-watermark.txt
+    REM --only-binary turns a doomed compile into an instant, clear message.
+    "%PYEXE%" -m pip install --no-warn-script-location --only-binary=numpy,scipy,scikit-image,pillow,torch,torchvision,opencv-python-headless,python-bidi -r requirements-watermark.txt
     if errorlevel 1 goto installfailed
     echo.
-    echo Dependencies installed.
-    echo.
+    echo Components installed.
 )
 
-echo Starting the web page. Your browser opens by itself.
+REM ---------------------------------------------------------------- Launch --
+REM Keep the AI models inside this folder too, so the whole thing stays
+REM self-contained and deleting the folder really does remove everything.
+set "EASYOCR_MODULE_PATH=%MODELS%\easyocr"
+echo.
+echo Step 3 of 3: starting. Your browser opens by itself.
 echo Close this window when you are finished.
 echo.
-"%VPY%" watermark_web.py
+"%PYEXE%" watermark_web.py --model-dir "%MODELS%"
 if errorlevel 1 (
     echo.
-    echo The server stopped with an error. The messages above say why.
+    echo It stopped with an error. Full diagnostic follows - send all of it.
     echo.
+    "%PYEXE%" watermark_doctor.py
 )
+echo.
 pause
 exit /b 0
 
 
-REM ---------------------------------------------------------------------------
-REM Pick a Python that actually has wheels. Preference order matters: named
-REM versions known to work come first, and each candidate must really run -
-REM "py" can exist with no Python 3 behind it, and "python" on PATH is often
-REM the Microsoft Store stub that does nothing.
-REM ---------------------------------------------------------------------------
-REM check_python.py exits 0 only for a 64-bit interpreter in the version range
-REM that has prebuilt wheels. It is a separate file because cmd's parser breaks
-REM on the parentheses a version comparison needs inside a FOR block.
-:findpython
-set "PY="
-for %%V in (3.12 3.11 3.13 3.10) do (
-    if not defined PY (
-        py -%%V check_python.py >nul 2>&1 && set "PY=py -%%V"
-    )
-)
-if not defined PY (
-    for %%C in ("py -3" "python" "python3") do (
-        if not defined PY (
-            %%~C check_python.py >nul 2>&1 && set "PY=%%~C"
-        )
-    )
-)
-exit /b 0
-
-
-:nopython
+:downloadfailed
+echo.
 echo ============================================
-echo   No suitable Python found.
+echo   Could not download Python.
 echo ============================================
 echo.
-echo This needs 64-bit Python 3.12 (3.10 - 3.13 also work).
-echo A newer Python is the problem, not the solution: PyTorch and friends
-echo do not ship prebuilt Windows files for it yet, so pip tries to
-echo compile them and fails. Python 3.15 has nothing prebuilt at all.
+echo Tried: %PYURL%
 echo.
-echo What is installed now:
-py -0 2>nul
+echo Check the internet connection. If you are behind a company firewall or
+echo VPN that blocks github.com, that is the cause.
 echo.
-echo Why each one was rejected:
-py -3 check_python.py --why 2>nul
-python check_python.py --why 2>nul
-echo.
-choice /c YN /m "Install Python 3.12 automatically with winget"
-if errorlevel 2 goto manualpython
-
-echo.
-echo Installing Python 3.12 ...
-winget install -e --id Python.Python.3.12 --accept-package-agreements --accept-source-agreements
-if errorlevel 1 goto manualpython
-
-echo.
-echo Checking again ...
-call :findpython
-if not defined PY goto manualpython
-echo Found: %PY%
-echo.
-echo Python 3.12 installed. Run this file again to finish setup.
-echo.
-pause
-exit /b 0
-
-:manualpython
-echo.
-echo Install Python 3.12 by hand:
-echo   https://www.python.org/downloads/release/python-31210/
-echo Choose "Windows installer (64-bit)" and tick
-echo "Install launcher for all users". You can leave "Add python.exe to
-echo PATH" unchecked - this launcher finds it with "py -3.12" either way.
-echo Then run this file again.
+echo You can also download that link in a browser, save it next to this file
+echo as python-download.tar.gz, and run this again - it will use the file.
 echo.
 pause
 exit /b 1
 
+:notar
+echo.
+echo ERROR: tar.exe was not found. It is built into Windows 10 build 17063
+echo and newer. On an older Windows, extract this file by hand with 7-Zip:
+echo   %TARBALL%
+echo so that python\python.exe ends up next to this .bat file, then run again.
+echo.
+pause
+exit /b 1
+
+:extractfailed
+echo.
+echo ERROR: could not extract the Python download - the file may be damaged.
+echo Delete this file and run again to re-download it:
+echo   %TARBALL%
+echo.
+pause
+exit /b 1
+
+:pythonbroken
+echo.
+echo ERROR: the private Python did not run. Delete the "python" folder next
+echo to this file and run this again to reinstall it.
+echo.
+pause
+exit /b 1
 
 :installfailed
 echo.
 echo ============================================
-echo   Installing the dependencies failed.
+echo   Installing components failed.
 echo ============================================
 echo.
-echo Your Python is:
-%PY% -c "import sys,struct; print('   Python', sys.version.split()[0], struct.calcsize('P')*8, 'bit')"
-echo.
-echo If the error above says no matching distribution was found, this Python
-echo has no prebuilt file for that package. Install Python 3.12 and run this
-echo file again:
-echo.
-echo   winget install -e --id Python.Python.3.12
+echo Usually this is a dropped connection - running this file again resumes
+echo where it stopped and is safe.
 echo.
 echo Full diagnostic follows. Send all of it if you need help.
 echo.
-if exist "%VPY%" ("%VPY%" watermark_doctor.py) else (%PY% watermark_doctor.py)
+"%PYEXE%" watermark_doctor.py
 echo.
 pause
 exit /b 1

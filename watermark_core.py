@@ -83,9 +83,21 @@ def ensure_lama(model_dir, auto_download=True):
     return checkpoint, found
 
 
+def easyocr_model_dir():
+    """Where EasyOCR keeps its weights, honouring its own env vars.
+
+    The Windows launcher sets EASYOCR_MODULE_PATH to a folder beside the app so
+    the whole install stays self-contained.
+    """
+    root = (os.environ.get("EASYOCR_MODULE_PATH")
+            or os.environ.get("MODULE_PATH")
+            or os.path.expanduser("~/.EasyOCR"))
+    return os.path.join(root, "model")
+
+
 def ensure_ocr(gpu=False):
     """Build the EasyOCR reader, downloading its weights on first use."""
-    model_dir = os.path.expanduser("~/.EasyOCR/model")
+    model_dir = easyocr_model_dir()
     needed = ["craft_mlt_25k.pth", "english_g2.pth"]
     if any(not os.path.isfile(os.path.join(model_dir, n)) for n in needed):
         print("downloading text-detector weights (~100 MB, one time) ...", flush=True)

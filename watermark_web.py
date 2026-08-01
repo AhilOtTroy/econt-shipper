@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """Local web UI for the batch watermark remover. Same engine as the CLI.
 
-Windows:  double-click start_watermark.bat
-Anything: pip install --no-deps iopaint==1.6.0
+Windows:  double-click start_watermark.bat and nothing else. It downloads its
+          own private Python into the folder, so no Python needs to be
+          installed and no installed Python can interfere.
+
+Elsewhere, with your own Python 3.10-3.13:
+          pip install --no-deps iopaint==1.6.0
           pip install -r requirements-watermark.txt
           python watermark_web.py
 

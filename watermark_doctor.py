@@ -156,13 +156,21 @@ def main():
 
     head("4. MODEL WEIGHTS")
     print("  LaMa is looked up in several cache roots; any one hit is enough.")
-    roots = [r for r in (os.environ.get("XDG_CACHE_HOME"), os.path.join(HOME, ".iopaint"),
-                         os.path.join(HOME, ".cache")) if r]
+    # "models" beside this file is where the self-contained Windows launcher
+    # puts them; the others are the defaults when run from a normal install.
+    here = os.path.dirname(os.path.abspath(__file__))
+    roots = [r for r in (os.environ.get("XDG_CACHE_HOME"), os.path.join(here, "models"),
+                         os.path.join(HOME, ".iopaint"), os.path.join(HOME, ".cache")) if r]
     have_lama = False
     for root in roots:
         if report_file(os.path.join(root, "torch", "hub", "checkpoints", "big-lama.pt")):
             have_lama = True
-    ocr = os.path.join(HOME, ".EasyOCR", "model")
+    ocr = os.path.join(
+        os.environ.get("EASYOCR_MODULE_PATH")
+        or os.environ.get("MODULE_PATH")
+        or os.path.join(HOME, ".EasyOCR"),
+        "model",
+    )
     have_ocr = all([report_file(os.path.join(ocr, name))
                     for name in ("craft_mlt_25k.pth", "english_g2.pth")])
     if not (have_lama and have_ocr):
