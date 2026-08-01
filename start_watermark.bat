@@ -31,7 +31,7 @@ REM     substituted when the block is parsed, not when it runs.
 REM ===========================================================================
 setlocal EnableExtensions DisableDelayedExpansion
 
-set "WMVERSION=2026-08-03.2"
+set "WMVERSION=2026-08-04.1"
 set "HERE=%~dp0"
 REM Same path without the trailing backslash. Required for any quoted argument.
 set "HEREN=%HERE:~0,-1%"

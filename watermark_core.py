@@ -31,6 +31,11 @@ DEFAULT_MIN_CONF = 0.30
 # touch — a product name, a label, printing on a box — sit in the middle. Set
 # to 1.0 to consider the whole frame.
 DEFAULT_EDGE_MARGIN = 0.25
+# How far to grow a matched text box sideways, in multiples of its own height,
+# so the logo glyph that sits beside the wordmark is erased with it. Measured
+# on Avito (dots icon, ~0.9 heights wide plus a gap) and Kufar (hexagon,
+# ~1.2 heights): 1.5 covers both with margin to spare.
+DEFAULT_ICON_PAD = 1.5
 
 
 class WatermarkError(Exception):
@@ -208,19 +213,153 @@ class Engine:
         from iopaint.schema import HDStrategy, InpaintRequest
 
         self.device = device
+        if device == "cpu":
+            # PyTorch defaults to a conservative thread count in some builds;
+            # LaMa is compute-bound, so use every core.
+            try:
+                torch.set_num_threads(os.cpu_count() or 1)
+            except Exception:
+                pass
         self.model = ModelManager(name="lama", device=torch.device(device))
         self.config = InpaintRequest(
             hd_strategy=HDStrategy.CROP,
-            hd_strategy_crop_trigger_size=1024,
+            # Crop-around-the-mask for anything bigger than 512px, not 1024.
+            # A watermark corner is a small part of the frame, and inpainting
+            # only that region with 196px of context is what IOPaint's own HD
+            # path does for large images — extending it to phone-sized photos
+            # measured 2-4x faster with the same visual result.
+            hd_strategy_crop_trigger_size=512,
             hd_strategy_crop_margin=196,
             hd_strategy_resize_limit=2048,
         )
         self.reader = ensure_ocr(gpu=(device == "cuda")) if with_detector else None
 
+    # Detection runs on an image no larger than this on its long side. OCR cost
+    # scales with area, and a watermark that passes the 3%-of-height floor is
+    # still comfortably readable at this size. Boxes are mapped back to full
+    # resolution, so the mask and the inpainting stay full-quality.
+    DETECT_MAX_SIDE = 1024
+
+    def _read_boxes(self, image_rgb):
+        """Run OCR, downscaling first when the image is large. Returns
+        (box_points, text, confidence) tuples in FULL-resolution coordinates."""
+        height, width = image_rgb.shape[:2]
+        scale = 1.0
+        detect_img = image_rgb
+        long_side = max(height, width)
+        if long_side > self.DETECT_MAX_SIDE:
+            scale = self.DETECT_MAX_SIDE / long_side
+            detect_img = cv2.resize(
+                image_rgb, (int(width * scale), int(height * scale)),
+                interpolation=cv2.INTER_AREA,
+            )
+        results = []
+        for box, text, confidence in self.reader.readtext(
+            detect_img, text_threshold=0.6, low_text=0.35, link_threshold=0.4
+        ):
+            points = np.array(box, dtype=np.float64) / scale
+            results.append((points.astype(np.int32), text, confidence))
+        return results
+
+    def _read_boxes_filtered(self, image_rgb, min_height_frac, edge_margin):
+        """Detect text everywhere, but only pay for recognition where a
+        watermark could legally be.
+
+        Measured on a real listing photo: the detector finds ~76 text regions
+        (all the printing on the product box), recognising them all costs
+        3.6s, and recognising the one region that survives the geometry
+        filters costs 0.01s. So the size and edge-band filters run BEFORE
+        recognition, on the detector's raw boxes, with a little slack; the
+        exact filters run again afterwards on the recognised results.
+        """
+        from easyocr.utils import reformat_input
+
+        height, width = image_rgb.shape[:2]
+        scale = 1.0
+        detect_img = image_rgb
+        long_side = max(height, width)
+        if long_side > self.DETECT_MAX_SIDE:
+            scale = self.DETECT_MAX_SIDE / long_side
+            detect_img = cv2.resize(
+                image_rgb, (int(width * scale), int(height * scale)),
+                interpolation=cv2.INTER_AREA,
+            )
+        det_h, det_w = detect_img.shape[:2]
+        image, grey = reformat_input(detect_img)
+        h_lists, f_lists = self.reader.detect(
+            image, text_threshold=0.6, low_text=0.35, link_threshold=0.4
+        )
+        h_list, f_list = h_lists[0], f_lists[0]
+
+        def plausible(x0, x1, y0, y1):
+            # Slightly loose versions of the real filters, so nothing that
+            # could pass them is dropped before recognition.
+            if (y1 - y0) < 0.85 * min_height_frac * det_h:
+                return False
+            if edge_margin >= 1.0:
+                return True
+            band = min(1.0, edge_margin * 1.15)
+            return (y1 <= band * det_h or y0 >= (1.0 - band) * det_h
+                    or x1 <= band * det_w or x0 >= (1.0 - band) * det_w)
+
+        h_keep = [b for b in h_list if plausible(b[0], b[1], b[2], b[3])]
+        f_keep = []
+        for quad in f_list:
+            pts = np.array(quad)
+            if plausible(pts[:, 0].min(), pts[:, 0].max(),
+                         pts[:, 1].min(), pts[:, 1].max()):
+                f_keep.append(quad)
+        if not h_keep and not f_keep:
+            return []
+
+        results = []
+        for box, text, confidence in self.reader.recognize(grey, h_keep, f_keep):
+            points = np.array(box, dtype=np.float64) / scale
+            results.append((points.astype(np.int32), text, confidence))
+        return results
+
+    def _read_corners(self, image_rgb, edge_margin):
+        """Second-chance pass: OCR each corner region at 2x magnification.
+
+        A small or low-contrast watermark that the full-frame pass misses is
+        usually still there — just under the detector's resolution. Corners are
+        a fraction of the image, so magnifying them is cheap, and boxes come
+        back in full-image coordinates ready for the same filters.
+        """
+        height, width = image_rgb.shape[:2]
+        band_h = max(1, int(edge_margin * height * 1.4))
+        band_w = max(1, int(edge_margin * width * 1.4))
+        regions = [
+            (0, 0), (width - band_w, 0),
+            (0, height - band_h), (width - band_w, height - band_h),
+        ]
+        results = []
+        for ox, oy in regions:
+            crop = image_rgb[oy:oy + band_h, ox:ox + band_w]
+            if crop.size == 0:
+                continue
+            # Magnify small corners fully, but cap the working size: the point
+            # is rescuing marks below the detector's resolution, and a corner
+            # of a large photo is already at a readable scale. Without the cap
+            # a clean 1080x1920 image paid 14s just to confirm it was clean.
+            factor = min(2.0, max(1.0, 900.0 / max(crop.shape[:2])))
+            zoomed = crop if factor == 1.0 else cv2.resize(
+                crop, (int(crop.shape[1] * factor), int(crop.shape[0] * factor)),
+                interpolation=cv2.INTER_CUBIC)
+            for box, text, confidence in self.reader.readtext(
+                zoomed, text_threshold=0.5, low_text=0.3, link_threshold=0.4
+            ):
+                points = np.array(box, dtype=np.float64) / factor
+                points[:, 0] += ox
+                points[:, 1] += oy
+                results.append((points.astype(np.int32), text, confidence))
+        return results
+
     def detect(self, image_rgb, dilate=DEFAULT_DILATE,
                min_height_frac=DEFAULT_MIN_HEIGHT_FRAC,
                flat_frac=DEFAULT_FLAT_FRAC, min_conf=DEFAULT_MIN_CONF,
-               edge_margin=DEFAULT_EDGE_MARGIN, words=None):
+               edge_margin=DEFAULT_EDGE_MARGIN, words=None,
+               icon_pad=DEFAULT_ICON_PAD, thorough=True, region=None):
         """Find overlaid text and return (mask, texts), or (None, []) if none.
 
         Several filters keep photo content out of the mask, which matters
@@ -245,41 +384,80 @@ class Engine:
         if self.reader is None:
             raise WatermarkError("this engine was built without the text detector")
         height, width = image_rgb.shape[:2]
-        mask = np.zeros((height, width), dtype=np.uint8)
-        hits = []
-        for box, text, confidence in self.reader.readtext(
-            image_rgb, text_threshold=0.6, low_text=0.35, link_threshold=0.4
-        ):
-            points = np.array(box, dtype=np.int32)
-            x0, x1 = max(0, int(points[:, 0].min())), min(width, int(points[:, 0].max()))
-            y0, y1 = max(0, int(points[:, 1].min())), min(height, int(points[:, 1].max()))
-            if x1 <= x0 or y1 <= y0:
-                continue
-            if (y1 - y0) < min_height_frac * height:
-                continue
-            if confidence < min_conf:
-                continue
-            if words and not matches_word(text, words):
-                continue
-            if edge_margin < 1.0:
-                # The box must lie wholly within one of the four outer bands.
-                near = (y1 <= edge_margin * height              # top
-                        or y0 >= (1.0 - edge_margin) * height   # bottom
-                        or x1 <= edge_margin * width            # left
-                        or x0 >= (1.0 - edge_margin) * width)   # right
-                if not near:
+
+        def accept(candidates):
+            mask = np.zeros((height, width), dtype=np.uint8)
+            found = []
+            for points, text, confidence in candidates:
+                x0, x1 = max(0, int(points[:, 0].min())), min(width, int(points[:, 0].max()))
+                y0, y1 = max(0, int(points[:, 1].min())), min(height, int(points[:, 1].max()))
+                if x1 <= x0 or y1 <= y0:
                     continue
-            roi = image_rgb[y0:y1, x0:x1].reshape(-1, 3).astype(np.int16)
-            high = roi.max(axis=1)
-            low = roi.min(axis=1)
-            chroma = high - low
-            flat_black = float(((high < 60) & (chroma < 30)).mean())
-            flat_white = float(((low > 200) & (chroma < 30)).mean())
-            if max(flat_black, flat_white) < flat_frac:
-                continue
-            cv2.rectangle(mask, (x0, y0), (x1, y1), 255, -1)
-            hits.append(text.strip())
-        if not hits:
+                if (y1 - y0) < min_height_frac * height:
+                    continue
+                if confidence < min_conf:
+                    continue
+                if words and not matches_word(text, words):
+                    continue
+                if edge_margin < 1.0:
+                    # The box must lie wholly within one of the four outer bands.
+                    near = (y1 <= edge_margin * height              # top
+                            or y0 >= (1.0 - edge_margin) * height   # bottom
+                            or x1 <= edge_margin * width            # left
+                            or x0 >= (1.0 - edge_margin) * width)   # right
+                    if not near:
+                        continue
+                roi = image_rgb[y0:y1, x0:x1].reshape(-1, 3).astype(np.int16)
+                high = roi.max(axis=1)
+                low = roi.min(axis=1)
+                chroma = high - low
+                flat_black = float(((high < 60) & (chroma < 30)).mean())
+                flat_white = float(((low > 200) & (chroma < 30)).mean())
+                if max(flat_black, flat_white) < flat_frac:
+                    continue
+                # Watermarks are rarely text alone: a logo glyph sits beside the
+                # word (OCR boxes only the letters, so the icon would survive
+                # and betray the removal). Grow the box sideways by icon_pad
+                # text-heights and a little vertically. The growth is bounded
+                # by the text's own height, so it stays a local patch — and at
+                # a corner most of it just falls off the edge of the frame.
+                grow_x = int(icon_pad * (y1 - y0))
+                grow_y = int(0.4 * (y1 - y0))
+                x0g, x1g = max(0, x0 - grow_x), min(width, x1 + grow_x)
+                y0g, y1g = max(0, y0 - grow_y), min(height, y1 + grow_y)
+                cv2.rectangle(mask, (x0g, y0g), (x1g, y1g), 255, -1)
+                found.append(text.strip())
+            return (mask, found) if found else (None, [])
+
+        if region is not None:
+            # OCR only this window (full-image coordinates). Used by the verify
+            # pass, which only needs to look where something was just erased —
+            # a fraction of the frame, so a fraction of the cost. Boxes are
+            # offset back so every filter still runs in full-image terms.
+            rx0, ry0, rx1, ry1 = region
+            rx0, ry0 = max(0, rx0), max(0, ry0)
+            rx1, ry1 = min(width, rx1), min(height, ry1)
+            if rx1 <= rx0 or ry1 <= ry0:
+                return None, []
+            offset_boxes = []
+            for points, text, confidence in self._read_boxes(image_rgb[ry0:ry1, rx0:rx1]):
+                shifted = points.copy()
+                shifted[:, 0] += rx0
+                shifted[:, 1] += ry0
+                offset_boxes.append((shifted, text, confidence))
+            mask, hits = accept(offset_boxes)
+        else:
+            mask, hits = accept(self._read_boxes_filtered(
+                image_rgb, min_height_frac, edge_margin))
+            if mask is None and thorough and edge_margin < 1.0:
+                # Nothing found at native resolution: magnify the corners and
+                # look again. This is what catches the small or washed-out
+                # marks the first pass slides over. Skipped when
+                # thorough=False, since running four magnified OCR crops just
+                # to confirm a clean result would double the cost of every
+                # image.
+                mask, hits = accept(self._read_corners(image_rgb, edge_margin))
+        if mask is None:
             return None, []
         if dilate > 0:
             k = 2 * dilate + 1
@@ -323,4 +501,23 @@ class Engine:
                 "than the minimum text height, or it sits away from the edges. "
                 "Adjust those under Detection settings."
             )
-        return self.inpaint(image_bgr, mask), hits, mask
+        result = self.inpaint(image_bgr, mask)
+
+        # Verify pass: look at the result the way a buyer would. If the
+        # detector can still read the watermark in the cleaned image — a
+        # semi-transparent remnant, or a second line the first mask clipped —
+        # erase that too. Only the neighbourhood of what was just erased is
+        # re-checked, so on a clean result this costs one small OCR call.
+        ys, xs = np.where(mask > 0)
+        pad_x = max(48, (xs.max() - xs.min()) // 2)
+        pad_y = max(48, (ys.max() - ys.min()) // 2)
+        neighbourhood = (int(xs.min()) - pad_x, int(ys.min()) - pad_y,
+                         int(xs.max()) + pad_x, int(ys.max()) + pad_y)
+        result_rgb = cv2.cvtColor(result, cv2.COLOR_BGR2RGB)
+        mask2, hits2 = self.detect(result_rgb, region=neighbourhood, **detect_kwargs)
+        if mask2 is not None:
+            result = self.inpaint(result, mask2)
+            mask = cv2.bitwise_or(mask, mask2)
+            hits = hits + [f"{t} (2nd pass)" for t in hits2]
+
+        return result, hits, mask

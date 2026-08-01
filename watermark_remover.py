@@ -33,6 +33,7 @@ import cv2
 
 from watermark_core import (
     DEFAULT_DILATE,
+    DEFAULT_ICON_PAD,
     DEFAULT_FLAT_FRAC,
     DEFAULT_MIN_CONF,
     DEFAULT_EDGE_MARGIN,
@@ -90,6 +91,9 @@ def main():
                     help="auto-detect: only touch text within this fraction of an "
                          "edge (default 0.25). Use 1.0 to search the whole image, "
                          "which risks erasing text printed on the subject itself.")
+    ap.add_argument("--icon-pad", type=float, default=DEFAULT_ICON_PAD,
+                    help="grow each matched text box sideways by this many text-heights "
+                         "so the logo icon beside the words goes too (default: 1.5)")
     ap.add_argument("--words", default="",
                     help="only remove text matching these comma-separated words, e.g. "
                          "'avito,kufar'. Exact and safe when you know the watermark: "
@@ -171,6 +175,7 @@ def main():
                 min_conf=args.min_conf,
                 edge_margin=args.edge_margin,
                 words=[w.strip() for w in args.words.split(",") if w.strip()],
+                icon_pad=args.icon_pad,
             )
         except WatermarkError as exc:
             failed += 1

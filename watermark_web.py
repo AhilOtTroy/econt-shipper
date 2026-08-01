@@ -38,6 +38,7 @@ import cv2
 
 from watermark_core import (
     DEFAULT_DILATE,
+    DEFAULT_ICON_PAD,
     DEFAULT_FLAT_FRAC,
     DEFAULT_MIN_CONF,
     DEFAULT_EDGE_MARGIN,
@@ -103,6 +104,7 @@ def clean():
             edge_margin=number("edge_margin", DEFAULT_EDGE_MARGIN),
             words=[w.strip() for w in (request.form.get("words") or "").split(",")
                    if w.strip()],
+            icon_pad=number("icon_pad", DEFAULT_ICON_PAD),
         )
         image = decode_image(upload.read())
         with ENGINE_LOCK:
