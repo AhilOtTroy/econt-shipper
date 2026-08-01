@@ -31,11 +31,15 @@ REM     substituted when the block is parsed, not when it runs.
 REM ===========================================================================
 setlocal EnableExtensions DisableDelayedExpansion
 
-set "WMVERSION=2026-08-02.1"
+set "WMVERSION=2026-08-03.1"
 set "HERE=%~dp0"
 REM Same path without the trailing backslash. Required for any quoted argument.
 set "HEREN=%HERE:~0,-1%"
 cd /d "%HERE%"
+REM One file to send when something goes wrong. Progress still prints to the
+REM window; the failure branches append the details here.
+set "LOG=%HERE%watermark-log.txt"
+if exist "%LOG%" del "%LOG%" >nul 2>&1
 
 set "PYDIR=%HERE%python"
 set "PYEXE=%PYDIR%\python.exe"
@@ -107,18 +111,20 @@ REM ---------------------------------------------------------- Components ----
 if "%errorlevel%"=="0" goto haspkgs
 
 echo Step 2 of 3: installing components, about 2.5 GB.
-echo First run only. This takes several minutes and looks frozen at times.
+echo First run only. This takes several minutes. The big step is written to
+echo watermark-log.txt instead of the screen, so the window will look quiet -
+echo that is normal. Leave it alone until it finishes.
 echo.
-"%PYEXE%" -m pip install --upgrade --no-warn-script-location pip setuptools wheel
+"%PYEXE%" -m pip install --upgrade --no-warn-script-location pip setuptools wheel >>"%LOG%" 2>&1
 if not "%errorlevel%"=="0" goto installfailed
-"%PYEXE%" -m pip install --no-warn-script-location --no-deps iopaint==1.6.0
+"%PYEXE%" -m pip install --no-warn-script-location --no-deps iopaint==1.6.0 >>"%LOG%" 2>&1
 if not "%errorlevel%"=="0" goto installfailed
 REM Prebuilt and shipped in wheels\ because PyPI has no wheel for it, only a
 REM source archive. omegaconf hard-pins this exact version, so installing it
 REM first is what keeps the whole setup free of compiling.
-"%PYEXE%" -m pip install --no-warn-script-location --no-index --find-links "%HERE%wheels" antlr4-python3-runtime==4.9.3
+"%PYEXE%" -m pip install --no-warn-script-location --no-index --find-links "%HERE%wheels" antlr4-python3-runtime==4.9.3 >>"%LOG%" 2>&1
 if not "%errorlevel%"=="0" goto installfailed
-"%PYEXE%" -m pip install --no-warn-script-location --only-binary=numpy,scipy,scikit-image,pillow,torch,torchvision,opencv-python-headless,python-bidi,shapely,pyclipper,ninja,tokenizers,safetensors,regex -r "%HERE%requirements-watermark.txt"
+"%PYEXE%" -m pip install --no-warn-script-location --only-binary=numpy,scipy,scikit-image,pillow,torch,torchvision,opencv-python-headless,python-bidi,shapely,pyclipper,ninja,tokenizers,safetensors,regex -r "%HERE%requirements-watermark.txt" >>"%LOG%" 2>&1
 if not "%errorlevel%"=="0" goto installfailed
 echo.
 echo Components installed.
@@ -219,9 +225,13 @@ echo.
 echo A dropped connection is the usual cause. Running this file again
 echo resumes where it stopped and is safe.
 echo.
-echo Diagnostic follows - send all of it, plus the red text above.
+echo Writing watermark-log.txt - send that one file.
 echo.
-"%PYEXE%" "%HERE%watermark_doctor.py"
+echo ==== install failed, v%WMVERSION% ==== >>"%LOG%"
+"%PYEXE%" "%HERE%watermark_doctor.py" >>"%LOG%" 2>&1
+type "%LOG%"
+echo.
+echo Saved to: %LOG%
 echo.
 pause
 exit /b 1
@@ -232,9 +242,13 @@ echo ============================================
 echo   It stopped with an error.
 echo ============================================
 echo.
-echo Diagnostic follows - send all of it, plus the red text above.
+echo Writing watermark-log.txt - send that one file.
 echo.
-"%PYEXE%" "%HERE%watermark_doctor.py"
+echo ==== run failed, v%WMVERSION% ==== >>"%LOG%"
+"%PYEXE%" "%HERE%watermark_doctor.py" >>"%LOG%" 2>&1
+type "%LOG%"
+echo.
+echo Saved to: %LOG%
 echo.
 pause
 exit /b 1

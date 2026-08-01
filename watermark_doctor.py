@@ -187,23 +187,26 @@ def main():
         print("  disk check failed: %s" % short(exc))
 
     head("6. WHAT TO DO")
-    # (instruction, literal lines to print verbatim underneath it)
+    # Never tell anyone to run pip by hand against a Python on this PC. Doing
+    # exactly that is what caused every failure this project has had: the
+    # Microsoft Store Python has no prebuilt packages for itself, pip tries to
+    # compile them, and it dies. start_watermark.bat downloads its own Python
+    # and is the only supported way in. Everything here points back at it.
     todo = []
-    if need_new_python:
-        todo.append(("Install 64-bit Python 3.12 from python.org, tick 'Add to PATH', and "
-                     "re-run this on it. Nothing below can work until the verdict is GOOD.",
-                     ["py -3.12 watermark_doctor.py"]))
-    if missing:
-        todo.append(("Install what is missing - IOPaint first and without its pins, since "
-                     "its pinned Pillow cannot build on current Python:",
-                     ["py -3.12 -m pip install --no-deps iopaint==1.6.0",
-                      "py -3.12 -m pip install -r requirements-watermark.txt"]))
+    if missing or need_new_python:
+        todo.append(("Run start_watermark.bat again. It installs everything into "
+                     "its own private Python and picks up where it stopped. Do not "
+                     "run pip yourself - a Python installed on this PC cannot "
+                     "install these packages, which is what the earlier errors were.",
+                     ["double-click  start_watermark.bat"]))
     if free_gb is not None and free_gb < 8:
         todo.append(("Free up disk space: %.1f GB left, the full install needs about 8 GB."
                      % free_gb, []))
     if not todo:
-        todo.append(("Nothing to fix. Start it with:", ["py -3.12 watermark_web.py"]))
-    todo.append(("If it still fails, send this whole output.", []))
+        todo.append(("Nothing to fix. Start it by double-clicking:",
+                     ["start_watermark.bat"]))
+    todo.append(("If it still fails, send watermark-log.txt from this folder - "
+                 "it has the whole story in one file.", []))
     for number, (text, commands) in enumerate(todo, 1):
         print(wrap("%d. %s" % (number, text), 2, 5))
         for command in commands:
