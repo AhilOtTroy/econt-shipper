@@ -40,16 +40,15 @@ REM Only install when something is actually missing, so restarts stay fast.
 if errorlevel 1 (
     echo Installing dependencies. First time only - this takes a few minutes.
     echo.
-    %PY% -m pip install --upgrade pip
-    %PY% -m pip install --upgrade setuptools wheel
-    %PY% -m pip install iopaint easyocr opencv-python-headless flask
-    if errorlevel 1 (
-        echo.
-        echo ERROR: installing the dependencies failed. The messages above say why.
-        echo.
-        pause
-        exit /b 1
-    )
+    %PY% -m pip install --upgrade pip setuptools wheel
+    REM --no-deps on purpose: IOPaint pins Pillow==9.5.0 and gradio==4.21.0,
+    REM which have no wheels on Python 3.12+, so pip would try to build Pillow
+    REM from source and fail. requirements-watermark.txt lists what it really
+    REM needs. See the comments in that file.
+    %PY% -m pip install --no-deps iopaint==1.6.0
+    if errorlevel 1 goto installfailed
+    %PY% -m pip install -r requirements-watermark.txt
+    if errorlevel 1 goto installfailed
     echo.
     echo Dependencies installed.
     echo.
@@ -65,3 +64,21 @@ if errorlevel 1 (
     echo.
 )
 pause
+exit /b 0
+
+:installfailed
+echo.
+echo ============================================
+echo   Installing the dependencies failed.
+echo ============================================
+echo.
+echo If the error above mentions building a wheel for torch, or says no
+echo matching distribution was found, your Python is probably too new for
+echo PyTorch. Your version is:
+%PY% -c "import sys; print('   Python', sys.version.split()[0])"
+echo.
+echo Install Python 3.12 from https://www.python.org/downloads/
+echo tick "Add python.exe to PATH", then run this file again.
+echo.
+pause
+exit /b 1

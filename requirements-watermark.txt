@@ -1,0 +1,38 @@
+# Dependencies for the watermark remover.
+#
+# Install IOPaint itself separately, with --no-deps:
+#
+#     pip install --no-deps iopaint==1.6.0
+#     pip install -r requirements-watermark.txt
+#
+# IOPaint 1.6.0 pins Pillow==9.5.0 and gradio==4.21.0. Neither has a wheel for
+# Python 3.12+, so pip falls back to building Pillow from source and dies with
+# "KeyError: '__version__'". Both pins are wrong for our purposes: LaMa runs
+# fine on current Pillow, and gradio is only for IOPaint's own web UI, which we
+# never start. Skipping its dependency list and naming the real ones here keeps
+# the install working on current Python.
+#
+# Verified on Python 3.11 with Pillow 12.3, torch 2.13, no gradio installed.
+
+# inpainting
+torch
+torchvision
+diffusers
+transformers
+huggingface_hub
+safetensors
+einops
+
+# IOPaint's own runtime imports
+loguru
+pydantic
+omegaconf
+yacs
+easydict
+piexif
+
+# detection, image IO, and the local web page
+easyocr
+opencv-python-headless
+numpy
+flask

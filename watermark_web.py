@@ -2,8 +2,12 @@
 """Local web UI for the batch watermark remover. Same engine as the CLI.
 
 Windows:  double-click start_watermark.bat
-Anything: pip install iopaint easyocr opencv-python-headless flask
+Anything: pip install --no-deps iopaint==1.6.0
+          pip install -r requirements-watermark.txt
           python watermark_web.py
+
+The --no-deps is deliberate: IOPaint pins Pillow==9.5.0, which cannot build on
+Python 3.12+. See requirements-watermark.txt.
 
 Model weights (~300 MB) download themselves on first run and the browser
 opens on its own. There is no separate setup command to get wrong.

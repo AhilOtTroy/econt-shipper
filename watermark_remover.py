@@ -2,8 +2,11 @@
 """Batch watermark remover. Local LaMa inpainting via IOPaint. No cloud, no per-image cost.
 
 Setup (once):
-    pip install iopaint easyocr opencv-python-headless
-    # model weights download themselves on first run, no extra command
+    pip install --no-deps iopaint==1.6.0
+    pip install -r requirements-watermark.txt
+    # --no-deps is deliberate: IOPaint pins Pillow==9.5.0, which cannot build
+    # on Python 3.12+. See requirements-watermark.txt.
+    # Model weights download themselves on first run, no extra command.
 
 Usage:
     # auto-detect the watermark text in each image (watermark moves between images)
