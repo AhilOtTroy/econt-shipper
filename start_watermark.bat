@@ -31,11 +31,51 @@ REM     substituted when the block is parsed, not when it runs.
 REM ===========================================================================
 setlocal EnableExtensions DisableDelayedExpansion
 
-set "WMVERSION=2026-08-03.1"
+set "WMVERSION=2026-08-03.2"
 set "HERE=%~dp0"
 REM Same path without the trailing backslash. Required for any quoted argument.
 set "HEREN=%HERE:~0,-1%"
 cd /d "%HERE%"
+
+REM ---------------------------------------------------------- MAX_PATH ------
+REM Windows refuses to create a file whose full path exceeds 260 characters,
+REM and Python packages nest deeply. Measured on a real failure: unzipping to
+REM Downloads gives a 122-character folder prefix, because GitHub's archive
+REM repeats the 59-character branch folder inside itself, and pip then died on
+REM   ...\python\Lib\site-packages\networkx\algorithms\centrality\tests\
+REM   test_current_flow_betweenness_centrality_subset.py
+REM at exactly 260 characters. From C:\wm the same file is 118.
+REM So the program moves itself somewhere short before installing anything.
+set "TARGET=C:\wm"
+if /i "%HEREN%"=="%TARGET%" goto shortpath
+md "%TARGET%" >nul 2>&1
+if exist "%TARGET%\." goto relocate
+REM C:\ refused us, e.g. a locked-down machine. Home is still far shorter.
+set "TARGET=%USERPROFILE%\wm"
+md "%TARGET%" >nul 2>&1
+if not exist "%TARGET%\." goto cannotrelocate
+
+:relocate
+echo Setting up in a short folder, so Windows' 260-character path limit
+echo cannot break the install:
+echo    %TARGET%
+echo.
+copy /y "%HERE%*.py" "%TARGET%\" >nul 2>&1
+copy /y "%HERE%*.html" "%TARGET%\" >nul 2>&1
+copy /y "%HERE%*.txt" "%TARGET%\" >nul 2>&1
+copy /y "%HERE%start_watermark.bat" "%TARGET%\" >nul 2>&1
+md "%TARGET%\wheels" >nul 2>&1
+copy /y "%HERE%wheels\*" "%TARGET%\wheels\" >nul 2>&1
+if not exist "%TARGET%\watermark_web.py" goto cannotrelocate
+if not exist "%TARGET%\start_watermark.bat" goto cannotrelocate
+echo From now on you can run it straight from there:
+echo    %TARGET%\start_watermark.bat
+echo.
+cd /d "%TARGET%"
+call "%TARGET%\start_watermark.bat"
+exit /b %errorlevel%
+
+:shortpath
 REM One file to send when something goes wrong. Progress still prints to the
 REM window; the failure branches append the details here.
 set "LOG=%HERE%watermark-log.txt"
@@ -149,6 +189,22 @@ echo.
 pause
 exit /b 0
 
+
+:cannotrelocate
+echo ============================================
+echo   Could not create a short working folder.
+echo ============================================
+echo.
+echo Tried C:\wm and %%USERPROFILE%%\wm and could not create either.
+echo.
+echo Windows cannot install this where it currently sits, because the full
+echo path would pass its 260-character limit:
+echo   %HEREN%
+echo.
+echo Move this folder to C:\ by hand (so it becomes C:\wm) and run it again.
+echo.
+pause
+exit /b 1
 
 :insidezip
 echo ============================================
