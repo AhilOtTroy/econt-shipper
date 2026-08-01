@@ -1,115 +1,164 @@
 @echo off
 REM ===========================================================================
-REM  Batch watermark remover - Windows. Double-click this file.
+REM  Batch watermark remover - Windows launcher.
 REM
-REM  This does NOT use, need, or touch any Python you have installed. It
-REM  downloads its own private Python into a "python" folder next to this file
-REM  and uses only that. Nothing is installed system-wide, nothing is added to
-REM  PATH, no admin rights are needed, and no Python version on your machine
-REM  can break it.
+REM  Uses NO Python from this PC. It downloads its own private Python into a
+REM  "python" folder beside this file and uses only that. Nothing is installed
+REM  system-wide, nothing touches PATH, no admin needed. To uninstall, delete
+REM  this folder.
 REM
-REM  To uninstall completely: delete this folder. That is all.
+REM  Every rule below was verified by running this under a real Windows shell
+REM  with a real MSVC-built python.exe. They are bugs that were hit, not
+REM  hypotheticals:
 REM
-REM  First run downloads about 2.5 GB and takes several minutes. Later runs
-REM  start in seconds.
+REM   * Never end a quoted argument with %~dp0. That path ends in a backslash,
+REM     and a backslash before a closing quote is an ESCAPED quote to the C
+REM     runtime, so the argument arrives with a stray quote glued on. Measured:
+REM     -C "%~dp0" produced  argv = C:\users\Test User\wm"  and tar then failed
+REM     with a misleading "corrupt download". Use %HEREN%, stripped of it.
+REM
+REM   * Check errors with  if not "%errorlevel%"=="0" . Measured: a crash exit
+REM     code of -1073741515 (missing DLL) is NOT caught by  if errorlevel 1 ,
+REM     because that means ">= 1". The string compare catches it.
+REM
+REM   * Do not use  ||  after the cd builtin; it fires even on success.
+REM
+REM   * Delayed expansion must stay OFF, or an exclamation mark anywhere in the
+REM     folder path is silently eaten out of every variable.
+REM
+REM   * Keep errorlevel checks out of parenthesised blocks - %errorlevel% is
+REM     substituted when the block is parsed, not when it runs.
 REM ===========================================================================
-setlocal EnableDelayedExpansion
-cd /d "%~dp0"
+setlocal EnableExtensions DisableDelayedExpansion
 
-set "PYDIR=%~dp0python"
+set "WMVERSION=2026-08-02.1"
+set "HERE=%~dp0"
+REM Same path without the trailing backslash. Required for any quoted argument.
+set "HEREN=%HERE:~0,-1%"
+cd /d "%HERE%"
+
+set "PYDIR=%HERE%python"
 set "PYEXE=%PYDIR%\python.exe"
-set "MODELS=%~dp0models"
-set "TARBALL=%~dp0python-download.tar.gz"
+set "MODELS=%HERE%models"
+set "TARBALL=%HERE%python-download.tar.gz"
+set "PORT=5057"
 
-REM Pinned build. Verified to exist and to run this project end to end.
+REM Always the x86_64 build, even on ARM64: PyTorch publishes no win_arm64
+REM wheel at all, and x64 runs fine under Windows-on-ARM emulation.
 set "PYVER=cpython-3.12.13+20260728"
-set "PYTAG=20260728"
-if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
-    set "PYPLAT=aarch64-pc-windows-msvc"
-) else (
-    set "PYPLAT=x86_64-pc-windows-msvc"
-)
-set "PYURL=https://github.com/astral-sh/python-build-standalone/releases/download/%PYTAG%/%PYVER%-%PYPLAT%-install_only.tar.gz"
+set "PYURL=https://github.com/astral-sh/python-build-standalone/releases/download/20260728/%PYVER%-x86_64-pc-windows-msvc-install_only.tar.gz"
 
-echo ============================================
-echo   Batch watermark remover
-echo ============================================
+echo [WM] v%WMVERSION%  batch watermark remover
+echo [WM] folder %HEREN%
 echo.
 
-REM ---------------------------------------------------------------- Python --
+REM Guard: run from inside the ZIP and Explorer copies only this one file to a
+REM Temp folder. The install would appear to work and then fail at the end on
+REM a missing .py. This also covers the case where the cd above failed.
+if not exist "%HERE%watermark_web.py" goto insidezip
+
+REM -------------------------------------------------------------- Python ----
 if exist "%PYEXE%" goto haspython
 
 echo Step 1 of 3: downloading a private Python (about 45 MB).
-echo This is not installed on your system - it lives in this folder only.
+echo Not installed on your PC - it lives in this folder only.
 echo.
+if exist "%TARBALL%" goto haveTarball
+
 where curl.exe >nul 2>&1
-if errorlevel 1 goto usepowershell
+if not "%errorlevel%"=="0" goto useps
 curl.exe -L --fail --progress-bar -o "%TARBALL%" "%PYURL%"
-if errorlevel 1 goto usepowershell
+if "%errorlevel%"=="0" goto extract
+echo Download with curl failed, trying PowerShell ...
+
+:useps
+set "WM_URL=%PYURL%"
+set "WM_OUT=%TARBALL%"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; try{[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12}catch{}; Invoke-WebRequest -Uri $env:WM_URL -OutFile $env:WM_OUT -UseBasicParsing"
+if not "%errorlevel%"=="0" goto downloadfailed
 goto extract
 
-:usepowershell
-echo (using PowerShell to download)
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '%PYURL%' -OutFile '%TARBALL%' -UseBasicParsing"
-if errorlevel 1 goto downloadfailed
+:haveTarball
+echo Using the copy already downloaded.
 
 :extract
 if not exist "%TARBALL%" goto downloadfailed
 echo Extracting ...
 where tar.exe >nul 2>&1
-if errorlevel 1 goto notar
-tar -xf "%TARBALL%" -C "%~dp0"
-if errorlevel 1 goto extractfailed
-del "%TARBALL%" >nul 2>&1
+if not "%errorlevel%"=="0" goto notar
+tar -xf "%TARBALL%" -C "%HEREN%"
+if not "%errorlevel%"=="0" goto extractfailed
 if not exist "%PYEXE%" goto extractfailed
+del "%TARBALL%" >nul 2>&1
 echo Private Python ready.
 echo.
 
 :haspython
-"%PYEXE%" -c "import sys; print('   using', sys.version.split()[0], 'from this folder')"
-if errorlevel 1 goto pythonbroken
+REM Confirm this is the private Python, not one from the PC. A virtualenv over
+REM a system Python sits inside this folder yet still IS the system
+REM interpreter, and that is the exact setup that produced the original
+REM "failed to build scipy". check_private.py inspects sys.base_prefix.
+"%PYEXE%" "%HERE%check_private.py" "%PYDIR%"
+if not "%errorlevel%"=="0" goto notprivate
+echo.
 
-REM ---------------------------------------------------------- Dependencies --
+REM ---------------------------------------------------------- Components ----
 "%PYEXE%" -c "import flask, cv2, easyocr, iopaint" >nul 2>&1
-if errorlevel 1 (
-    echo.
-    echo Step 2 of 3: installing components, about 2.5 GB. First run only,
-    echo this takes several minutes. Leave it alone until it finishes.
-    echo.
-    "%PYEXE%" -m pip install --upgrade --no-warn-script-location pip setuptools wheel
-    REM --no-deps on purpose: IOPaint pins Pillow==9.5.0 and gradio==4.21.0,
-    REM and gradio drags in numpy 1.x. On current Python none of those have
-    REM prebuilt files, so pip would try to compile them and fail. That is the
-    REM real cause of the "failed to build scipy" error - scipy is innocent,
-    REM it is numpy 1.x being compiled inside scipy's build step that dies.
-    "%PYEXE%" -m pip install --no-warn-script-location --no-deps iopaint==1.6.0
-    if errorlevel 1 goto installfailed
-    REM --only-binary turns a doomed compile into an instant, clear message.
-    "%PYEXE%" -m pip install --no-warn-script-location --only-binary=numpy,scipy,scikit-image,pillow,torch,torchvision,opencv-python-headless,python-bidi -r requirements-watermark.txt
-    if errorlevel 1 goto installfailed
-    echo.
-    echo Components installed.
-)
+if "%errorlevel%"=="0" goto haspkgs
 
-REM ---------------------------------------------------------------- Launch --
-REM Keep the AI models inside this folder too, so the whole thing stays
-REM self-contained and deleting the folder really does remove everything.
+echo Step 2 of 3: installing components, about 2.5 GB.
+echo First run only. This takes several minutes and looks frozen at times.
+echo.
+"%PYEXE%" -m pip install --upgrade --no-warn-script-location pip setuptools wheel
+if not "%errorlevel%"=="0" goto installfailed
+"%PYEXE%" -m pip install --no-warn-script-location --no-deps iopaint==1.6.0
+if not "%errorlevel%"=="0" goto installfailed
+REM Prebuilt and shipped in wheels\ because PyPI has no wheel for it, only a
+REM source archive. omegaconf hard-pins this exact version, so installing it
+REM first is what keeps the whole setup free of compiling.
+"%PYEXE%" -m pip install --no-warn-script-location --no-index --find-links "%HERE%wheels" antlr4-python3-runtime==4.9.3
+if not "%errorlevel%"=="0" goto installfailed
+"%PYEXE%" -m pip install --no-warn-script-location --only-binary=numpy,scipy,scikit-image,pillow,torch,torchvision,opencv-python-headless,python-bidi,shapely,pyclipper,ninja,tokenizers,safetensors,regex -r "%HERE%requirements-watermark.txt"
+if not "%errorlevel%"=="0" goto installfailed
+echo.
+echo Components installed.
+
+:haspkgs
+REM ------------------------------------------------------------- Launch -----
+REM Keep caches and weights inside this folder so that deleting the folder
+REM really does remove everything.
 set "EASYOCR_MODULE_PATH=%MODELS%\easyocr"
+set "PIP_CACHE_DIR=%HERE%cache\pip"
+set "HF_HOME=%HERE%cache\hf"
+set "PYTHONNOUSERSITE=1"
+set "PYTHONHOME="
+set "PYTHONPATH="
 echo.
 echo Step 3 of 3: starting. Your browser opens by itself.
-echo Close this window when you are finished.
+echo Keep this window open while you use it.
 echo.
-"%PYEXE%" watermark_web.py --model-dir "%MODELS%"
-if errorlevel 1 (
-    echo.
-    echo It stopped with an error. Full diagnostic follows - send all of it.
-    echo.
-    "%PYEXE%" watermark_doctor.py
-)
+"%PYEXE%" "%HERE%watermark_web.py" --model-dir "%MODELS%" --port %PORT%
+if not "%errorlevel%"=="0" goto runfailed
 echo.
 pause
 exit /b 0
 
+
+:insidezip
+echo ============================================
+echo   Extract the ZIP first.
+echo ============================================
+echo.
+echo This file is not sitting next to the rest of the program, which almost
+echo always means it is being run from inside the ZIP.
+echo.
+echo Right-click the ZIP file, choose "Extract All", then open the folder
+echo that appears and run this file from there.
+echo.
+echo   Current folder: %HEREN%
+echo.
+pause
+exit /b 1
 
 :downloadfailed
 echo.
@@ -119,41 +168,47 @@ echo ============================================
 echo.
 echo Tried: %PYURL%
 echo.
-echo Check the internet connection. If you are behind a company firewall or
-echo VPN that blocks github.com, that is the cause.
+echo Check the internet connection. A company firewall or VPN blocking
+echo github.com would also do this.
 echo.
-echo You can also download that link in a browser, save it next to this file
-echo as python-download.tar.gz, and run this again - it will use the file.
+echo You can also open that link in a browser, save the file into this
+echo folder as  python-download.tar.gz  and run this again - it will use it.
 echo.
 pause
 exit /b 1
 
 :notar
 echo.
-echo ERROR: tar.exe was not found. It is built into Windows 10 build 17063
-echo and newer. On an older Windows, extract this file by hand with 7-Zip:
+echo ERROR: tar.exe not found. It is built into Windows 10 build 17063 and
+echo newer. On an older Windows, extract this file with 7-Zip by hand:
 echo   %TARBALL%
-echo so that python\python.exe ends up next to this .bat file, then run again.
+echo so that python\python.exe sits next to this file, then run this again.
 echo.
 pause
 exit /b 1
 
 :extractfailed
 echo.
-echo ERROR: could not extract the Python download - the file may be damaged.
-echo Delete this file and run again to re-download it:
+echo ERROR: could not extract the Python download.
+echo Delete this file, then run this again to download it fresh:
 echo   %TARBALL%
 echo.
 pause
 exit /b 1
 
-:pythonbroken
+:notprivate
 echo.
-echo ERROR: the private Python did not run. Delete the "python" folder next
-echo to this file and run this again to reinstall it.
+echo ============================================
+echo   Stopping: that is not the private Python.
+echo ============================================
+echo.
+echo Refusing to continue rather than use a Python installed on this PC,
+echo which is what caused the earlier install errors.
+echo.
+echo Delete the "python" folder next to this file and run this again.
 echo.
 pause
-exit /b 1
+exit /b 87
 
 :installfailed
 echo.
@@ -161,12 +216,25 @@ echo ============================================
 echo   Installing components failed.
 echo ============================================
 echo.
-echo Usually this is a dropped connection - running this file again resumes
-echo where it stopped and is safe.
+echo A dropped connection is the usual cause. Running this file again
+echo resumes where it stopped and is safe.
 echo.
-echo Full diagnostic follows. Send all of it if you need help.
+echo Diagnostic follows - send all of it, plus the red text above.
 echo.
-"%PYEXE%" watermark_doctor.py
+"%PYEXE%" "%HERE%watermark_doctor.py"
+echo.
+pause
+exit /b 1
+
+:runfailed
+echo.
+echo ============================================
+echo   It stopped with an error.
+echo ============================================
+echo.
+echo Diagnostic follows - send all of it, plus the red text above.
+echo.
+"%PYEXE%" "%HERE%watermark_doctor.py"
 echo.
 pause
 exit /b 1

@@ -27,6 +27,7 @@ per-image failure is shown on that image's card and counted, never hidden.
 import argparse
 import io
 import os
+import socket
 import sys
 import threading
 import time
@@ -167,7 +168,10 @@ def reset(session):
 def main():
     ap = argparse.ArgumentParser(description="Local web UI for the batch watermark remover.")
     ap.add_argument("--host", default="127.0.0.1", help="bind address (default: localhost only)")
-    ap.add_argument("--port", type=int, default=5000)
+    # Not 5000: Hyper-V, WSL2 and Docker Desktop reserve blocks of low ports on
+    # Windows, and a clash there surfaces as WinError 10013, which reads like a
+    # firewall problem and would strike only after the long first-run install.
+    ap.add_argument("--port", type=int, default=5057)
     ap.add_argument("--model-dir", default=DEFAULT_MODEL_DIR)
     ap.add_argument("--device", default="cpu", choices=["cpu", "cuda", "mps"])
     ap.add_argument("--no-browser", action="store_true", help="do not open a browser window")
@@ -183,13 +187,36 @@ def main():
         sys.exit(1)
     print(f"model      : {ENGINE.checkpoint}", flush=True)
 
-    url = f"http://{args.host}:{args.port}"
+    # Claim the port before announcing it. Binding can fail for reasons the
+    # user cannot act on (another copy already running, or Windows reserving
+    # the range), and failing after a long install with a bare traceback would
+    # be a miserable place to stop.
+    port = None
+    for candidate in range(args.port, args.port + 20):
+        probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            probe.bind((args.host, candidate))
+        except OSError:
+            probe.close()
+            continue
+        probe.close()
+        port = candidate
+        break
+    if port is None:
+        print(f"\nFATAL: no free port between {args.port} and {args.port + 19} on "
+              f"{args.host}. Another copy may already be running — check your "
+              f"browser tabs.", file=sys.stderr, flush=True)
+        sys.exit(1)
+    if port != args.port:
+        print(f"port {args.port} was busy, using {port}", flush=True)
+
+    url = f"http://{args.host}:{port}"
     print(f"\n  ready — {url}\n", flush=True)
     if not args.no_browser:
         # Fires once the server is accepting connections, so the page is not
         # opened against a socket that is not listening yet.
         threading.Timer(1.0, lambda: webbrowser.open(url)).start()
-    app.run(host=args.host, port=args.port, threaded=True, debug=False)
+    app.run(host=args.host, port=port, threaded=True, debug=False)
 
 
 if __name__ == "__main__":
