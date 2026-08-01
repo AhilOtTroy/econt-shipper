@@ -29,6 +29,7 @@ def find_lama_checkpoint(model_dir):
     IOPaint resolves weights through XDG_CACHE_HOME/torch/hub/checkpoints, so we
     only accept locations IOPaint itself can load from. Finding the file
     somewhere IOPaint cannot see would let this check pass and fail later.
+    Returns (checkpoint_path, cache_root) or (None, paths_tried).
     """
     tried = []
     for root in [model_dir, os.path.expanduser("~/.cache")]:
@@ -36,24 +37,65 @@ def find_lama_checkpoint(model_dir):
         tried.append(path)
         if os.path.isfile(path):
             return path, root
-    raise WatermarkError(
-        "LaMa model weights not found. Looked in:\n  "
-        + "\n  ".join(tried)
-        + "\n\nDownload them first (one time, ~200 MB):\n"
-        f"    iopaint download --model lama --model-dir {model_dir}"
-    )
+    return None, tried
 
 
-def check_ocr_checkpoints():
-    """Verify the EasyOCR detector + recogniser weights exist."""
+def ensure_lama(model_dir, auto_download=True):
+    """Return (checkpoint, cache_root), fetching the weights if they are absent.
+
+    Downloading here rather than making the user run a separate `iopaint`
+    command keeps setup to one step and works the same on Windows, macOS and
+    Linux — there is no console script to be missing from PATH.
+    """
+    checkpoint, found = find_lama_checkpoint(model_dir)
+    if checkpoint:
+        return checkpoint, found
+
+    tried = found
+    if not auto_download:
+        raise WatermarkError(
+            "LaMa model weights not found. Looked in:\n  " + "\n  ".join(tried)
+            + "\n\nRe-run without --no-download to fetch them automatically."
+        )
+
+    os.makedirs(model_dir, exist_ok=True)
+    # Must be set before importing the model registry: it decides where the
+    # download lands and where IOPaint later looks for it.
+    os.environ["XDG_CACHE_HOME"] = model_dir
+    print(f"downloading LaMa weights (~200 MB, one time) to {model_dir} ...", flush=True)
+    try:
+        from iopaint.model import models
+        models["lama"].download()
+    except Exception as exc:
+        raise WatermarkError(
+            f"could not download the LaMa weights: {type(exc).__name__}: {exc}\n"
+            "Check the internet connection and that this folder is writable:\n"
+            f"    {model_dir}"
+        )
+
+    checkpoint, found = find_lama_checkpoint(model_dir)
+    if not checkpoint:
+        raise WatermarkError(
+            "the LaMa download reported success but the file is not where "
+            "IOPaint looks for it. Expected:\n  " + "\n  ".join(tried)
+        )
+    print("LaMa weights ready.", flush=True)
+    return checkpoint, found
+
+
+def ensure_ocr(gpu=False):
+    """Build the EasyOCR reader, downloading its weights on first use."""
     model_dir = os.path.expanduser("~/.EasyOCR/model")
     needed = ["craft_mlt_25k.pth", "english_g2.pth"]
-    missing = [n for n in needed if not os.path.isfile(os.path.join(model_dir, n))]
-    if missing:
+    if any(not os.path.isfile(os.path.join(model_dir, n)) for n in needed):
+        print("downloading text-detector weights (~100 MB, one time) ...", flush=True)
+    import easyocr
+    try:
+        return easyocr.Reader(["en"], gpu=gpu, verbose=False, download_enabled=True)
+    except Exception as exc:
         raise WatermarkError(
-            f"text-detector weights missing from {model_dir}: {', '.join(missing)}\n\n"
-            "Download them first (one time, ~100 MB):\n"
-            "    python3 -c \"import easyocr; easyocr.Reader(['en'], gpu=False)\""
+            f"could not prepare the text detector: {type(exc).__name__}: {exc}\n"
+            "Check the internet connection, then try again."
         )
 
 
@@ -89,10 +131,9 @@ def read_mask(path):
 class Engine:
     """Holds the loaded models. Build once, clean many images."""
 
-    def __init__(self, model_dir=DEFAULT_MODEL_DIR, device="cpu", with_detector=True):
-        self.checkpoint, cache_root = find_lama_checkpoint(model_dir)
-        if with_detector:
-            check_ocr_checkpoints()
+    def __init__(self, model_dir=DEFAULT_MODEL_DIR, device="cpu", with_detector=True,
+                 auto_download=True):
+        self.checkpoint, cache_root = ensure_lama(model_dir, auto_download=auto_download)
 
         # Point IOPaint at the cache root that actually holds the weights we
         # found. Set, not setdefault: an inherited value would ignore model_dir.
@@ -109,10 +150,7 @@ class Engine:
             hd_strategy_crop_margin=196,
             hd_strategy_resize_limit=2048,
         )
-        self.reader = None
-        if with_detector:
-            import easyocr
-            self.reader = easyocr.Reader(["en"], gpu=(device == "cuda"), verbose=False)
+        self.reader = ensure_ocr(gpu=(device == "cuda")) if with_detector else None
 
     def detect(self, image_rgb, dilate=DEFAULT_DILATE,
                min_height_frac=DEFAULT_MIN_HEIGHT_FRAC,

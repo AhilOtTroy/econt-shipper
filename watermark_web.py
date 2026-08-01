@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Local web UI for the batch watermark remover. Same engine as the CLI.
 
-    pip install iopaint easyocr opencv-python-headless flask
-    iopaint download --model lama --model-dir ~/.iopaint
-    python3 watermark_web.py            # then open http://127.0.0.1:5000
+Windows:  double-click start_watermark.bat
+Anything: pip install iopaint easyocr opencv-python-headless flask
+          python watermark_web.py
+
+Model weights (~300 MB) download themselves on first run and the browser
+opens on its own. There is no separate setup command to get wrong.
 
 Paste images with Ctrl+V (paste as many times as you like), drop them on the
 page, or pick files. Hit Clean all, then download them one by one or as a zip.
@@ -19,6 +22,7 @@ import os
 import sys
 import threading
 import time
+import webbrowser
 import zipfile
 
 import cv2
@@ -158,17 +162,25 @@ def main():
     ap.add_argument("--port", type=int, default=5000)
     ap.add_argument("--model-dir", default=DEFAULT_MODEL_DIR)
     ap.add_argument("--device", default="cpu", choices=["cpu", "cuda", "mps"])
+    ap.add_argument("--no-browser", action="store_true", help="do not open a browser window")
     args = ap.parse_args()
 
     global ENGINE
-    print(f"loading LaMa on {args.device} (once, takes a few seconds)...", flush=True)
+    print("starting up — the first run downloads ~300 MB of model weights,", flush=True)
+    print("after that it takes a few seconds.\n", flush=True)
     try:
         ENGINE = Engine(model_dir=args.model_dir, device=args.device, with_detector=True)
     except WatermarkError as exc:
         print(f"\nFATAL: {exc}", file=sys.stderr, flush=True)
         sys.exit(1)
     print(f"model      : {ENGINE.checkpoint}", flush=True)
-    print(f"\n  open http://{args.host}:{args.port}\n", flush=True)
+
+    url = f"http://{args.host}:{args.port}"
+    print(f"\n  ready — {url}\n", flush=True)
+    if not args.no_browser:
+        # Fires once the server is accepting connections, so the page is not
+        # opened against a socket that is not listening yet.
+        threading.Timer(1.0, lambda: webbrowser.open(url)).start()
     app.run(host=args.host, port=args.port, threaded=True, debug=False)
 
 

@@ -3,7 +3,7 @@
 
 Setup (once):
     pip install iopaint easyocr opencv-python-headless
-    iopaint download --model lama --model-dir ~/.iopaint
+    # model weights download themselves on first run, no extra command
 
 Usage:
     # auto-detect the watermark text in each image (watermark moves between images)
@@ -84,6 +84,8 @@ def main():
                     help="auto-detect: min OCR confidence for a box to count as a watermark")
     ap.add_argument("--save-masks", metavar="DIR",
                     help="also write the mask used for each image, for inspection")
+    ap.add_argument("--no-download", action="store_true",
+                    help="fail instead of fetching missing model weights")
     args = ap.parse_args()
 
     print("=== batch watermark remover (LaMa / IOPaint, local) ===", flush=True)
@@ -133,6 +135,7 @@ def main():
             model_dir=args.model_dir,
             device=args.device,
             with_detector=(fixed_mask is None),
+            auto_download=not args.no_download,
         )
     except WatermarkError as exc:
         die(str(exc))
