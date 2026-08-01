@@ -5,14 +5,26 @@
 #     pip install --no-deps iopaint==1.6.0
 #     pip install -r requirements-watermark.txt
 #
-# IOPaint 1.6.0 pins Pillow==9.5.0 and gradio==4.21.0. Neither has a wheel for
-# Python 3.12+, so pip falls back to building Pillow from source and dies with
-# "KeyError: '__version__'". Both pins are wrong for our purposes: LaMa runs
-# fine on current Pillow, and gradio is only for IOPaint's own web UI, which we
-# never start. Skipping its dependency list and naming the real ones here keeps
-# the install working on current Python.
+# IOPaint 1.6.0 pins Pillow==9.5.0 and gradio==4.21.0. Neither has a Windows
+# wheel past Python 3.12, and gradio 4.21.0 additionally caps numpy to 1.x,
+# whose last release (1.26.4) also stops at Python 3.12. Accept those pins and
+# pip has to compile numpy and Pillow from source, which fails on a normal
+# Windows box. That is where "failed to build scipy" comes from, confusingly:
+# scipy has wheels and is innocent — it is numpy 1.x being compiled inside
+# scipy's isolated build step that actually dies.
 #
-# Verified on Python 3.11 with Pillow 12.3, torch 2.13, no gradio installed.
+# Both pins are wrong for our purposes. LaMa runs fine on current Pillow, and
+# gradio is only for IOPaint's own web UI, which we never start. Skipping
+# IOPaint's dependency list and naming the real ones here keeps the install to
+# prebuilt wheels only.
+#
+# Verified from an empty virtualenv on CPython 3.11.15: resolves to Pillow
+# 12.3.0, numpy 2.4.6, torch 2.13.0, scipy 1.17.1, diffusers 0.39.0,
+# transformers 5.14.1, no gradio, no source builds. Both the CLI and the web
+# UI then cleaned all three sample images.
+#
+# scipy and scikit-image are not listed here: they arrive with easyocr, which
+# imports scipy unconditionally. They are fine on a supported Python.
 
 # inpainting
 torch
