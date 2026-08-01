@@ -14,13 +14,66 @@ IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff")
 
 DEFAULT_MODEL_DIR = os.path.expanduser("~/.iopaint")
 DEFAULT_DILATE = 6
-DEFAULT_MIN_HEIGHT_FRAC = 0.012
-DEFAULT_FLAT_FRAC = 0.10
+# Measured across both sample sets: real watermarks are 0.040 to 0.090 of the
+# image height (Avito 0.040, Kufar 0.090, the hand-added ones 0.053 to 0.081),
+# while the things that must survive are 0.010 to 0.020 (a product name, the
+# small print on a box, a price sticker). 0.03 sits in the gap. Erring high is
+# deliberate: a missed watermark is obvious and one slider away, whereas
+# quietly erasing the printing on the item may not be noticed until it is sold.
+DEFAULT_MIN_HEIGHT_FRAC = 0.03
+# Off by default. Overlay text is not reliably flat: marketplace watermarks are
+# semi-transparent grey and score ~0.00 here, so this filter would reject them.
+# The edge restriction below is what keeps photo content safe instead.
+DEFAULT_FLAT_FRAC = 0.0
 DEFAULT_MIN_CONF = 0.30
+# Only treat text as a watermark if it sits in the outer quarter of the frame.
+# Watermarks are stamped into a corner or along an edge; the things we must not
+# touch — a product name, a label, printing on a box — sit in the middle. Set
+# to 1.0 to consider the whole frame.
+DEFAULT_EDGE_MARGIN = 0.25
 
 
 class WatermarkError(Exception):
     """Anything that should stop work on an image, with a message worth showing."""
+
+
+def _norm(text):
+    return "".join(c for c in text.lower() if c.isalnum())
+
+
+def _distance(a, b):
+    """Levenshtein distance, for matching OCR output against a known word."""
+    if len(a) < len(b):
+        a, b = b, a
+    previous = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        current = [i]
+        for j, cb in enumerate(b, 1):
+            current.append(min(previous[j] + 1,
+                               current[j - 1] + 1,
+                               previous[j - 1] + (ca != cb)))
+        previous = current
+    return previous[-1]
+
+
+def matches_word(text, words):
+    """True if OCR text looks like one of the given watermark words.
+
+    The logo glyph runs into the first letter, so the same Avito mark comes back
+    as "Avito", "SAvito", "8Avito", "BAvitto" and "SAvite" across a batch. Exact
+    matching would catch about half of them, hence substring plus a small edit
+    distance.
+    """
+    got = _norm(text)
+    if not got:
+        return False
+    for word in words:
+        want = _norm(word)
+        if not want:
+            continue
+        if want in got or _distance(got, want) <= 2:
+            return True
+    return False
 
 
 def find_lama_checkpoint(model_dir):
@@ -166,17 +219,28 @@ class Engine:
 
     def detect(self, image_rgb, dilate=DEFAULT_DILATE,
                min_height_frac=DEFAULT_MIN_HEIGHT_FRAC,
-               flat_frac=DEFAULT_FLAT_FRAC, min_conf=DEFAULT_MIN_CONF):
+               flat_frac=DEFAULT_FLAT_FRAC, min_conf=DEFAULT_MIN_CONF,
+               edge_margin=DEFAULT_EDGE_MARGIN, words=None):
         """Find overlaid text and return (mask, texts), or (None, []) if none.
 
-        Three filters keep photo content out of the mask, which matters because
-        the detector also finds real text in the scene — bike decals, signage.
-        A box counts as a watermark only if it is:
-          1. tall enough — watermarks are big, stamped-on decals are small;
-          2. flat black or flat white — what a rendered overlay looks like, and
-             what photographed text, lit and textured, almost never looks like;
-          3. read with high confidence — overlay text is crisp so OCR is sure of
-             it, while a warped decal scores near zero.
+        Several filters keep photo content out of the mask, which matters
+        because the detector also finds real text in the scene — a bike decal,
+        signage, the printing on a product box. A box counts as a watermark
+        only if it is:
+          1. inside the outer edge band — this is the one that does the heavy
+             lifting. Watermarks are stamped into a corner; a product name and
+             the small print on packaging are in the middle of the frame. On a
+             photo of a boxed product, dropping this filter erases the box's
+             own printing, which is far worse than missing a watermark;
+          2. tall enough — watermarks are big, stamped-on decals are small;
+          3. read with high confidence — overlay text is crisp so OCR is sure
+             of it, while a warped decal scores near zero;
+          4. optionally flat black or white, off by default, since a
+             semi-transparent grey watermark fails it;
+          5. optionally one of a given list of words. Geometry alone cannot
+             always win — on a photo of a boxed product, "Pencil Pro" printed
+             near the right edge is the same size and position as a corner
+             watermark. Naming the watermark makes it exact.
         """
         if self.reader is None:
             raise WatermarkError("this engine was built without the text detector")
@@ -195,6 +259,16 @@ class Engine:
                 continue
             if confidence < min_conf:
                 continue
+            if words and not matches_word(text, words):
+                continue
+            if edge_margin < 1.0:
+                # The box must lie wholly within one of the four outer bands.
+                near = (y1 <= edge_margin * height              # top
+                        or y0 >= (1.0 - edge_margin) * height   # bottom
+                        or x1 <= edge_margin * width            # left
+                        or x0 >= (1.0 - edge_margin) * width)   # right
+                if not near:
+                    continue
             roi = image_rgb[y0:y1, x0:x1].reshape(-1, 3).astype(np.int16)
             high = roi.max(axis=1)
             low = roi.min(axis=1)
@@ -239,9 +313,14 @@ class Engine:
         image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
         mask, hits = self.detect(image_rgb, **detect_kwargs)
         if mask is None:
+            words = detect_kwargs.get("words")
+            hint = (f"No text matched {', '.join(words)}. " if words else
+                    "Nothing looked like a watermark. ")
             raise WatermarkError(
-                "no watermark detected. Not writing a silent copy. Either the "
-                "watermark is not flat black/white text, or it is too small — "
-                "lower the size/confidence thresholds, or supply a mask."
+                "no watermark detected — this image is left alone rather than "
+                "written out unchanged. " + hint
+                + "Either the photo is already clean, or the mark is smaller "
+                "than the minimum text height, or it sits away from the edges. "
+                "Adjust those under Detection settings."
             )
         return self.inpaint(image_bgr, mask), hits, mask

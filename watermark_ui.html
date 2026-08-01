@@ -26,6 +26,14 @@
       border-radius:5px;padding:1px 6px;font:12px ui-monospace,monospace}
 
   .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0}
+  .wordbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0 0;
+           padding:12px 14px;border:1px solid var(--line);border-radius:10px;
+           background:var(--panel)}
+  .wordbar label{font-size:13.5px;color:var(--dim)}
+  .wordbar input{flex:1;min-width:240px;background:#12151c;color:var(--text);
+                 border:1px solid var(--line);border-radius:7px;padding:8px 11px;font-size:14px}
+  .wordbar input:focus{outline:none;border-color:var(--accent)}
+  .wordbar .hint{flex-basis:100%;font-size:11.5px;color:var(--dim)}
   button{background:var(--panel2);color:var(--text);border:1px solid var(--line);
          border-radius:9px;padding:9px 15px;font-size:14px;cursor:pointer}
   button:hover:not(:disabled){border-color:var(--accent)}
@@ -86,6 +94,13 @@
     <input id="file" type="file" accept="image/*" multiple hidden>
   </div>
 
+  <div class="wordbar">
+    <label for="words">Only remove these words</label>
+    <input id="words" type="text" placeholder="e.g.  avito, kufar  —  leave empty to remove any watermark">
+    <span class="hint">Naming the watermark is exact: nothing else in the photo can be touched.
+      Leave it empty and it removes any text that looks like a watermark.</span>
+  </div>
+
   <div class="bar">
     <button id="run" class="primary" disabled>Clean all</button>
     <button id="zip" disabled>Download all (.zip)</button>
@@ -101,10 +116,12 @@
         <input id="dilate" type="range" min="0" max="30" step="1" value="6"></label>
       <label class="opt">Min text confidence <b id="vc">0.30</b>
         <input id="conf" type="range" min="0.05" max="0.95" step="0.05" value="0.30"></label>
-      <label class="opt">Min text height <b id="vh">1.2</b>% of image
-        <input id="hfrac" type="range" min="0.2" max="8" step="0.1" value="1.2"></label>
-      <label class="opt">Min flat black/white <b id="vf">0.10</b>
-        <input id="flat" type="range" min="0" max="0.6" step="0.02" value="0.10"></label>
+      <label class="opt">Min text height <b id="vh">3.0</b>% of image
+        <input id="hfrac" type="range" min="0.2" max="8" step="0.1" value="3.0"></label>
+      <label class="opt">Min flat black/white <b id="vf">0.00</b>
+        <input id="flat" type="range" min="0" max="0.6" step="0.02" value="0.00"></label>
+      <label class="opt">Search within <b id="ve">25</b>% of an edge
+        <input id="edge" type="range" min="5" max="100" step="5" value="25"></label>
     </div>
   </details>
 
@@ -193,6 +210,8 @@ async function cleanOne(it){
   body.append('min_conf', $('conf').value);
   body.append('min_height_frac', ($('hfrac').value/100).toFixed(4));
   body.append('flat_frac', $('flat').value);
+  body.append('edge_margin', ($('edge').value/100).toFixed(3));
+  body.append('words', $('words').value);
   try{
     const res = await fetch('/api/clean', {method:'POST', body});
     const data = await res.json();
@@ -248,7 +267,8 @@ clearBtn.addEventListener('click', async () => {
 });
 
 for(const [id,out,fmt] of [['dilate','vd',v=>v],['conf','vc',v=>(+v).toFixed(2)],
-                           ['hfrac','vh',v=>v],['flat','vf',v=>(+v).toFixed(2)]]){
+                           ['hfrac','vh',v=>v],['flat','vf',v=>(+v).toFixed(2)],
+                           ['edge','ve',v=>v]]){
   $(id).addEventListener('input', () => $(out).textContent = fmt($(id).value));
 }
 render();

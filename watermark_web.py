@@ -40,6 +40,7 @@ from watermark_core import (
     DEFAULT_DILATE,
     DEFAULT_FLAT_FRAC,
     DEFAULT_MIN_CONF,
+    DEFAULT_EDGE_MARGIN,
     DEFAULT_MIN_HEIGHT_FRAC,
     DEFAULT_MODEL_DIR,
     Engine,
@@ -99,6 +100,9 @@ def clean():
             min_height_frac=number("min_height_frac", DEFAULT_MIN_HEIGHT_FRAC),
             flat_frac=number("flat_frac", DEFAULT_FLAT_FRAC),
             min_conf=number("min_conf", DEFAULT_MIN_CONF),
+            edge_margin=number("edge_margin", DEFAULT_EDGE_MARGIN),
+            words=[w.strip() for w in (request.form.get("words") or "").split(",")
+                   if w.strip()],
         )
         image = decode_image(upload.read())
         with ENGINE_LOCK:

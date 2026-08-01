@@ -35,6 +35,7 @@ from watermark_core import (
     DEFAULT_DILATE,
     DEFAULT_FLAT_FRAC,
     DEFAULT_MIN_CONF,
+    DEFAULT_EDGE_MARGIN,
     DEFAULT_MIN_HEIGHT_FRAC,
     DEFAULT_MODEL_DIR,
     IMAGE_EXTS,
@@ -85,6 +86,15 @@ def main():
                     help="auto-detect: min fraction of flat black/white pixels in a text box")
     ap.add_argument("--min-conf", type=float, default=DEFAULT_MIN_CONF,
                     help="auto-detect: min OCR confidence for a box to count as a watermark")
+    ap.add_argument("--edge-margin", type=float, default=DEFAULT_EDGE_MARGIN,
+                    help="auto-detect: only touch text within this fraction of an "
+                         "edge (default 0.25). Use 1.0 to search the whole image, "
+                         "which risks erasing text printed on the subject itself.")
+    ap.add_argument("--words", default="",
+                    help="only remove text matching these comma-separated words, e.g. "
+                         "'avito,kufar'. Exact and safe when you know the watermark: "
+                         "nothing else can be touched. Empty means remove any text "
+                         "that looks like a watermark.")
     ap.add_argument("--save-masks", metavar="DIR",
                     help="also write the mask used for each image, for inspection")
     ap.add_argument("--no-download", action="store_true",
@@ -159,6 +169,8 @@ def main():
                 min_height_frac=args.min_height_frac,
                 flat_frac=args.flat_frac,
                 min_conf=args.min_conf,
+                edge_margin=args.edge_margin,
+                words=[w.strip() for w in args.words.split(",") if w.strip()],
             )
         except WatermarkError as exc:
             failed += 1
