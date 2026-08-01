@@ -4,3 +4,5 @@ config.json
 offices.cache.json
 test-*.js
 .DS_Store
+
+__pycache__/
