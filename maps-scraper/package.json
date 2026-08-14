@@ -1,0 +1,17 @@
+{
+  "name": "maps-scraper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Събира телефони на занаятчийски и индустриални фирми от Google Maps по градове и браншове.",
+  "scripts": {
+    "setup": "npm install && npx playwright install chromium",
+    "scrape": "node scrape.js",
+    "export": "node export.js"
+  },
+  "dependencies": {
+    "playwright": "^1.56.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
