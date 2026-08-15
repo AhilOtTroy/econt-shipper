@@ -400,12 +400,21 @@ class Engine:
                 if words and not matches_word(text, words):
                     continue
                 if edge_margin < 1.0:
-                    # The box must lie wholly within one of the four outer bands.
-                    near = (y1 <= edge_margin * height              # top
-                            or y0 >= (1.0 - edge_margin) * height   # bottom
-                            or x1 <= edge_margin * width            # left
-                            or x0 >= (1.0 - edge_margin) * width)   # right
-                    if not near:
+                    # Must be in a CORNER, not merely near an edge: close to a
+                    # vertical edge AND a horizontal one. An edge-only test is
+                    # not enough and cost a user real damage — "Pencil Pro"
+                    # printed at mid-height on the right of a product box sat
+                    # inside the right band and was erased along with the
+                    # paragraph beside it. Measured on every sample watermark:
+                    # Avito ends at 0.99x/0.99y, Kufar 0.96/0.96, the
+                    # hand-added ones 0.94/0.98, 0.01/0.98 and 0.99/0.08 — all
+                    # true corners. "Pro" sits at 0.85x/0.50y and is now
+                    # rejected, as is anything printed on the item itself.
+                    near_x = (x0 <= edge_margin * width
+                              or x1 >= (1.0 - edge_margin) * width)
+                    near_y = (y0 <= edge_margin * height
+                              or y1 >= (1.0 - edge_margin) * height)
+                    if not (near_x and near_y):
                         continue
                 roi = image_rgb[y0:y1, x0:x1].reshape(-1, 3).astype(np.int16)
                 high = roi.max(axis=1)
