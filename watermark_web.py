@@ -57,6 +57,7 @@ ENGINE_LOCK = threading.Lock()  # one LaMa forward pass at a time
 RESULTS = {}                    # session id -> {filename: cleaned bytes}
 RESULTS_LOCK = threading.Lock()
 
+UI_VERSION = "2026-08-04.3"
 HERE = os.path.dirname(os.path.abspath(__file__))
 UI_FILE = os.path.join(HERE, "watermark_ui.html")
 
@@ -66,7 +67,21 @@ def index():
     if not os.path.isfile(UI_FILE):
         return Response(f"missing UI file: {UI_FILE}", status=500, mimetype="text/plain")
     with open(UI_FILE, "r", encoding="utf-8") as handle:
-        return Response(handle.read(), mimetype="text/html")
+        response = Response(handle.read(), mimetype="text/html")
+    # Never let the browser reuse an old copy of this page. The page and the
+    # server ship together and are updated together; a cached page from a
+    # previous version can be missing controls the current one expects, which
+    # surfaces as the page appearing not to reach the server at all.
+    response.headers["Cache-Control"] = "no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    return response
+
+
+@app.get("/api/ping")
+def ping():
+    """Cheap liveness check so the page can say plainly whether it can reach
+    the program, instead of every failure looking like a network error."""
+    return jsonify(ok=True, version=UI_VERSION)
 
 
 @app.get("/favicon.ico")
@@ -219,9 +234,20 @@ def main():
     url = f"http://{args.host}:{port}"
     print(f"\n  ready — {url}\n", flush=True)
     if not args.no_browser:
-        # Fires once the server is accepting connections, so the page is not
-        # opened against a socket that is not listening yet.
-        threading.Timer(1.0, lambda: webbrowser.open(url)).start()
+        # Poll until the server actually answers before opening the browser.
+        # A fixed delay was a guess: on a slow machine the page could load
+        # before Flask was listening, which looks exactly like "the UI cannot
+        # reach the server" and only a manual reload fixed it.
+        def open_when_ready():
+            import urllib.request
+            for _ in range(60):
+                try:
+                    with urllib.request.urlopen(url + "/api/ping", timeout=1):
+                        break
+                except Exception:
+                    time.sleep(0.5)
+            webbrowser.open(url)
+        threading.Thread(target=open_when_ready, daemon=True).start()
     app.run(host=args.host, port=port, threaded=True, debug=False)
 
 

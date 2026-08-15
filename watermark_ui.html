@@ -125,6 +125,13 @@
     </div>
   </details>
 
+  <div id="offline" style="display:none;margin:0 0 18px;padding:12px 14px;border-radius:10px;
+       border:1px solid #5c2828;background:#241417;color:#ff9b9b;font-size:13.5px">
+    <b>Not connected to the program.</b>
+    The black window must stay open while you use this page.
+    <button id="retry" style="margin-left:10px">Try again</button>
+  </div>
+
   <div id="grid"></div>
   <div id="empty">No images yet.</div>
 </main>
@@ -204,14 +211,23 @@ const escapeHtml = s => s.replace(/[&<>"']/g, c =>
 
 async function cleanOne(it){
   const body = new FormData();
+  // Read every control defensively. A stale cached copy of this page can be
+  // missing a control the server now understands, and reaching into a null
+  // element used to throw here — inside the try below, which then reported it
+  // as "server unreachable". The server applies its own defaults for anything
+  // omitted, so skipping a missing control is always safe.
+  const val = (id, fallback) => {
+    const el = $(id);
+    return (el && el.value !== '') ? el.value : fallback;
+  };
   body.append('image', it.file, it.name);
   body.append('session', SESSION);
-  body.append('dilate', $('dilate').value);
-  body.append('min_conf', $('conf').value);
-  body.append('min_height_frac', ($('hfrac').value/100).toFixed(4));
-  body.append('flat_frac', $('flat').value);
-  body.append('edge_margin', ($('edge').value/100).toFixed(3));
-  body.append('words', $('words').value);
+  body.append('dilate', val('dilate', '6'));
+  body.append('min_conf', val('conf', '0.30'));
+  body.append('min_height_frac', (val('hfrac', '3.0')/100).toFixed(4));
+  body.append('flat_frac', val('flat', '0'));
+  body.append('edge_margin', (val('edge', '25')/100).toFixed(3));
+  body.append('words', val('words', ''));
   try{
     const res = await fetch('/api/clean', {method:'POST', body});
     const data = await res.json();
@@ -222,7 +238,14 @@ async function cleanOne(it){
       Object.assign(it, {state:'fail', error:data.error || 'failed'});
     }
   }catch(err){
-    Object.assign(it, {state:'fail', error:'server unreachable: '+err.message});
+    // Distinguish "the server did not answer" from "this page has a bug".
+    // Calling both unreachable sent a real user hunting a network problem
+    // that did not exist.
+    const network = (err instanceof TypeError) && /fetch|network|load failed/i.test(err.message);
+    Object.assign(it, {state:'fail', error: network
+      ? 'could not reach the program at ' + location.host +
+        '. Is the black window still open?'
+      : 'page error: ' + err.message + ' — reload with Ctrl+F5.'});
   }
 }
 
@@ -236,6 +259,7 @@ async function runAll(){
     render();
   }
   running = false; render();
+  if(items.some(i => i.state==='fail')) checkLink();
 }
 
 // ---- input: paste, drop, pick -------------------------------------------
@@ -265,6 +289,22 @@ clearBtn.addEventListener('click', async () => {
   await fetch(`/api/reset/${SESSION}`, {method:'POST'});
   render();
 });
+
+// Say plainly whether the program is reachable, rather than leaving the page
+// looking alive while every action fails.
+async function checkLink(){
+  try{
+    const r = await fetch('/api/ping', {cache:'no-store'});
+    if(!r.ok) throw new Error('status '+r.status);
+    $('offline').style.display = 'none';
+    return true;
+  }catch(e){
+    $('offline').style.display = 'block';
+    return false;
+  }
+}
+$('retry').addEventListener('click', checkLink);
+checkLink();
 
 for(const [id,out,fmt] of [['dilate','vd',v=>v],['conf','vc',v=>(+v).toFixed(2)],
                            ['hfrac','vh',v=>v],['flat','vf',v=>(+v).toFixed(2)],
