@@ -31,7 +31,7 @@ REM     substituted when the block is parsed, not when it runs.
 REM ===========================================================================
 setlocal EnableExtensions DisableDelayedExpansion
 
-set "WMVERSION=2026-08-04.3"
+set "WMVERSION=2026-08-04.4"
 set "HERE=%~dp0"
 REM Same path without the trailing backslash. Required for any quoted argument.
 set "HEREN=%HERE:~0,-1%"
@@ -298,7 +298,11 @@ echo ============================================
 echo   It stopped with an error.
 echo ============================================
 echo.
-echo Writing watermark-log.txt - send that one file.
+echo If you stopped it yourself - closed the browser page, pressed Ctrl+C -
+echo this is a false alarm: just close this window and ignore the rest.
+echo.
+echo Writing watermark-log.txt - send that one file only if it stopped on
+echo its own.
 echo.
 echo ==== run failed, v%WMVERSION% ==== >>"%LOG%"
 "%PYEXE%" "%HERE%watermark_doctor.py" >>"%LOG%" 2>&1

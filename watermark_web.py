@@ -57,7 +57,7 @@ ENGINE_LOCK = threading.Lock()  # one LaMa forward pass at a time
 RESULTS = {}                    # session id -> {filename: cleaned bytes}
 RESULTS_LOCK = threading.Lock()
 
-UI_VERSION = "2026-08-04.3"
+UI_VERSION = "2026-08-04.4"
 HERE = os.path.dirname(os.path.abspath(__file__))
 UI_FILE = os.path.join(HERE, "watermark_ui.html")
 
@@ -248,7 +248,22 @@ def main():
                     time.sleep(0.5)
             webbrowser.open(url)
         threading.Thread(target=open_when_ready, daemon=True).start()
-    app.run(host=args.host, port=port, threaded=True, debug=False)
+    # Some of the numeric libraries loaded above reset the Ctrl+C handler to
+    # "terminate immediately", which kills the process by signal - bypassing
+    # the except below and handing the launcher a crash-looking exit code.
+    # Measured: without this line the process died with the signal's own code;
+    # with it, a Ctrl+C lands in the except and the exit code is 0.
+    import signal
+    signal.signal(signal.SIGINT, signal.default_int_handler)
+    try:
+        app.run(host=args.host, port=port, threaded=True, debug=False)
+    except KeyboardInterrupt:
+        # The user pressing Ctrl+C in the window is how this app is meant to
+        # be stopped. Without this, Python exits non-zero, and the launcher
+        # read that as a crash - it showed "It stopped with an error" and ran
+        # the full diagnostic, which then correctly reported nothing wrong.
+        # A deliberate stop must exit 0 so the launcher stays quiet.
+        print("\nstopped.", flush=True)
 
 
 if __name__ == "__main__":
