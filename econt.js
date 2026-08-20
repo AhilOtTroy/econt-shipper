@@ -41,12 +41,15 @@ async function callEcont(creds, path, body) {
   return json;
 }
 
+// Customer-facing offices only. `showLC` adds Локални Логистични Центрове (ЛЛЦ) —
+// sorting hubs that are "active" on Econt's map but are NOT valid delivery
+// destinations for a normal parcel; picking one fails createLabel with
+// "Невалиден обслужващ офис". Cargo receptions are freight points, same story.
 function getOffices(creds, countryCode) {
-  // Request the maximal set so nothing is filtered out of the office list.
   return callEcont(creds, '/Nomenclatures/NomenclaturesService.getOffices.json', {
     countryCode: countryCode || 'BGR',
-    showCargoReceptions: true,
-    showLC: true,
+    showCargoReceptions: false,
+    showLC: false,
   });
 }
 

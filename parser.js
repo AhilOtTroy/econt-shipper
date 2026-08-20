@@ -207,11 +207,20 @@ function tokenize(s) {
   return (s || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').split(/\s+/).filter((w) => w && !STOP_OFFICE.has(w) && (w.length >= 3 || /^\d{4}$/.test(w)));
 }
 function officeHaystack(o) { const a = o.address || {}, city = a.city || {}; return [o.name, o.nameEn, a.fullAddress, a.quarter, a.street, city.name, city.postCode].filter(Boolean).join(' '); }
+// Sorting hubs (ЛЛЦ — Локален Логистичен Център) and cargo points show as "active"
+// on Econt's map but cannot receive a normal parcel: createLabel rejects them with
+// "Невалиден обслужващ офис". getOffices already excludes them; this is a second
+// net in case a stale/edge-case entry still carries such a name.
+const HUB_NAME_RE = /(^|[^\p{L}])(ллц|llc)([^\p{L}]|$)|логистичен\s*център|logistic/iu;
+function isCustomerOffice(o) {
+  return !HUB_NAME_RE.test([o && o.name, o && o.nameEn].filter(Boolean).join(' '));
+}
 function matchOffices(locationText, offices, limit) {
   const qTokens = tokenize(locationText);
   const postcode = (locationText.match(/\b\d{4}\b/) || [])[0];
   const ranked = [];
   for (const o of offices) {
+    if (!isCustomerOffice(o)) continue;
     const hayArr = tokenize(officeHaystack(o));
     const hayTokens = new Set(hayArr);
     let score = 0;
@@ -227,4 +236,4 @@ function matchOffices(locationText, offices, limit) {
   return ranked.slice(0, limit || 6);
 }
 
-module.exports = { parseMessage, matchOffices, normalizePhone, tokenize, detectCod };
+module.exports = { parseMessage, matchOffices, normalizePhone, tokenize, detectCod, isCustomerOffice };
