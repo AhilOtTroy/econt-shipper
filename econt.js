@@ -63,6 +63,13 @@ function getShipmentStatuses(creds, shipmentNumbers) {
   return callEcont(creds, '/Shipments/ShipmentService.getShipmentStatuses.json', { shipmentNumbers });
 }
 
+// The client's own profile(s). Carries `cdPayOptions[]` — the COD payout
+// agreements (споразумения) registered on the account. A bank agreement holds
+// the IBAN/BIC; a label references one by its `num`, never by raw IBAN.
+function getClientProfiles(creds) {
+  return callEcont(creds, '/Profile/ProfileService.getClientProfiles.json', {});
+}
+
 function toAddress(a) {
   if (!a) return undefined;
   return {
@@ -116,8 +123,13 @@ function buildLabel(sender, defaults, o) {
   const cod = o.cod || d.cod;
   if (cod && cod.enabled && Number(cod.amount) > 0) {
     services.cdAmount = Number(cod.amount);
-    services.cdType = 'get';
+    services.cdType = 'get';   // 'get' = collect from receiver. Bank payout does NOT change this.
     services.cdCurrency = cod.currency || 'BGN';
+    // Where the collected money is paid out to the sender. Econt does not accept a
+    // raw IBAN per shipment: the bank account lives on the account as a signed CD
+    // agreement (споразумение), and the label references it by number.
+    const payoutNum = (o.cod && o.cod.payOptionNum) || (d.cod && d.cod.payOptionNum);
+    if (payoutNum) services.cdPayOptionsTemplate = String(payoutNum);
   }
   const sms = o.smsNotification != null ? o.smsNotification : d.smsNotification;
   if (sms) services.smsNotification = true;
@@ -126,4 +138,4 @@ function buildLabel(sender, defaults, o) {
   return label;
 }
 
-module.exports = { callEcont, getOffices, createLabel, getShipmentStatuses, buildLabel, baseUrl };
+module.exports = { callEcont, getOffices, createLabel, getShipmentStatuses, getClientProfiles, buildLabel, baseUrl };

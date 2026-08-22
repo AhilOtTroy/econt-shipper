@@ -41,6 +41,11 @@ const I18N = {
     set_defaults: 'Настройки по подразбиране', receiver: 'Получател', sender: 'Подател', set_cod_default: 'Наложен платеж по подразбиране',
     set_shiptype: 'Тип пратка', shiptype_pack: 'Колет', shiptype_doc: 'Документи', set_packcount: 'Брой пакети',
     set_sms: 'SMS известие до получателя за всяка пратка', cod_warn: '⚠ Няма наложен платеж на тази пратка',
+    payout_label: 'Изплащане на наложения платеж', payout_default: 'Както е зададено в Еконт', payout_load: 'Зареди сметките',
+    payout_bank: 'банков превод', payout_office: 'в офис', payout_address: 'на адрес',
+    payout_hint: 'Парите се превеждат по сметката от избраното споразумение с Еконт.',
+    payout_found: 'Намерени {n} споразумения ({b} банкови) — изберете по кое да получавате парите.',
+    payout_none: 'Няма споразумения за изплащане в акаунта ви. За получаване по банков път подпишете споразумение с Еконт.',
     refresh_offices: 'Обнови офисите', save: 'Запази',
     paste_label: 'Поставете съобщението на клиента', paste_ph: 'Моля да ги изпратите в Офис на еконт: …  Име – 08xx xxx xxx', paste_hint: 'Съвет: Ctrl+Enter за преглед',
     img_cta: 'Снимка → товарителница', img_hint: 'Пуснете, поставете или изберете снимка на чата', or_paste: 'или поставете текста',
@@ -112,6 +117,11 @@ const I18N = {
     set_defaults: 'Default options', receiver: 'Receiver', sender: 'Sender', set_cod_default: 'COD on by default',
     set_shiptype: 'Shipment type', shiptype_pack: 'Parcel', shiptype_doc: 'Documents', set_packcount: 'Number of packs',
     set_sms: 'SMS notification to the recipient for every parcel', cod_warn: '⚠ No cash-on-delivery on this parcel',
+    payout_label: 'COD payout', payout_default: 'As configured with Econt', payout_load: 'Load accounts',
+    payout_bank: 'bank transfer', payout_office: 'at office', payout_address: 'to address',
+    payout_hint: 'COD money is paid out to the account in the agreement you pick with Econt.',
+    payout_found: 'Found {n} agreements ({b} bank) — pick where your money is paid out.',
+    payout_none: 'No payout agreements on your account. To be paid by bank transfer, sign an agreement with Econt.',
     refresh_offices: 'Refresh offices', save: 'Save',
     paste_label: "Paste the customer's message", paste_ph: 'Моля да ги изпратите в Офис на еконт: …  Name – 08xx xxx xxx', paste_hint: 'Tip: Ctrl+Enter to preview',
     img_cta: 'Screenshot → label', img_hint: 'Drop, paste or pick a screenshot of the chat', or_paste: 'or paste the text',
@@ -378,6 +388,7 @@ function enterApp() {
   $('cfgCur').value = (d.cod && d.cod.currency) || 'EUR';
   $('cfgShipType').value = d.shipmentType || 'pack'; $('cfgPackCount').value = d.packCount || 1;
   $('cfgSms').checked = !!d.smsNotification;
+  renderPayoutSelect(PAYOUTS, (d.cod && d.cod.payOptionNum) || '');
   setSeg('cfgReviewSeg', 'cfgReviewMode', reviewAnchor(d));
   applyReviewUI();  // keep the preview's review control in sync after a settings change
   switchTab('new');
@@ -413,9 +424,50 @@ $('saveCfgBtn').onclick = async () => {
     shipmentType: $('cfgShipType').value, packCount: Math.max(1, parseInt($('cfgPackCount').value, 10) || 1),
     smsNotification: $('cfgSms').checked,
     reviewMode: rm, payAfterAccept: rf.payAfterAccept, payAfterTest: rf.payAfterTest,
-    cod: Object.assign({}, CONFIG.defaults.cod, { enabled: $('cfgCodOn').checked, currency: $('cfgCur').value }),
+    cod: Object.assign({}, CONFIG.defaults.cod, { enabled: $('cfgCodOn').checked, currency: $('cfgCur').value, payOptionNum: $('cfgPayout').value || '' }),
   });
   await persist(); enterApp(); toast(t('saved'));
+};
+
+
+// ---------- COD payout agreements (Econt holds the IBAN, we only reference it) ----------
+let PAYOUTS = [];
+function payoutLabel(o) {
+  const m = o.method === 'bank' ? t('payout_bank') : o.method === 'office' ? t('payout_office')
+    : o.method === 'address' ? t('payout_address') : (o.method || '');
+  return [o.num, m, o.iban, o.bic].filter(Boolean).join(' \u00b7 ');
+}
+function renderPayoutSelect(options, selected) {
+  const sel = $('cfgPayout');
+  sel.innerHTML = '';
+  const def = document.createElement('option');
+  def.value = ''; def.textContent = t('payout_default');
+  sel.appendChild(def);
+  for (const o of options) {
+    const el = document.createElement('option');
+    el.value = o.num; el.textContent = payoutLabel(o);
+    sel.appendChild(el);
+  }
+  // Keep a previously saved choice selectable even before the list is fetched.
+  if (selected && !options.some((o) => o.num === selected)) {
+    const el = document.createElement('option');
+    el.value = selected; el.textContent = selected;
+    sel.appendChild(el);
+  }
+  sel.value = selected || '';
+}
+$('cfgPayoutBtn').onclick = async (ev) => {
+  const btn = ev.currentTarget;
+  btnBusy(btn, true);
+  $('cfgPayoutMsg').textContent = t('loading');
+  const c = { mode: $('cfgMode').value, username: $('cfgUser').value.trim(), password: $('cfgPass').value || SESSION.password };
+  const r = await api('/api/payouts', { creds: c });
+  btnBusy(btn, false);
+  if (!r.ok) { $('cfgPayoutMsg').textContent = t('error_prefix') + r.error; return; }
+  PAYOUTS = r.options || [];
+  renderPayoutSelect(PAYOUTS, (CONFIG.defaults.cod && CONFIG.defaults.cod.payOptionNum) || '');
+  const banks = PAYOUTS.filter((o) => o.method === 'bank').length;
+  $('cfgPayoutMsg').textContent = PAYOUTS.length ? t('payout_found', { n: PAYOUTS.length, b: banks }) : t('payout_none');
 };
 
 // ---------- parse / preview / create ----------

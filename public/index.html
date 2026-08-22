@@ -584,6 +584,12 @@ try {
         <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgCodOn"> <span data-i18n="set_cod_default">Наложен платеж по подразбиране</span></label>
         <label data-i18n="cod_currency">Валута на наложен платеж</label>
         <select id="cfgCur"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
+        <label id="cfgPayoutLbl" data-i18n="payout_label">Изплащане на наложения платеж</label>
+        <div class="inline">
+          <select id="cfgPayout" style="flex:1 1 200px"><option value="" data-i18n="payout_default">Както е зададено в Еконт</option></select>
+          <button class="ghost" id="cfgPayoutBtn" data-i18n="payout_load">Зареди сметките</button>
+        </div>
+        <div id="cfgPayoutMsg" class="muted" style="margin-top:6px" role="status" data-i18n="payout_hint">Парите се превеждат по сметката от избраното споразумение с Еконт.</div>
         <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgSms"> <span data-i18n="set_sms">SMS известие до получателя за всяка пратка</span></label>
         <label id="cfgReviewLbl" data-i18n="review_setting">Фиксирай „Преглед“ за всяка пратка</label>
         <div class="segmini segwide" id="cfgReviewSeg" role="group" aria-labelledby="cfgReviewLbl">

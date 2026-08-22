@@ -162,6 +162,34 @@ async function handleApi(req, res, url) {
     } catch (e) { return sendJson(res, 200, e.friendly ? { ok: false, error: e.message } : errorPayload(e)); }
   }
 
+  // COD payout agreements registered on the user's Econt account. The IBAN lives
+  // with Econt (signed agreement) — we only ever let the user pick one by number.
+  if (url.pathname === '/api/payouts') {
+    try {
+      const creds = getCreds(body);
+      const r = await econt.getClientProfiles(creds);
+      const seen = new Set(), options = [];
+      for (const p of (r.profiles || [])) {
+        for (const a of (p.cdPayOptions || [])) {
+          if (!a || !a.num || seen.has(a.num)) continue;
+          seen.add(a.num);
+          options.push({
+            num: a.num,
+            method: a.method || '',
+            iban: a.IBAN || null,
+            bic: a.BIC || null,
+            currency: a.bankCurrency || null,
+            officeCode: a.officeCode || null,
+            express: !!a.express,
+            payDays: a.payDays || [],
+            payWeekdays: a.payWeekdays || [],
+          });
+        }
+      }
+      return sendJson(res, 200, { ok: true, options });
+    } catch (e) { return sendJson(res, 200, e.friendly ? { ok: false, error: e.message } : errorPayload(e)); }
+  }
+
   if (url.pathname === '/api/preview' || url.pathname === '/api/create') {
     try {
       const creds = getCreds(body);
