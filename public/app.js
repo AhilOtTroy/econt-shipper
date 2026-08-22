@@ -226,6 +226,25 @@ function reviewAnchor(d) {
   if (d.payAfterAccept) return 'review';
   return '';
 }
+// Segmented button group backed by a hidden input: the control reads as buttons
+// while every existing `<input>.value` read keeps working unchanged.
+function setSeg(segId, inputId, val) {
+  const seg = $(segId), input = $(inputId);
+  if (!seg || !input) return;
+  input.value = val == null ? '' : val;
+  seg.querySelectorAll('button').forEach((b) => {
+    const on = b.dataset.val === input.value;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+}
+function initSeg(segId, inputId, onChange) {
+  const seg = $(segId); if (!seg) return;
+  seg.querySelectorAll('button').forEach((b) => {
+    b.onclick = () => { setSeg(segId, inputId, b.dataset.val); if (onChange) onChange(); };
+  });
+  setSeg(segId, inputId, $(inputId).value);
+}
 
 // ===================== state =====================
 const SESSION = { password: null, pin: null };
@@ -359,7 +378,7 @@ function enterApp() {
   $('cfgCur').value = (d.cod && d.cod.currency) || 'EUR';
   $('cfgShipType').value = d.shipmentType || 'pack'; $('cfgPackCount').value = d.packCount || 1;
   $('cfgSms').checked = !!d.smsNotification;
-  $('cfgReviewMode').value = reviewAnchor(d);
+  setSeg('cfgReviewSeg', 'cfgReviewMode', reviewAnchor(d));
   applyReviewUI();  // keep the preview's review control in sync after a settings change
   switchTab('new');
   show('app');
@@ -458,7 +477,7 @@ async function doParse(ev) {
     applyReviewUI();
     // Reset the per-shipment review each parse (never leak a prior message's choice),
     // then apply the review hint detected in THIS message, if any.
-    if (!reviewAnchor(CONFIG.defaults)) $('pReviewMode').value = p.reviewMode || 'none';
+    if (!reviewAnchor(CONFIG.defaults)) setSeg('pReviewSeg', 'pReviewMode', p.reviewMode || 'none');
     // Office vs address (door) delivery: pick the detected mode and pre-fill the form.
     PARSED_ADDR = p.address || null;
     fillAddress(p.address);
@@ -479,7 +498,7 @@ function applyReviewUI() {
   } else {
     $('reviewRow').classList.remove('hide');
     $('reviewAnchored').classList.add('hide');
-    if (!$('pReviewMode').value) $('pReviewMode').value = 'none';
+    setSeg('pReviewSeg', 'pReviewMode', $('pReviewMode').value || 'none');
   }
 }
 function gatherOverrides() {
@@ -678,7 +697,8 @@ async function runOCR(file) {
   });
 })();
 $('recalcBtn').onclick = doPreview;
-$('pReviewMode').onchange = doPreview;
+initSeg('pReviewSeg', 'pReviewMode', doPreview);
+initSeg('cfgReviewSeg', 'cfgReviewMode');
 $('createBtn').onclick = doCreate;
 $('officeSearchBtn').onclick = async () => { await fillOfficeSelect($('pOffice'), $('officeSearch').value, creds()); doPreview(); };
 $('pOffice').onchange = () => doPreview();

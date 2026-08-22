@@ -227,6 +227,9 @@ try {
   .segmini button { border: 0; background: transparent; color: var(--muted); font-weight: 700; font-size: 13px; padding: 8px 16px; border-radius: 9px; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; transition: color .25s var(--ease); }
   @media (hover: hover) { .segmini button:hover { transform: none; box-shadow: none; border-color: transparent; color: var(--ink); } }
   .segmini button.active { background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; box-shadow: var(--shadow-brand); }
+  /* Full-width variant for 3-option groups (review / review & test) */
+  .segwide { display: flex; width: 100%; flex-wrap: wrap; }
+  .segwide button { flex: 1 1 auto; min-width: 96px; white-space: nowrap; }
   /* Inline caution note (e.g. no cash-on-delivery on this parcel) */
   .warn-box { margin-top: 10px; padding: 9px 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: #7a5200; background: #fff4d6; border: 1px solid rgba(154,103,0,.25); animation: warnIn .3s var(--spring); }
   :root[data-theme="dark"] .warn-box { color: #f4c463; background: #3a2d12; border-color: rgba(244,196,99,.22); }
@@ -582,12 +585,13 @@ try {
         <label data-i18n="cod_currency">Валута на наложен платеж</label>
         <select id="cfgCur"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
         <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgSms"> <span data-i18n="set_sms">SMS известие до получателя за всяка пратка</span></label>
-        <label data-i18n="review_setting">Фиксирай „Преглед“ за всяка пратка</label>
-        <select id="cfgReviewMode">
-          <option value="" data-i18n="review_unanchored">Избирам за всяка пратка</option>
-          <option value="review" data-i18n="review_only">Преглед</option>
-          <option value="review_test" data-i18n="review_test">Преглед и тест</option>
-        </select>
+        <label id="cfgReviewLbl" data-i18n="review_setting">Фиксирай „Преглед“ за всяка пратка</label>
+        <div class="segmini segwide" id="cfgReviewSeg" role="group" aria-labelledby="cfgReviewLbl">
+          <button type="button" data-val="" data-i18n="review_unanchored">Избирам за всяка пратка</button>
+          <button type="button" data-val="review" data-i18n="review_only">Преглед</button>
+          <button type="button" data-val="review_test" data-i18n="review_test">Преглед и тест</button>
+        </div>
+        <input type="hidden" id="cfgReviewMode" value="">
 
         <hr>
         <div class="toolbar">
@@ -661,12 +665,13 @@ try {
           <select id="pCodCur" style="width:auto"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select></label>
         <div id="codWarn" class="warn-box hide" role="status" data-i18n="cod_warn">⚠ Няма наложен платеж на тази пратка</div>
         <div id="reviewRow">
-          <label data-i18n="review_label">Опция „Преглед“</label>
-          <select id="pReviewMode">
-            <option value="none" data-i18n="review_none">Без преглед</option>
-            <option value="review" data-i18n="review_only">Преглед</option>
-            <option value="review_test" data-i18n="review_test">Преглед и тест</option>
-          </select>
+          <label id="pReviewLbl" data-i18n="review_label">Опция „Преглед“</label>
+          <div class="segmini segwide" id="pReviewSeg" role="group" aria-labelledby="pReviewLbl">
+            <button type="button" data-val="none" data-i18n="review_none">Без преглед</button>
+            <button type="button" data-val="review" data-i18n="review_only">Преглед</button>
+            <button type="button" data-val="review_test" data-i18n="review_test">Преглед и тест</button>
+          </div>
+          <input type="hidden" id="pReviewMode" value="none">
         </div>
         <div id="reviewAnchored" class="muted hide" style="margin-top:10px"></div>
         <hr>
