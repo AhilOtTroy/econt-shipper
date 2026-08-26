@@ -8,25 +8,39 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const zlib = require('zlib');
 const econt = require('./econt');
-const { parseMessage, matchOffices } = require('./parser');
+const { parseMessage, matchOffices, splitBatch, stripNoise } = require('./parser');
 
 const ROOT = __dirname;
 const PORT = process.env.PORT || 5005;
 
 // In-memory office nomenclature cache, keyed by environment. The office list is
 // the same for every valid user of a given mode, so this is shared safely.
+// Refreshed automatically every OFFICE_TTL_MS so newly opened offices appear
+// without anyone pressing "refresh"; a stale list is served if Econt is down.
 const officeCache = { demo: null, production: null };
+const OFFICE_TTL_MS = 6 * 3600 * 1000;
 
 async function loadOffices(creds, force) {
   const key = creds.mode === 'production' ? 'production' : 'demo';
-  if (!force && officeCache[key] && officeCache[key].offices.length) {
-    return officeCache[key].offices;
+  const c = officeCache[key];
+  const fresh = c && c.offices.length && (Date.now() - c.at) < OFFICE_TTL_MS;
+  if (!force && fresh) return c.offices;
+  try {
+    const data = await econt.getOffices(creds, 'BGR');
+    const offices = data.offices || [];
+    officeCache[key] = { offices, at: Date.now(), prevCount: c ? c.offices.length : 0 };
+    return offices;
+  } catch (e) {
+    if (c && c.offices.length) return c.offices; // stale beats broken
+    throw e;
   }
-  const data = await econt.getOffices(creds, 'BGR');
-  const offices = data.offices || [];
-  officeCache[key] = { offices, at: Date.now() };
-  return offices;
+}
+function officeStatus(key) {
+  const c = officeCache[key];
+  if (!c) return null;
+  return { count: c.offices.length, ageMinutes: Math.round((Date.now() - c.at) / 60000), added: c.prevCount ? c.offices.length - c.prevCount : 0 };
 }
 
 // ---------- http helpers ----------
@@ -94,7 +108,7 @@ async function handleApi(req, res, url) {
   }
 
   if (url.pathname === '/api/parse') {
-    const parsed = parseMessage(body.text || '');
+    const parsed = parseMessage(stripNoise(body.text || ''));
     let candidates = [];
     if (parsed.deliveryType === 'office' && parsed.locationText) {
       try {
@@ -105,6 +119,28 @@ async function handleApi(req, res, url) {
       }
     }
     return sendJson(res, 200, { ok: true, parsed, candidates });
+  }
+
+  // Batch input: several parcels in one paste. Splits per phone number, parses
+  // each chunk, detects existing waybill numbers (those rows are for tracking,
+  // not creation), and matches offices — falling back to the whole chunk when
+  // the pre-phone text is a listing header rather than a location.
+  if (url.pathname === '/api/parse-batch') {
+    const chunks = splitBatch(body.text || '');
+    let offices = null, officesError = null;
+    try { offices = await loadOffices(getCreds(body)); }
+    catch (e) { officesError = errorPayload(e).error; }
+    const rows = chunks.map((chunk) => {
+      const parsed = parseMessage(chunk);
+      const trackNum = (chunk.match(/\b\d{12,14}\b/) || [null])[0];
+      let candidates = [];
+      if (offices && parsed.deliveryType === 'office') {
+        if (parsed.locationText) candidates = matchOffices(parsed.locationText, offices);
+        if (!candidates.length) candidates = matchOffices(chunk.replace(/\b\d{6,}\b/g, ' '), offices);
+      }
+      return { chunk, parsed, candidates, trackNum };
+    });
+    return sendJson(res, 200, { ok: true, rows, officesError });
   }
 
   if (url.pathname === '/api/offices') {
@@ -119,7 +155,18 @@ async function handleApi(req, res, url) {
     try {
       const creds = getCreds(body);
       const offices = await loadOffices(creds, true);
-      return sendJson(res, 200, { ok: true, count: offices.length });
+      const st = officeStatus(creds.mode === 'production' ? 'production' : 'demo');
+      return sendJson(res, 200, { ok: true, count: offices.length, added: (st && st.added) || 0 });
+    } catch (e) { return sendJson(res, 200, e.friendly ? { ok: false, error: e.message } : errorPayload(e)); }
+  }
+
+  // Live nomenclature status: how many active offices we track and how old the list is.
+  if (url.pathname === '/api/offices/status') {
+    try {
+      const creds = getCreds(body);
+      await loadOffices(creds); // fills or auto-renews the cache (TTL)
+      const st = officeStatus(creds.mode === 'production' ? 'production' : 'demo');
+      return sendJson(res, 200, Object.assign({ ok: true }, st));
     } catch (e) { return sendJson(res, 200, e.friendly ? { ok: false, error: e.message } : errorPayload(e)); }
   }
 
@@ -224,17 +271,24 @@ function serveStatic(req, res, url) {
     // still return a cheap 304 instead of re-downloading.
     const etag = '"' + crypto.createHash('sha1').update(data).digest('base64').slice(0, 22) + '"';
     if (req.headers['if-none-match'] === etag) { res.writeHead(304, { ETag: etag, 'Cache-Control': 'no-cache' }); return res.end(); }
+    // Gzip text assets (~70% smaller) when the client accepts it.
+    const compressible = /^(text\/|application\/manifest)/.test(type);
+    const wantsGzip = compressible && /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+    const body = wantsGzip ? zlib.gzipSync(data) : data;
     // Safe hardening headers (do not restrict script/style/connect, so OCR and inline styles keep working).
-    res.writeHead(200, {
+    const headers = {
       'Content-Type': type,
-      'Content-Length': data.length,
+      'Content-Length': body.length,
       'Cache-Control': 'no-cache',
       'ETag': etag,
+      'Vary': 'Accept-Encoding',
       'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'no-referrer',
       'Content-Security-Policy': "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
-    });
-    res.end(data);
+    };
+    if (wantsGzip) headers['Content-Encoding'] = 'gzip';
+    res.writeHead(200, headers);
+    res.end(body);
   });
 }
 

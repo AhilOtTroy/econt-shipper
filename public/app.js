@@ -20,12 +20,12 @@ const CREATOR = {
 // ===================== i18n =====================
 const I18N = {
   bg: {
-    land_pill: 'Еконт, опростено', land_title: 'Съобщение. Товарителница. Готово.',
-    land_sub: 'Превърнете чата на клиента в готова пратка. За секунди.',
-    land_cta: 'Започнете', land_what_h: 'Накратко',
-    land_what_p: 'Поставяте съобщението. Проверявате. Готова товарителница във вашия Еконт. Входът остава на устройството, с PIN.',
-    land_f1: 'Разпознава офис, име и телефон.', land_f2: 'Виждате цената преди да потвърдите.',
-    land_f3: 'Жив статус на всяка пратка.', land_f4: 'Евро или лева. Наложен платеж.',
+    land_pill: 'За продавачи в OLX, Bazar, Instagram и Facebook', land_title: 'От съобщение до товарителница. За секунди.',
+    land_sub: 'Клиентът праща име, телефон и офис. Ти поставяш съобщението — останалото е готово.',
+    land_cta: 'Започнете безплатно', land_what_h: 'Защо Econt Shipper',
+    land_what_p: 'Край на преписването на имена, телефони и офиси от чата — и на сгрешените пратки. Помощникът чете съобщението, намира точния офис и създава товарителницата във вашия Еконт акаунт. Входът остава на устройството, с PIN.',
+    land_f1: 'Чете текст и снимки от чата (OCR).', land_f2: 'Разпознава трите имена, телефона и офиса.',
+    land_f3: 'Наложен платеж, обявена стойност, преглед и тест.', land_f4: 'Жив статус и готов отговор с номер за проследяване.',
     setup_title: 'Бърза настройка', setup_sub: 'Еднократно. Всичко остава на устройството, с PIN.',
     setup_s1: 'Изберете PIN', setup_s1_sub: 'Заключва приложението и криптира паролата ви за Еконт на това устройство.',
     setup_pin: 'PIN (4–6 цифри)', setup_pin2: 'Повторете PIN', setup_s2: 'Вашият Еконт акаунт', setup_mode: 'Режим', mode_prod: 'Реален', mode_demo: 'Демо',
@@ -41,6 +41,15 @@ const I18N = {
     set_defaults: 'Настройки по подразбиране', receiver: 'Получател', sender: 'Подател', set_cod_default: 'Наложен платеж по подразбиране',
     set_shiptype: 'Тип пратка', shiptype_pack: 'Колет', shiptype_doc: 'Документи', set_packcount: 'Брой пакети',
     set_sms: 'SMS известие до получателя за всяка пратка', cod_warn: '⚠ Няма наложен платеж на тази пратка',
+    offices_status: '{n} активни офиса · списък отпреди {m} мин', offices_added: '+{d} нови офиса',
+    gaps_prefix: 'Не разчетох: ', gap_name: 'име', gap_phone: 'телефон', gap_office: 'офис', gap_addr: 'адрес', gaps_hint: ' — попълнете ръчно.',
+    decl: 'Обявена стойност', decl_default: 'Обявена стойност по подразбиране (= наложения платеж, ако няма друга сума)',
+    sec_recipient: 'Получател', sec_delivery: 'Доставка', sec_parcel: 'Пратка', sec_pay: 'Плащане и опции',
+    ret_label: 'При отказ от получателя — къде да се върне пратката', ret_default: 'Както е настроено в Еконт', ret_office: 'В офис (въведете код)', ret_address: 'На адрес', ret_office_ph: 'код на офис, напр. 9049',
+    batch_h: 'Партида — няколко пратки', batch_found: '{n} пратки открити · {c} за създаване · {t} за проследяване', batch_create: '✓ Изпълни избраните', batch_cancel: 'Затвори',
+    batch_edit: 'Отвори', batch_no_office: '— избери офис —', batch_addr_row: 'до адрес: {a}',
+    st_create: 'нова пратка', st_track: 'има товарителница → проследяване', st_missing: '⚠ липсва офис', st_creating: 'създаване…', st_ok: '✓ {num}', st_tracked: '✓ добавена за проследяване', st_skip: 'пропусната',
+    batch_done: 'Готово: {ok} успешни · {fail} грешки · {skip} пропуснати',
     payout_label: 'Изплащане на наложения платеж', payout_default: 'Както е зададено в Еконт', payout_load: 'Зареди сметките',
     payout_bank: 'банков превод', payout_office: 'в офис', payout_address: 'на адрес',
     payout_hint: 'Парите се превеждат по сметката от избраното споразумение с Еконт.',
@@ -84,7 +93,7 @@ const I18N = {
     refreshing: 'Обновяване…', offices_loaded: 'Заредени {n} офиса ✓', searching: 'търсене…', no_matches: 'няма резултати',
     no_number: '(няма върнат номер)', econt_prefix: 'Еконт: ', error_prefix: 'Грешка: ',
     land_trust: 'Безплатно · Без сървърна регистрация · Данните остават при вас',
-    step1_t: 'Постави', step1_s: 'съобщението от клиента', step2_t: 'Провери', step2_s: 'име, офис и цена', step3_t: 'Изпрати', step3_s: 'готов номер за секунди',
+    step1_t: 'Постави', step1_s: 'съобщението или снимка от чата', step2_t: 'Провери', step2_s: 'име, офис и наложен платеж', step3_t: 'Създай', step3_s: 'и прати номера на клиента',
     about_sub: 'Съобщение → товарителница. Направено с грижа, за да ви спестява време всеки ден.',
     about_app_h: 'Полезно да знаете',
     about_app_p: 'Приложението превръща съобщението на клиента в готова товарителница във вашия Еконт акаунт. Реален и демо режим, евро и лева, наложен платеж, опция „Преглед“, снимка → пратка и живо проследяване.',
@@ -96,12 +105,12 @@ const I18N = {
     a11y_info: 'За приложението', a11y_settings: 'Настройки', a11y_lock: 'Заключи', a11y_home: 'Начало',
   },
   en: {
-    land_pill: 'Econt, simplified', land_title: 'A message in. A label out.',
-    land_sub: "Turn a customer's chat into a ready shipment. In seconds.",
-    land_cta: 'Get started', land_what_h: 'In short',
-    land_what_p: 'Paste the message. Check it. Get a label in your Econt account. Login stays on this device, behind a PIN.',
-    land_f1: 'Reads the office, name and phone.', land_f2: 'See the price before you confirm.',
-    land_f3: 'Live status for every parcel.', land_f4: 'Euro or leva. Cash on delivery.',
+    land_pill: 'For sellers on OLX, Bazar, Instagram & Facebook', land_title: 'From a message to a waybill. In seconds.',
+    land_sub: 'The customer sends a name, phone and office. You paste the message — the rest is done.',
+    land_cta: 'Start for free', land_what_h: 'Why Econt Shipper',
+    land_what_p: 'No more retyping names, phones and offices from the chat — and no more mis-sent parcels. The assistant reads the message, finds the right office and creates the waybill in your Econt account. Your login stays on this device, behind a PIN.',
+    land_f1: 'Reads text and chat screenshots (OCR).', land_f2: 'Recognises all three names, the phone and the office.',
+    land_f3: 'Cash on delivery, declared value, review & test.', land_f4: 'Live status and a ready reply with the tracking number.',
     setup_title: 'Quick setup', setup_sub: 'One time. Everything stays on this device, behind a PIN.',
     setup_s1: 'Choose a PIN', setup_s1_sub: 'Locks the app and encrypts your Econt password on this device.',
     setup_pin: 'PIN (4–6 digits)', setup_pin2: 'Repeat PIN', setup_s2: 'Your Econt account', setup_mode: 'Mode', mode_prod: 'Production', mode_demo: 'Demo',
@@ -117,6 +126,15 @@ const I18N = {
     set_defaults: 'Default options', receiver: 'Receiver', sender: 'Sender', set_cod_default: 'COD on by default',
     set_shiptype: 'Shipment type', shiptype_pack: 'Parcel', shiptype_doc: 'Documents', set_packcount: 'Number of packs',
     set_sms: 'SMS notification to the recipient for every parcel', cod_warn: '⚠ No cash-on-delivery on this parcel',
+    offices_status: '{n} active offices · list from {m} min ago', offices_added: '+{d} new offices',
+    gaps_prefix: 'Could not read: ', gap_name: 'name', gap_phone: 'phone', gap_office: 'office', gap_addr: 'address', gaps_hint: ' — fill in manually.',
+    decl: 'Declared value', decl_default: 'Declared value by default (= the COD amount unless set otherwise)',
+    sec_recipient: 'Recipient', sec_delivery: 'Delivery', sec_parcel: 'Parcel', sec_pay: 'Payment & options',
+    ret_label: 'If the receiver refuses — where to return the parcel', ret_default: 'As configured with Econt', ret_office: 'To an office (enter code)', ret_address: 'To an address', ret_office_ph: 'office code, e.g. 9049',
+    batch_h: 'Batch — several parcels', batch_found: '{n} parcels found · {c} to create · {t} to track', batch_create: '✓ Run selected', batch_cancel: 'Close',
+    batch_edit: 'Open', batch_no_office: '— pick an office —', batch_addr_row: 'to address: {a}',
+    st_create: 'new parcel', st_track: 'has a waybill → tracking', st_missing: '⚠ office missing', st_creating: 'creating…', st_ok: '✓ {num}', st_tracked: '✓ added to tracking', st_skip: 'skipped',
+    batch_done: 'Done: {ok} created · {fail} errors · {skip} skipped',
     payout_label: 'COD payout', payout_default: 'As configured with Econt', payout_load: 'Load accounts',
     payout_bank: 'bank transfer', payout_office: 'at office', payout_address: 'to address',
     payout_hint: 'COD money is paid out to the account in the agreement you pick with Econt.',
@@ -160,7 +178,7 @@ const I18N = {
     refreshing: 'Refreshing…', offices_loaded: 'Loaded {n} offices ✓', searching: 'searching…', no_matches: 'no matches',
     no_number: '(no number returned)', econt_prefix: 'Econt: ', error_prefix: 'Error: ',
     land_trust: 'Free · No server accounts · Your data stays with you',
-    step1_t: 'Paste', step1_s: "the customer's message", step2_t: 'Check', step2_s: 'name, office and price', step3_t: 'Send', step3_s: 'a ready number in seconds',
+    step1_t: 'Paste', step1_s: 'the message or a chat screenshot', step2_t: 'Check', step2_s: 'name, office and COD', step3_t: 'Create', step3_s: 'and send the number to the customer',
     about_sub: 'A message in, a label out. Built with care to save you time every day.',
     about_app_h: 'Good to know',
     about_app_p: "The app turns a customer's message into a ready shipment label in your Econt account. Production and demo modes, euro and leva, cash-on-delivery, the Review option, screenshot → parcel and live tracking.",
@@ -388,7 +406,15 @@ function enterApp() {
   $('cfgCur').value = (d.cod && d.cod.currency) || 'EUR';
   $('cfgShipType').value = d.shipmentType || 'pack'; $('cfgPackCount').value = d.packCount || 1;
   $('cfgSms').checked = !!d.smsNotification;
+  $('cfgDeclOn').checked = !!(d.declaredValue && d.declaredValue.enabled);
   renderPayoutSelect(PAYOUTS, (d.cod && d.cod.payOptionNum) || '');
+  const ret = d.returnTo || {};
+  $('cfgRetMode').value = ret.mode || '';
+  $('cfgRetOfficeCode').value = ret.officeCode || '';
+  const ra = ret.address || {};
+  $('cfgRetCity').value = ra.city || ''; $('cfgRetPost').value = ra.postCode || '';
+  $('cfgRetStreet').value = ra.street || ''; $('cfgRetNum').value = ra.num || '';
+  applyRetUI();
   setSeg('cfgReviewSeg', 'cfgReviewMode', reviewAnchor(d));
   applyReviewUI();  // keep the preview's review control in sync after a settings change
   switchTab('new');
@@ -396,7 +422,7 @@ function enterApp() {
 }
 $('navNew').onclick = () => switchTab('new');
 $('navParcels').onclick = () => switchTab('parcels');
-$('settingsBtn').onclick = () => { switchTab('new'); $('settings').classList.toggle('hide'); };
+$('settingsBtn').onclick = () => { switchTab('new'); $('settings').classList.toggle('hide'); if (!$('settings').classList.contains('hide')) fetchOfficeStatus(); };
 $('cfgTestBtn').onclick = async () => {
   const c = { mode: $('cfgMode').value, username: $('cfgUser').value.trim(), password: $('cfgPass').value || SESSION.password };
   $('cfgMsg').textContent = t('testing');
@@ -412,7 +438,9 @@ $('refreshOfficesBtn').onclick = async (ev) => {
   btnBusy(ev.currentTarget, true); $('cfgMsg').textContent = t('refreshing');
   const r = await api('/api/offices/refresh', { creds: creds() });
   btnBusy(ev.currentTarget, false);
-  $('cfgMsg').textContent = r.ok ? t('offices_loaded', { n: r.count }) : (t('error_prefix') + r.error);
+  $('cfgMsg').textContent = r.ok
+    ? t('offices_loaded', { n: r.count }) + (r.added > 0 ? ' · ' + t('offices_added', { d: r.added }) : '')
+    : (t('error_prefix') + r.error);
 };
 $('saveCfgBtn').onclick = async () => {
   CONFIG.mode = $('cfgMode').value; CONFIG.username = $('cfgUser').value.trim();
@@ -423,6 +451,8 @@ $('saveCfgBtn').onclick = async () => {
     weight: Number($('cfgWeight').value) || 1, shipmentDescription: $('cfgDesc').value.trim(), payer: $('cfgPayer').value,
     shipmentType: $('cfgShipType').value, packCount: Math.max(1, parseInt($('cfgPackCount').value, 10) || 1),
     smsNotification: $('cfgSms').checked,
+    declaredValue: { enabled: $('cfgDeclOn').checked },
+    returnTo: gatherReturnTo(),
     reviewMode: rm, payAfterAccept: rf.payAfterAccept, payAfterTest: rf.payAfterTest,
     cod: Object.assign({}, CONFIG.defaults.cod, { enabled: $('cfgCodOn').checked, currency: $('cfgCur').value, payOptionNum: $('cfgPayout').value || '' }),
   });
@@ -470,6 +500,34 @@ $('cfgPayoutBtn').onclick = async (ev) => {
   $('cfgPayoutMsg').textContent = PAYOUTS.length ? t('payout_found', { n: PAYOUTS.length, b: banks }) : t('payout_none');
 };
 
+// ---------- refusal-return anchor ----------
+function applyRetUI() {
+  const m = $('cfgRetMode').value;
+  $('retOfficeBox').classList.toggle('hide', m !== 'office');
+  $('retAddrBox').classList.toggle('hide', m !== 'address');
+  // Sensible prefill: returning to "my office" usually means the drop-off office.
+  if (m === 'office' && !$('cfgRetOfficeCode').value.trim()) $('cfgRetOfficeCode').value = $('cfgSenderOffice').value.trim();
+}
+$('cfgRetMode').onchange = applyRetUI;
+function gatherReturnTo() {
+  const mode = $('cfgRetMode').value;
+  if (mode === 'office') { const oc = $('cfgRetOfficeCode').value.trim(); return oc ? { mode, officeCode: oc } : { mode: '' }; }
+  if (mode === 'address') {
+    const a = { city: $('cfgRetCity').value.trim(), postCode: $('cfgRetPost').value.trim(), street: $('cfgRetStreet').value.trim(), num: $('cfgRetNum').value.trim(), countryCode: 'BGR' };
+    return a.city && a.street ? { mode, address: a } : { mode: '' };
+  }
+  return { mode: '' };
+}
+
+// ---------- office list freshness ----------
+async function fetchOfficeStatus() {
+  const r = await api('/api/offices/status', { creds: creds() });
+  if (!r.ok) return;
+  let msg = t('offices_status', { n: r.count, m: r.ageMinutes });
+  if (r.added > 0) msg += ' · ' + t('offices_added', { d: r.added });
+  $('cfgMsg').textContent = msg;
+}
+
 // ---------- parse / preview / create ----------
 let CANDIDATES = [];
 let deliverMode = 'office';   // 'office' | 'address' (door)
@@ -499,10 +557,14 @@ function fillAddress(a) {
 function gatherAddress() {
   return { city: $('pAddrCity').value.trim(), postCode: $('pAddrPost').value.trim(), street: $('pAddrStreet').value.trim(), num: $('pAddrNum').value.trim(), other: $('pAddrNote').value.trim(), countryCode: 'BGR' };
 }
+const PHONE_COUNT_RE = /(?:\+?\s?359|0)[\s\-.]?8(?:[\s\-.]?\d){8}/g;
 async function doParse(ev) {
   $('parseErr').textContent = '';
   const text = $('msg').value.trim();
   if (!text) { $('parseErr').textContent = t('paste_first'); return; }
+  // Several phone numbers in one paste = a batch of parcels.
+  if ((text.match(PHONE_COUNT_RE) || []).length >= 2) return doBatchParse(text);
+  $('batch').classList.add('hide');
   const btn = $('parseBtn'); btnBusy(btn, true);
   try {
     const r = await api('/api/parse', { text, creds: creds() });
@@ -526,6 +588,11 @@ async function doParse(ev) {
       $('pCodOn').checked = !!(d.cod && d.cod.enabled); $('pCodAmount').value = (d.cod && d.cod.amount) || '';
       $('pCodCur').value = (d.cod && d.cod.currency) || 'EUR';
     }
+    // Declared value: from the settings anchor; amount mirrors the COD amount.
+    const declOn = !!(d.declaredValue && d.declaredValue.enabled);
+    $('pDeclOn').checked = declOn;
+    $('pDeclAmount').value = declOn && $('pCodAmount').value ? $('pCodAmount').value : '';
+    $('pDeclCur').value = $('pCodCur').value;
     applyReviewUI();
     // Reset the per-shipment review each parse (never leak a prior message's choice),
     // then apply the review hint detected in THIS message, if any.
@@ -562,6 +629,7 @@ function gatherOverrides() {
     recipientName: $('pName').value.trim(), phone: $('pPhone').value.trim(),
     weight: Number($('pWeight').value) || undefined, description: $('pDesc').value.trim(), payer: $('pPayer').value,
     cod: { enabled: $('pCodOn').checked, amount: Number($('pCodAmount').value) || 0, currency: $('pCodCur').value },
+    declaredValue: { enabled: $('pDeclOn').checked, amount: Number($('pDeclAmount').value) || 0, currency: $('pDeclCur').value },
     payAfterAccept: rf.payAfterAccept, payAfterTest: rf.payAfterTest, reviewMode: mode,
   };
   if (deliverMode === 'address') o.address = gatherAddress();
@@ -591,16 +659,27 @@ function updateSummary() {
   const codOn = $('pCodOn').checked, codAmt = Number($('pCodAmount').value);
   const cod = codOn && codAmt > 0 ? `${codAmt} ${$('pCodCur').value}` : '';
   const rl = reviewLabel(currentReviewMode());
+  const declOn = $('pDeclOn').checked, declAmt = Number($('pDeclAmount').value);
   const parts = [];
   if (name) parts.push(`<b>${esc(name)}</b>`);
   if (dest) parts.push(`📍 ${esc(dest)}`);
   if (cod) parts.push(`💰 ${esc(cod)}`);
+  if (declOn && declAmt > 0) parts.push(`🛡 ${esc(declAmt + ' ' + $('pDeclCur').value)}`);
   if (rl) parts.push(`👁 ${esc(rl)}`);
   const box = $('prevSummary');
   if (parts.length) { box.innerHTML = parts.join('<span class="dot-sep">·</span>'); box.classList.remove('hide'); }
   else box.classList.add('hide');
   // Warn when there is no cash-on-delivery on this parcel.
   $('codWarn').classList.toggle('hide', codOn && codAmt > 0);
+  // What the parser could not read — so nothing silently stays empty.
+  const gaps = [];
+  if (!name) gaps.push(t('gap_name'));
+  if (!$('pPhone').value.trim()) gaps.push(t('gap_phone'));
+  if (deliverMode === 'address') { if (!$('pAddrCity').value.trim() || !$('pAddrStreet').value.trim()) gaps.push(t('gap_addr')); }
+  else if (!sel.value) gaps.push(t('gap_office'));
+  const gb = $('parseGaps');
+  if (gaps.length) { gb.textContent = t('gaps_prefix') + gaps.join(', ') + t('gaps_hint'); gb.classList.remove('hide'); }
+  else gb.classList.add('hide');
 }
 // Coalesce bursts of input events into a single summary update per frame.
 let _sumRaf = 0;
@@ -669,6 +748,132 @@ async function doCreate() {
 $('clearBtn').onclick = () => { $('msg').value = ''; $('preview').classList.add('hide'); $('result').classList.add('hide'); };
 $('parseBtn').onclick = doParse;
 
+// ---------- batch: several parcels in one paste ----------
+let BATCH = [];
+function batchRowHTML(row, i) {
+  const st = row.trackNum ? t('st_track') : (row.officeCode || row.parsed.deliveryType === 'door' ? t('st_create') : t('st_missing'));
+  const officeUI = row.parsed.deliveryType === 'door' && row.parsed.address
+    ? `<input data-f="addr" value="${esc(t('batch_addr_row', { a: [row.parsed.address.city, row.parsed.address.street, row.parsed.address.num].filter(Boolean).join(' ') }))}" disabled>`
+    : `<select data-f="office">${row.candidates.length ? '' : `<option value="">${t('batch_no_office')}</option>`}${row.candidates.map((c) => `<option value="${esc(c.code)}">${esc(officeLabel(c))}</option>`).join('')}</select>`;
+  return `<div class="brow" data-i="${i}">
+    <div class="brow-top">
+      <input type="checkbox" data-f="on" ${row.on ? 'checked' : ''}>
+      <span class="idx">#${i + 1}</span>
+      ${row.trackNum ? `<span class="track-tag">📦 ${esc(row.trackNum)}</span>` : ''}
+      <span class="brow-status" data-status>${esc(st)}</span>
+    </div>
+    <div class="brow-grid">
+      <input data-f="name" data-i18n-nope value="${esc(row.name)}" placeholder="${esc(t('recipient'))}">
+      <input data-f="phone" class="bamt" inputmode="tel" value="${esc(row.phone)}" placeholder="${esc(t('phone'))}">
+      ${officeUI}
+      <input data-f="cod" class="bamt" type="number" inputmode="decimal" step="0.01" min="0" value="${row.cod || ''}" placeholder="${esc(t('amount'))}">
+      <select data-f="cur" class="bamt"><option value="EUR"${row.cur === 'EUR' ? ' selected' : ''}>€ EUR</option><option value="BGN"${row.cur === 'BGN' ? ' selected' : ''}>лв BGN</option></select>
+      <button class="ghost" data-f="edit" type="button" style="flex:0 0 auto">${t('batch_edit')}</button>
+    </div>
+  </div>`;
+}
+async function doBatchParse(text) {
+  const btn = $('parseBtn'); btnBusy(btn, true);
+  try {
+    const r = await api('/api/parse-batch', { text, creds: creds() });
+    if (!r.ok) { $('parseErr').textContent = r.error || 'Parse failed'; return; }
+    BATCH = (r.rows || []).map((row) => ({
+      chunk: row.chunk, parsed: row.parsed, candidates: row.candidates || [], trackNum: row.trackNum || null,
+      on: true,
+      name: row.parsed.recipientName || '',
+      phone: row.parsed.phone || '',
+      officeCode: (row.candidates && row.candidates.length) ? String(row.candidates[0].code) : '',
+      cod: row.parsed.cod ? row.parsed.cod.amount : '',
+      cur: (row.parsed.cod && row.parsed.cod.currency) || (CONFIG.defaults.cod && CONFIG.defaults.cod.currency) || 'EUR',
+      done: false,
+    }));
+    if (r.officesError) $('batchErr').textContent = t('office_err', { err: r.officesError }); else $('batchErr').textContent = '';
+    renderBatch();
+    $('preview').classList.add('hide'); $('result').classList.add('hide');
+    $('batch').classList.remove('hide');
+    $('batch').scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
+  } finally { btnBusy(btn, false); }
+}
+function renderBatch() {
+  const creates = BATCH.filter((r) => !r.trackNum).length;
+  $('batchInfo').textContent = t('batch_found', { n: BATCH.length, c: creates, t: BATCH.length - creates });
+  $('batchList').innerHTML = BATCH.map((row, i) => batchRowHTML(row, i)).join('');
+  // Preselect the top office candidate in each row's select.
+  $('batchList').querySelectorAll('.brow').forEach((el) => {
+    const row = BATCH[Number(el.dataset.i)];
+    const sel = el.querySelector('select[data-f="office"]');
+    if (sel && row.officeCode) sel.value = row.officeCode;
+  });
+}
+$('batchList').addEventListener('input', (e) => {
+  const el = e.target, brow = el.closest('.brow'); if (!brow) return;
+  const row = BATCH[Number(brow.dataset.i)], f = el.dataset.f;
+  if (!row || !f) return;
+  if (f === 'on') row.on = el.checked;
+  else if (f === 'name') row.name = el.value;
+  else if (f === 'phone') row.phone = el.value;
+  else if (f === 'office') row.officeCode = el.value;
+  else if (f === 'cod') row.cod = el.value;
+  else if (f === 'cur') row.cur = el.value;
+});
+$('batchList').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-f="edit"]'); if (!btn) return;
+  const row = BATCH[Number(btn.closest('.brow').dataset.i)];
+  $('msg').value = row.chunk;
+  $('batch').classList.add('hide');
+  doParse();
+});
+function batchOverrides(row) {
+  const d = CONFIG.defaults;
+  const mode = reviewAnchor(d) || row.parsed.reviewMode || 'none';
+  const rf = reviewFlags(mode);
+  const amt = Number(row.cod) || 0;
+  const o = {
+    recipientName: row.name.trim(), phone: row.phone.trim(),
+    weight: d.weight, description: d.shipmentDescription, payer: d.payer || 'receiver',
+    cod: { enabled: amt > 0, amount: amt, currency: row.cur },
+    declaredValue: (d.declaredValue && d.declaredValue.enabled && amt > 0) ? { enabled: true, amount: amt, currency: row.cur } : { enabled: false },
+    payAfterAccept: rf.payAfterAccept, payAfterTest: rf.payAfterTest, reviewMode: mode,
+  };
+  if (row.parsed.deliveryType === 'door' && row.parsed.address) o.address = Object.assign({ countryCode: 'BGR' }, row.parsed.address);
+  else o.officeCode = row.officeCode;
+  return o;
+}
+$('batchCancelBtn').onclick = () => $('batch').classList.add('hide');
+$('batchCreateBtn').onclick = async () => {
+  const btn = $('batchCreateBtn'); btnBusy(btn, true, t('creating'));
+  let ok = 0, fail = 0, skip = 0;
+  try {
+    for (let i = 0; i < BATCH.length; i++) {
+      const row = BATCH[i]; if (row.done) continue;
+      const el = $q(`.brow[data-i="${i}"] [data-status]`);
+      const set = (txt, color) => { if (el) { el.textContent = txt; el.style.color = color || ''; } };
+      if (!row.on) { skip++; set(t('st_skip')); continue; }
+      if (row.trackNum) {
+        if (!loadParcels().some((x) => x.number === row.trackNum)) {
+          addParcel({ number: row.trackNum, recipient: row.name.trim(), office: row.officeCode || '', cod: Number(row.cod) || 0, currency: row.cur, createdAt: Date.now(), mode: CONFIG.mode, manual: true });
+        }
+        row.done = true; ok++; set(t('st_tracked'), 'var(--go-d)');
+        $q(`.brow[data-i="${i}"]`).classList.add('done');
+        continue;
+      }
+      const o = batchOverrides(row);
+      if (!o.recipientName || !o.phone || (!o.officeCode && !o.address)) { fail++; set(t('st_missing'), 'var(--warn)'); continue; }
+      set(t('st_creating'));
+      const r = await api('/api/create', shipBody(o));
+      const st = r.ok ? (r.response.label || r.response) : null;
+      if (r.ok && st && st.shipmentNumber) {
+        addParcel({ number: st.shipmentNumber, recipient: o.recipientName, office: o.officeCode || (o.address && o.address.city) || '', weight: o.weight, description: o.description, cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: st.pdfURL, mode: CONFIG.mode });
+        row.done = true; ok++; set(t('st_ok', { num: st.shipmentNumber }), 'var(--go-d)');
+        $q(`.brow[data-i="${i}"]`).classList.add('done');
+      } else {
+        fail++; set('✗ ' + ((r && r.error) || 'error').slice(0, 120), 'var(--warn)');
+      }
+    }
+    $('batchInfo').textContent = t('batch_done', { ok, fail, skip });
+  } finally { btnBusy(btn, false); }
+};
+
 // ---------- screenshot → text (client-side OCR, nothing leaves the device) ----------
 let _tessLoad = null;
 function loadTesseract() {
@@ -705,29 +910,81 @@ function guessDescription(text) {
   d = d.replace(/\s*\d+[.,]?\d*\s*(лв\.?|bgn|eur|€)\b.*$/i, '').trim();
   return d.slice(0, 40);
 }
-async function runOCR(file) {
-  if (!file || !/^image\//.test(file.type || '')) return;
+// Upscale small screenshots and boost contrast before OCR — the single biggest
+// accuracy lever for phone-chat screenshots; huge photos are downscaled so the
+// recogniser stays fast.
+async function preprocessImage(file) {
+  try {
+    const img = await createImageBitmap(file);
+    const scale = img.width < 1000 ? Math.min(2.5, 1280 / img.width) : img.width > 2200 ? 1800 / img.width : 1;
+    const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+    const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, w, h);
+    const d = ctx.getImageData(0, 0, w, h), px = d.data;
+    let min = 255, max = 0;
+    for (let i = 0; i < px.length; i += 4) {
+      const g = (px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114) | 0;
+      px[i] = px[i + 1] = px[i + 2] = g;
+      if (g < min) min = g; if (g > max) max = g;
+    }
+    const range = Math.max(40, max - min);
+    for (let i = 0; i < px.length; i += 4) {
+      const v = Math.max(0, Math.min(255, ((px[i] - min) * 255 / range) | 0));
+      px[i] = px[i + 1] = px[i + 2] = v;
+    }
+    ctx.putImageData(d, 0, 0);
+    return await new Promise((res) => canvas.toBlob((b) => res(b || file), 'image/png'));
+  } catch (e) { return file; }
+}
+// OCR loves turning digits into lookalike letters; inside long digit runs the
+// intent is unambiguous, so map О/O→0, l/I/|→1 there (phones, waybills).
+function fixDigitRuns(text) {
+  return String(text).replace(/[\d OoОоlI|]{8,}/g, (run) => {
+    const digits = (run.match(/\d/g) || []).length;
+    if (digits < 5) return run;
+    return run.replace(/[OoОо]/g, '0').replace(/[lI|]/g, '1');
+  });
+}
+async function runOCRFiles(files) {
+  const imgs = [...files].filter((f) => f && /^image\//.test(f.type || ''));
+  if (!imgs.length) return;
   const box = $('ocrBox'), msgEl = $('ocrMsg');
   $('parseErr').textContent = '';
   box.classList.remove('hide'); msgEl.textContent = t('ocr_loading');
   try {
     const T = await loadTesseract();
-    const { data } = await T.recognize(file, 'bul+eng', {
-      logger: (m) => { if (m && m.status === 'recognizing text') msgEl.textContent = t('ocr_reading', { p: Math.round((m.progress || 0) * 100) }); },
-    });
-    const text = ((data && data.text) || '').replace(/[ \t]+\n/g, '\n').trim();
+    const texts = [];
+    for (let i = 0; i < imgs.length; i++) {
+      const pre = await preprocessImage(imgs[i]);
+      const tag = imgs.length > 1 ? `(${i + 1}/${imgs.length}) ` : '';
+      const { data } = await T.recognize(pre, 'bul+eng', {
+        logger: (m) => { if (m && m.status === 'recognizing text') msgEl.textContent = tag + t('ocr_reading', { p: Math.round((m.progress || 0) * 100) }); },
+      });
+      const txt = ((data && data.text) || '').replace(/[ \t]+\n/g, '\n').trim();
+      if (txt) texts.push(fixDigitRuns(txt));
+    }
     box.classList.add('hide');
-    if (!text) { $('parseErr').textContent = t('ocr_empty'); return; }
+    if (!texts.length) { $('parseErr').textContent = t('ocr_empty'); return; }
+    if (texts.length > 1) {
+      // Several screenshots = a batch; keep block boundaries for the splitter.
+      $('msg').value = texts.join('\n\n');
+      await doParse();
+      return;
+    }
+    const text = texts[0];
     const desc = guessDescription(text);
     $('msg').value = isolateMessage(text);
     await doParse();
     // The product from the screenshot is the most relevant description for this parcel.
-    if (desc) { $('pDesc').value = desc; if (!$('preview').classList.contains('hide')) doPreview(); }
+    if (desc && !$('preview').classList.contains('hide')) { $('pDesc').value = desc; doPreview(); }
   } catch (e) {
     box.classList.add('hide');
     $('parseErr').textContent = t('ocr_fail');
   }
 }
+const runOCR = (file) => runOCRFiles(file ? [file] : []);
 (function initOCRInputs() {
   const drop = $('imgDrop'), input = $('imgInput');
   if (!drop || !input) return;
@@ -737,15 +994,17 @@ async function runOCR(file) {
   drop.addEventListener('dragenter', warmOCR, { once: true });
   drop.addEventListener('click', warmOCR, { once: true });
   drop.onclick = (e) => { if (e.target !== input) input.click(); };
-  input.onchange = () => { const f = input.files && input.files[0]; if (f) runOCR(f); input.value = ''; };
+  input.onchange = () => { if (input.files && input.files.length) runOCRFiles(input.files); input.value = ''; };
   ['dragover', 'dragenter'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('drag'); }));
   ['dragleave', 'dragend'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('drag'); }));
-  drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('drag'); const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) runOCR(f); });
+  drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('drag'); const fl = e.dataTransfer && e.dataTransfer.files; if (fl && fl.length) runOCRFiles(fl); });
   // Paste a screenshot anywhere while the New tab is open.
   document.addEventListener('paste', (e) => {
     if ($('view-app').classList.contains('hide') || $('tab-new').classList.contains('hide')) return;
     const items = (e.clipboardData && e.clipboardData.items) || [];
-    for (const it of items) { if (it.type && it.type.startsWith('image/')) { const f = it.getAsFile(); if (f) { e.preventDefault(); runOCR(f); return; } } }
+    const fls = [];
+    for (const it of items) { if (it.type && it.type.startsWith('image/')) { const f = it.getAsFile(); if (f) fls.push(f); } }
+    if (fls.length) { e.preventDefault(); runOCRFiles(fls); }
   });
 })();
 $('recalcBtn').onclick = doPreview;
@@ -763,7 +1022,8 @@ $('replyBtn').onclick = async () => {
 $('newBtn').onclick = () => { $('msg').value = ''; $('result').classList.add('hide'); $('preview').classList.add('hide'); $('msg').focus(); };
 // Instant: pasting the message auto-parses (no extra click). Live summary follows edits.
 $('msg').addEventListener('paste', () => setTimeout(() => { if ($('msg').value.trim()) doParse(); }, 60));
-['pName', 'pCodOn', 'pCodAmount', 'pCodCur', 'pAddrCity', 'pAddrStreet', 'pAddrNum'].forEach((id) => $(id).addEventListener('input', scheduleSummary));
+['pName', 'pPhone', 'pCodOn', 'pCodAmount', 'pCodCur', 'pDeclOn', 'pDeclAmount', 'pDeclCur', 'pAddrCity', 'pAddrStreet', 'pAddrNum'].forEach((id) => $(id).addEventListener('input', scheduleSummary));
+$('pDeclOn').addEventListener('change', () => { if ($('pDeclOn').checked && !$('pDeclAmount').value && $('pCodAmount').value) $('pDeclAmount').value = $('pCodAmount').value; doPreview(); });
 // Office ↔ address delivery toggle. When switching to address with empty fields,
 // pre-fill from the last parsed address.
 $('modeOfficeBtn').onclick = () => setDeliverMode('office');

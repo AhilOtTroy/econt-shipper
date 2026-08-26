@@ -230,6 +230,22 @@ try {
   /* Full-width variant for 3-option groups (review / review & test) */
   .segwide { display: flex; width: 100%; flex-wrap: wrap; }
   .segwide button { flex: 1 1 auto; min-width: 96px; white-space: nowrap; }
+  /* Batch rows */
+  .brow { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-top: 10px; background: var(--card-solid); }
+  .brow-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .brow-top .idx { font-weight: 800; color: var(--brand); font-size: 13px; flex: none; }
+  .brow-top input[type=checkbox] { width: auto; transform: scale(1.25); accent-color: var(--brand); }
+  .brow-status { margin-left: auto; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .brow-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .brow-grid input, .brow-grid select { flex: 1 1 150px; min-width: 0; padding: 9px 11px; font-size: 14px; }
+  .brow-grid .bamt { flex: 0 1 100px; }
+  .brow .track-tag { font-size: 12px; color: var(--muted); }
+  .brow.done { opacity: .62; }
+  /* Section labels inside the preview — orientation without noise */
+  .sec { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--brand); margin: 18px 0 2px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .sec:first-of-type { margin-top: 8px; padding-top: 0; border-top: 0; }
+  .optline { margin-top: 10px !important; }
+  .optline .amt { width: 110px; margin-left: 6px; }
   /* Inline caution note (e.g. no cash-on-delivery on this parcel) */
   .warn-box { margin-top: 10px; padding: 9px 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: #7a5200; background: #fff4d6; border: 1px solid rgba(154,103,0,.25); animation: warnIn .3s var(--spring); }
   :root[data-theme="dark"] .warn-box { color: #f4c463; background: #3a2d12; border-color: rgba(244,196,99,.22); }
@@ -565,6 +581,25 @@ try {
           <button class="ghost" id="cfgSenderSearchBtn" data-i18n="find">Намери</button>
         </div>
         <select id="cfgSenderOfficeSel" class="hide" style="margin-top:8px"></select>
+        <label data-i18n="ret_label">При отказ от получателя — къде да се върне пратката</label>
+        <select id="cfgRetMode">
+          <option value="" data-i18n="ret_default">Както е настроено в Еконт</option>
+          <option value="office" data-i18n="ret_office">В офис (въведете код)</option>
+          <option value="address" data-i18n="ret_address">На адрес</option>
+        </select>
+        <div id="retOfficeBox" class="hide" style="margin-top:8px">
+          <input id="cfgRetOfficeCode" inputmode="numeric" data-i18n-ph="ret_office_ph" placeholder="код на офис, напр. 9049" style="max-width:220px">
+        </div>
+        <div id="retAddrBox" class="hide">
+          <div class="row">
+            <div><label data-i18n="addr_city">Град</label><input id="cfgRetCity"></div>
+            <div style="flex:0 0 120px"><label data-i18n="addr_post">Пощ. код</label><input id="cfgRetPost" inputmode="numeric"></div>
+          </div>
+          <div class="row">
+            <div><label data-i18n="addr_street">Улица / квартал</label><input id="cfgRetStreet"></div>
+            <div style="flex:0 0 90px"><label data-i18n="addr_num">№</label><input id="cfgRetNum"></div>
+          </div>
+        </div>
 
         <hr>
         <h3 data-i18n="set_defaults">Настройки по подразбиране</h3>
@@ -590,6 +625,7 @@ try {
           <button class="ghost" id="cfgPayoutBtn" data-i18n="payout_load">Зареди сметките</button>
         </div>
         <div id="cfgPayoutMsg" class="muted" style="margin-top:6px" role="status" data-i18n="payout_hint">Парите се превеждат по сметката от избраното споразумение с Еконт.</div>
+        <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgDeclOn"> <span data-i18n="decl_default">Обявена стойност по подразбиране (= наложения платеж, ако няма друга сума)</span></label>
         <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgSms"> <span data-i18n="set_sms">SMS известие до получателя за всяка пратка</span></label>
         <label id="cfgReviewLbl" data-i18n="review_setting">Фиксирай „Преглед“ за всяка пратка</label>
         <div class="segmini segwide" id="cfgReviewSeg" role="group" aria-labelledby="cfgReviewLbl">
@@ -613,7 +649,7 @@ try {
         <button type="button" id="imgDrop" class="drop">
           <span class="drop-ico">📷</span>
           <span class="drop-txt"><strong data-i18n="img_cta">Снимка → товарителница</strong><span class="muted" data-i18n="img_hint">Пуснете, поставете или изберете снимка на чата</span></span>
-          <input type="file" id="imgInput" accept="image/*" hidden>
+          <input type="file" id="imgInput" accept="image/*" multiple hidden>
         </button>
         <div id="ocrBox" class="ocr hide" role="status"><span class="spin" aria-hidden="true"></span><span id="ocrMsg"></span></div>
         <div class="or-sep" data-i18n="or_paste">или поставете текста</div>
@@ -626,15 +662,29 @@ try {
         <div id="parseErr" class="err" role="alert"></div>
       </div>
 
+      <!-- BATCH (several parcels in one paste) -->
+      <div id="batch" class="card hide">
+        <h3 data-i18n="batch_h">Партида — няколко пратки</h3>
+        <div id="batchInfo" class="muted" role="status"></div>
+        <div id="batchList"></div>
+        <div class="toolbar" style="margin-top:12px">
+          <button class="ghost" id="batchCancelBtn" data-i18n="batch_cancel">Затвори</button>
+          <button class="go" id="batchCreateBtn" data-i18n="batch_create">✓ Изпълни избраните</button>
+        </div>
+        <div id="batchErr" class="err" role="alert"></div>
+      </div>
+
       <!-- PREVIEW -->
       <div id="preview" class="card hide">
         <h3 data-i18n="prev_h">Проверете и потвърдете</h3>
         <div id="prevSummary" class="summary hide"></div>
+        <div id="parseGaps" class="warn-box hide" role="status"></div>
+        <div class="sec" data-i18n="sec_recipient">Получател</div>
         <div class="row">
           <div><label data-i18n="recipient">Име на получателя</label><input id="pName" data-enter="recalcBtn"></div>
           <div><label data-i18n="phone">Телефон</label><input id="pPhone" inputmode="tel" data-enter="recalcBtn"></div>
         </div>
-        <label data-i18n="deliver_to">Доставка</label>
+        <div class="sec" data-i18n="sec_delivery">Доставка</div>
         <div class="segmini" id="deliverToggle" role="tablist">
           <button type="button" id="modeOfficeBtn" class="active" role="tab" aria-selected="true" data-i18n="to_office">До офис</button>
           <button type="button" id="modeAddressBtn" role="tab" aria-selected="false" data-i18n="to_address">До адрес</button>
@@ -659,6 +709,7 @@ try {
           <label data-i18n="addr_note">Ориентир (по избор)</label>
           <input id="pAddrNote" data-enter="recalcBtn">
         </div>
+        <div class="sec" data-i18n="sec_parcel">Пратка</div>
         <div class="row" style="margin-top:8px">
           <div><label data-i18n="weight">Тегло (кг)</label><input id="pWeight" type="number" inputmode="decimal" step="0.1" min="0.1" data-enter="recalcBtn"></div>
           <div><label data-i18n="description">Описание</label><input id="pDesc" data-enter="recalcBtn"></div>
@@ -666,10 +717,14 @@ try {
             <select id="pPayer"><option value="receiver" data-i18n="receiver">Получател</option><option value="sender" data-i18n="sender">Подател</option></select>
           </div>
         </div>
-        <label class="inline" style="margin-top:12px"><input type="checkbox" id="pCodOn"> <span data-i18n="cod">Нал. платеж</span>
-          <input id="pCodAmount" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" style="width:100px; margin-left:6px">
+        <div class="sec" data-i18n="sec_pay">Плащане и опции</div>
+        <label class="inline optline"><input type="checkbox" id="pCodOn"> <span data-i18n="cod">Нал. платеж</span>
+          <input id="pCodAmount" class="amt" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума">
           <select id="pCodCur" style="width:auto"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select></label>
         <div id="codWarn" class="warn-box hide" role="status" data-i18n="cod_warn">⚠ Няма наложен платеж на тази пратка</div>
+        <label class="inline optline"><input type="checkbox" id="pDeclOn"> <span data-i18n="decl">Обявена стойност</span>
+          <input id="pDeclAmount" class="amt" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума">
+          <select id="pDeclCur" style="width:auto"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select></label>
         <div id="reviewRow">
           <label id="pReviewLbl" data-i18n="review_label">Опция „Преглед“</label>
           <div class="segmini segwide" id="pReviewSeg" role="group" aria-labelledby="pReviewLbl">

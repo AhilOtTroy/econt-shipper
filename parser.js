@@ -66,9 +66,20 @@ function isNameWord(tok) {
   const b = bare(tok);
   return !STOP_NAME.has(b) && !CITIES.has(b);
 }
-// Up to 2 consecutive name words from the front / back of a token list.
-function leadingName(tokens) { const o = []; for (const tk of tokens) { if (o.length < 2 && isNameWord(tk)) o.push(tk); else break; } return o; }
-function trailingName(tokens) { const o = []; for (let i = tokens.length - 1; i >= 0 && o.length < 2; i--) { if (isNameWord(tokens[i])) o.unshift(tokens[i]); else break; } return o; }
+// Up to 3 consecutive name words from the front / back of a token list —
+// Bulgarian recipients are usually given with all three names (трите имена).
+function leadingName(tokens) { const o = []; for (const tk of tokens) { if (o.length < 3 && isNameWord(tk)) o.push(tk); else break; } return o; }
+// Returns the name segment's indices so the caller can cut exactly it out of the
+// location text. Trailing city words ("Иван Петров Пловдив, 0888…") are skipped
+// over — they belong to the delivery location, not the name.
+function trailingName(tokens) {
+  let i = tokens.length - 1, skipped = 0;
+  while (i >= 0 && skipped < 3 && CITIES.has(bare(tokens[i]))) { i--; skipped++; }
+  const words = [];
+  const end = i;
+  for (; i >= 0 && words.length < 3; i--) { if (isNameWord(tokens[i])) words.unshift(tokens[i]); else break; }
+  return { words, start: i + 1, end };
+}
 
 function curOf(s) { s = (s || '').toLowerCase(); return (s.includes('€') || s.startsWith('евро') || s.startsWith('eur')) ? 'EUR' : 'BGN'; }
 
@@ -172,12 +183,13 @@ function parseMessage(text) {
   while (beforeTok.length) { const last = beforeTok[beforeTok.length - 1]; if (isPunct(last) || TRAIL_LABEL.has(bare(last))) beforeTok.pop(); else break; }
   while (afterTok.length && isPunct(afterTok[0])) afterTok.shift();
 
-  let nameTok = leadingName(afterTok), nameFrom = 'after';
-  if (!nameTok.length) { nameTok = trailingName(beforeTok); nameFrom = 'before'; }
+  let nameTok = leadingName(afterTok), nameFrom = 'after', beforeSeg = null;
+  if (!nameTok.length) { beforeSeg = trailingName(beforeTok); nameTok = beforeSeg.words; nameFrom = 'before'; }
   out.recipientName = nameTok.join(' ').replace(/[.,'’-]+$/u, '').trim();
 
   let officeTokens = beforeTok.slice();
-  if (nameFrom === 'before' && nameTok.length) officeTokens = officeTokens.slice(0, officeTokens.length - nameTok.length);
+  // Cut exactly the name segment out; trailing city words stay in the location.
+  if (nameFrom === 'before' && nameTok.length) officeTokens = beforeTok.slice(0, beforeSeg.start).concat(beforeTok.slice(beforeSeg.end + 1));
   officeTokens = officeTokens.filter((w) => !['тел', 'телефон', 'gsm', 'гсм'].includes(w.toLowerCase()));
   let loc = officeTokens.join(' ');
   // Strip a leading "Label:" (e.g. "Адрес за доставка:") — but only when the prefix is a
@@ -236,4 +248,59 @@ function matchOffices(locationText, offices, limit) {
   return ranked.slice(0, limit || 6);
 }
 
-module.exports = { parseMessage, matchOffices, normalizePhone, tokenize, detectCod, isCustomerOffice };
+// ---------- batch input & noise filtering ----------
+const PHONE_RE_G = new RegExp(PHONE_RE.source, 'g');
+function countPhones(text) { return (String(text).match(PHONE_RE_G) || []).length; }
+
+// Lines that carry no shipment signal at all — chat furniture, timestamps, read
+// receipts, emoji rows, platform labels. Dropped before parsing OCR/batch input
+// so junk never leaks into names, addresses or descriptions.
+const NOISE_LINE = [
+  /^\d{1,2}[:.]\d{2}(\s*(ч|h|am|pm)\.?)?$/i,                                   // bare timestamp
+  /^(днес|вчера|today|yesterday|online|на линия|активен|typing|пише)\b.{0,20}$/i,
+  /^(изпратено|доставено|видяно|прочетено|seen|delivered|sent|edited|редактирано)\b.{0,20}$/i,
+  /^(viber|whatsapp|messenger|instagram|facebook|olx|bazar)\b.{0,25}$/i,
+  /^id[:\s]*\d+$/i,
+  /^[\W_]+$/u,                                                                  // punctuation / emoji only
+];
+function isNoiseLine(line) {
+  const t = line.trim();
+  if (!t) return true;
+  if (t.length <= 2 && !/\d\d/.test(t)) return true;
+  return NOISE_LINE.some((re) => re.test(t));
+}
+function stripNoise(text) { return String(text).split(/\n/).filter((l) => !isNoiseLine(l)).join('\n'); }
+
+// Split a batch message into one chunk per parcel. Blank-line blocks first;
+// a block holding several phone numbers is split greedily so each chunk keeps
+// exactly one phone. Phoneless fragments are merged into the following chunk
+// (they usually hold that parcel's name or a header).
+function splitBatch(text) {
+  const blocks = String(text).split(/\n\s*\n+/).map(stripNoise).filter((b) => b.trim());
+  const out = [];
+  for (const b of blocks) {
+    if (countPhones(b) <= 1) { out.push(b); continue; }
+    const lines = b.split(/\n/);
+    let cur = [], curHasPhone = false;
+    for (const line of lines) {
+      const hasPhone = PHONE_RE.test(line);
+      if (hasPhone && curHasPhone) { out.push(cur.join('\n')); cur = []; curHasPhone = false; }
+      cur.push(line);
+      if (hasPhone) curHasPhone = true;
+    }
+    if (cur.length) out.push(cur.join('\n'));
+  }
+  const merged = [];
+  let pending = '';
+  for (const c of out) {
+    if (!PHONE_RE.test(c)) { pending += (pending ? '\n' : '') + c; continue; }
+    merged.push(pending ? pending + '\n' + c : c); pending = '';
+  }
+  // A trailing phoneless fragment is chatter after the last parcel (e.g. "в
+  // разговор, без данни" lists) — merging it in would pollute the last row's
+  // COD/location, so it is dropped unless it is the only content at all.
+  if (pending && !merged.length) merged.push(pending);
+  return merged;
+}
+
+module.exports = { parseMessage, matchOffices, normalizePhone, tokenize, detectCod, isCustomerOffice, stripNoise, splitBatch, countPhones };

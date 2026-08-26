@@ -124,16 +124,43 @@ function buildLabel(sender, defaults, o) {
   if (cod && cod.enabled && Number(cod.amount) > 0) {
     services.cdAmount = Number(cod.amount);
     services.cdType = 'get';   // 'get' = collect from receiver. Bank payout does NOT change this.
-    services.cdCurrency = cod.currency || 'BGN';
+    services.cdCurrency = cod.currency || 'EUR';
     // Where the collected money is paid out to the sender. Econt does not accept a
     // raw IBAN per shipment: the bank account lives on the account as a signed CD
     // agreement (споразумение), and the label references it by number.
     const payoutNum = (o.cod && o.cod.payOptionNum) || (d.cod && d.cod.payOptionNum);
     if (payoutNum) services.cdPayOptionsTemplate = String(payoutNum);
   }
+  // Declared value (обявена стойност) — Econt's liability for damage/loss/theft.
+  // Always the amount+currency pair; currency is mandatory post euro-migration.
+  const decl = o.declaredValue || d.declaredValue;
+  if (decl && decl.enabled && Number(decl.amount) > 0) {
+    services.declaredValueAmount = Number(decl.amount);
+    services.declaredValueCurrency = decl.currency || (cod && cod.currency) || 'EUR';
+  }
   const sms = o.smsNotification != null ? o.smsNotification : d.smsNotification;
   if (sms) services.smsNotification = true;
   if (Object.keys(services).length) label.services = Object.assign(label.services || {}, services);
+
+  // Where a REFUSED parcel is returned (per-label return instruction). Uses the
+  // reject* half of ReturnInstructionParams only — the returnParcel* fields would
+  // silently order a PAID two-way return service instead of routing refusals.
+  const ret = o.returnTo || d.returnTo;
+  if (ret && (ret.mode === 'office' || ret.mode === 'address')) {
+    const rp = {
+      rejectReturnClient: { name: sender.name, phones: [sender.phone] },
+      rejectOriginalParcelPaySide: 'sender',
+      rejectReturnParcelPaySide: 'sender',
+    };
+    if (ret.mode === 'office' && ret.officeCode) {
+      rp.rejectAction = 'return_to_office';
+      rp.rejectReturnOfficeCode = String(ret.officeCode);
+    } else if (ret.mode === 'address' && ret.address && ret.address.city) {
+      rp.rejectAction = 'return_to_address';
+      rp.rejectReturnAddress = toAddress(ret.address);
+    }
+    if (rp.rejectAction) label.instructions = [{ type: 'return', returnInstructionParams: rp }];
+  }
 
   return label;
 }
