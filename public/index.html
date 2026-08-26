@@ -17,7 +17,7 @@ try {
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="preconnect" href="https://tessdata.projectnaptha.com" crossorigin>
 <link rel="dns-prefetch" href="https://tessdata.projectnaptha.com">
-<title>Econt Shipper — текст → пратка</title>
+<title>Econt Shipper: от текст до пратка</title>
 <style>
   :root {
     color-scheme: light;
@@ -436,7 +436,7 @@ try {
         </div>
         <span class="pill" data-i18n="land_pill">За подателите в Еконт</span>
         <h1 data-i18n="land_title">Поставете съобщение. Получавате товарителница.</h1>
-        <p data-i18n="land_sub">Превърнете съобщението на клиента в готов номер на пратка в Еконт — за секунди, с вашите обичайни настройки.</p>
+        <p data-i18n="land_sub">Пускаш съобщението от клиента, хвърляш едно око и товарителницата е готова в твоя Еконт.</p>
         <button class="primary block" id="getStartedBtn" data-i18n="land_cta">Започнете</button>
         <div class="muted" style="margin-top:12px; font-size:12.5px" data-i18n="land_trust">Безплатно · Без сървърна регистрация · Данните остават при вас</div>
       </div>
@@ -449,7 +449,7 @@ try {
         <h3 data-i18n="land_what_h">Какво е това?</h3>
         <p class="muted" data-i18n="land_what_p">Малък помощник за подателите в Еконт. Поставяте съобщението с офис/адрес, което клиентът ви праща, проверявате данните и приложението създава товарителницата във вашия Еконт профил. Данните ви за вход остават на вашето устройство, защитени с PIN.</p>
         <div class="feat"><span class="tick">✓</span><span data-i18n="land_f1">Автоматично разпознава офис, име и телефон от текста</span></div>
-        <div class="feat"><span class="tick">✓</span><span data-i18n="land_f2">Преглед на цената преди да потвърдите — нищо не се създава по погрешка</span></div>
+        <div class="feat"><span class="tick">✓</span><span data-i18n="land_f2">Разпознава трите имена, телефона и офиса.</span></div>
         <div class="feat"><span class="tick">✓</span><span data-i18n="land_f3">Жив списък на пратките ви със статус от Еконт</span></div>
         <div class="feat"><span class="tick">✓</span><span data-i18n="land_f4">Евро или лева, наложен платеж, вашите настройки по подразбиране</span></div>
       </div>
@@ -467,7 +467,7 @@ try {
       <h3><span class="step-no">1</span><span data-i18n="setup_s1">Изберете PIN</span></h3>
       <p class="muted" data-i18n="setup_s1_sub">Заключва приложението и криптира паролата ви за Еконт на това устройство.</p>
       <div class="row">
-        <div><label data-i18n="setup_pin">PIN (4–6 цифри)</label><input id="suPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
+        <div><label data-i18n="setup_pin">PIN (4-6 цифри)</label><input id="suPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
         <div><label data-i18n="setup_pin2">Повторете PIN</label><input id="suPin2" class="pin" type="password" inputmode="numeric" enterkeyhint="go" maxlength="6" autocomplete="new-password" data-enter="suFinishBtn"></div>
       </div>
     </div>
@@ -480,7 +480,7 @@ try {
         <div><label data-i18n="setup_pass">Парола за Еконт</label><input id="suPass" type="password" autocomplete="current-password" data-enter="suTestBtn"></div>
       </div>
       <button class="primary" id="suTestBtn" style="margin-top:12px" data-i18n="setup_test">Проверка на входа</button>
-      <button class="ghost block" id="suDemoBtn" type="button" style="margin-top:10px" data-i18n="setup_demo_try">Нямам вход в Еконт — пробвай с ДЕМО акаунт</button>
+      <button class="ghost block" id="suDemoBtn" type="button" style="margin-top:10px" data-i18n="setup_demo_try">Без вход в Еконт? Пробвай ДЕМО акаунта</button>
       <div id="suTestMsg" class="muted" role="status"></div>
     </div>
 
@@ -568,7 +568,7 @@ try {
     <div id="settings" class="card">
       <button class="ghost" id="settingsBackBtn" type="button" style="margin-bottom:12px" data-i18n="about_back">← Назад</button>
         <h3 data-i18n="set_account">Еконт акаунт</h3>
-        <div id="cfgDemoNote" class="warn-box hide" data-i18n="demo_note">В момента сте в ДЕМО режим. Въведете реалния си потребител и парола и запазете — преминавате автоматично на реалния акаунт.</div>
+        <div id="cfgDemoNote" class="warn-box hide" data-i18n="demo_note">В момента сте в ДЕМО режим. Въведете реалния си потребител и парола, запазете, и приложението минава на реалния ви акаунт.</div>
         <div class="row">
           <div><label data-i18n="username">Потребител</label><input id="cfgUser" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-enter="saveCfgBtn"></div>
           <div><label data-i18n="pass_keep">Парола (празно = без промяна)</label><input id="cfgPass" type="password" placeholder="••••" autocomplete="off" data-enter="saveCfgBtn"></div>
@@ -588,7 +588,7 @@ try {
           <button class="ghost" id="cfgSenderSearchBtn" data-i18n="find">Намери</button>
         </div>
         <select id="cfgSenderOfficeSel" class="hide" style="margin-top:8px"></select>
-        <label data-i18n="ret_label">При отказ от получателя — къде да се върне пратката</label>
+        <label data-i18n="ret_label">Ако получателят откаже пратката, къде да се върне</label>
         <select id="cfgRetMode">
           <option value="" data-i18n="ret_default">Както е настроено в Еконт</option>
           <option value="office" data-i18n="ret_office">В офис (въведете код)</option>
@@ -662,10 +662,10 @@ try {
     <div id="tab-new" role="tabpanel" aria-labelledby="navNew">
       <!-- COMPOSER: text or screenshots in → parcels out -->
       <div class="card composer-card" id="imgDrop">
-        <textarea id="msg" data-i18n-ph="paste_ph" placeholder="Моля да ги изпратите в Офис на еконт: …  Име – 08xx xxx xxx"></textarea>
+        <textarea id="msg" data-i18n-ph="paste_ph" placeholder="Моля да ги изпратите в Офис на еконт: …  Име - 08xx xxx xxx"></textarea>
         <div class="composer-bar">
           <button type="button" class="icon icon-sm" id="attachBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></button>
-          <span class="muted chint" data-i18n="comp_hint">Постави текст или снимка от чата — или ги пусни тук.</span>
+          <span class="muted chint" data-i18n="comp_hint">Постави текст или снимка от чата, или просто ги пусни върху полето.</span>
           <span class="spacer"></span>
           <button class="ghost btn-sm" id="clearBtn" data-i18n="clear">Изчисти</button>
           <button class="primary" id="parseBtn" data-i18n="preview">Преглед →</button>
@@ -677,7 +677,7 @@ try {
 
       <!-- BATCH (several parcels in one paste) -->
       <div id="batch" class="card hide">
-        <h3 data-i18n="batch_h">Партида — няколко пратки</h3>
+        <h3 data-i18n="batch_h">Партида: няколко пратки</h3>
         <div id="batchInfo" class="muted" role="status"></div>
         <div id="batchList"></div>
         <div class="toolbar" style="margin-top:12px">
