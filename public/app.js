@@ -31,6 +31,7 @@ const I18N = {
     setup_s1: 'Изберете PIN', setup_s1_sub: 'Заключва приложението и криптира паролата ви за Еконт на това устройство.',
     setup_pin: 'PIN (4–6 цифри)', setup_pin2: 'Повторете PIN', setup_s2: 'Вашият Еконт акаунт', setup_mode: 'Режим', mode_prod: 'Реален', mode_demo: 'Демо',
     setup_user: 'Потребителско име в Еконт (точно, с главни/малки букви)', setup_pass: 'Парола за Еконт', setup_test: 'Проверка на входа',
+    setup_demo_try: 'Нямам вход в Еконт — пробвай с ДЕМО акаунт', demo_note: 'В момента сте в ДЕМО режим. Въведете реалния си потребител и парола и запазете — преминавате автоматично на реалния акаунт.',
     setup_s3: 'Вие (подателят)', setup_yourname: 'Вашето име', setup_yourphone: 'Вашият телефон', setup_youroffice: 'Вашият офис за подаване',
     setup_search_office: 'търсене по град / име на офис…', find: 'Намери', setup_s4: 'Вашите обичайни настройки', weight: 'Тегло (кг)', contents: 'Съдържание', who_pays: 'Кой плаща',
     receiver_pays: 'Получателят плаща', i_pay: 'Аз плащам', setup_cod: 'Обикновено с наложен платеж (сумата въвеждате за всяка пратка)',
@@ -41,7 +42,7 @@ const I18N = {
     set_sender: 'Подател', name: 'Име', phone: 'Телефон', set_office_code: 'Код на вашия офис за подаване', search: 'търсене…',
     set_defaults: 'Настройки по подразбиране', receiver: 'Получател', sender: 'Подател', set_cod_default: 'Наложен платеж по подразбиране',
     set_shiptype: 'Тип пратка', shiptype_pack: 'Колет', shiptype_doc: 'Документи', set_packcount: 'Брой пакети',
-    set_sms: 'SMS известие до получателя за всяка пратка', cod_warn: '⚠ Няма наложен платеж на тази пратка',
+    set_sms: 'SMS известие до получателя за всяка пратка', cod_warn: 'Няма наложен платеж на тази пратка',
     offices_status: '{n} активни офиса · списък отпреди {m} мин', offices_added: '+{d} нови офиса',
     gaps_prefix: 'Не разчетох: ', gap_name: 'име', gap_phone: 'телефон', gap_office: 'офис', gap_addr: 'адрес', gaps_hint: ' — попълнете ръчно.',
     decl: 'Обявена стойност', decl_default: 'Обявена стойност по подразбиране (= наложения платеж, ако няма друга сума)',
@@ -49,9 +50,9 @@ const I18N = {
     ret_label: 'При отказ от получателя — къде да се върне пратката', ret_default: 'Както е настроено в Еконт', ret_office: 'В офис (въведете код)', ret_address: 'На адрес', ret_office_ph: 'код на офис, напр. 9049',
     batch_h: 'Партида — няколко пратки', batch_found: '{n} пратки открити · {c} за създаване · {t} за проследяване', batch_create: '✓ Изпълни избраните', batch_cancel: 'Затвори',
     batch_edit: 'Отвори', batch_no_office: '— избери офис —', batch_addr_row: 'до адрес: {a}',
-    st_create: 'нова пратка', st_track: 'има товарителница → проследяване', st_missing: '⚠ липсва офис', st_creating: 'създаване…', st_ok: '✓ {num}', st_tracked: '✓ добавена за проследяване', st_skip: 'пропусната',
+    st_create: 'нова пратка', st_track: 'има товарителница → проследяване', st_missing: 'липсва офис', st_creating: 'създаване…', st_ok: '✓ {num}', st_tracked: '✓ добавена за проследяване', st_skip: 'пропусната',
     batch_done: 'Готово: {ok} успешни · {fail} грешки · {skip} пропуснати',
-    row_label: 'Ред {n}', ret_incomplete: '⚠ Опцията за връщане не е запазена — попълнете офис код / адрес.',
+    row_label: 'Ред {n}', ret_incomplete: 'Опцията за връщане не е запазена — попълнете офис код / адрес.',
     back_to_batch: '← Към партидата ({n})',
     payout_label: 'Изплащане на наложения платеж', payout_default: 'Както е зададено в Еконт', payout_load: 'Зареди сметките',
     payout_bank: 'банков превод', payout_office: 'в офис', payout_address: 'на адрес',
@@ -68,11 +69,11 @@ const I18N = {
     addr_city: 'Град', addr_post: 'Пощ. код', addr_street: 'Улица / квартал', addr_num: '№', addr_note: 'Ориентир (по избор)', need_addr: 'Нужни са град и улица/квартал за доставка до адрес.',
     wrong_office: 'грешен офис? търсене по име/град…', search_btn: 'Търси', description: 'Описание', pays: 'Плаща',
     cod: 'Нал. платеж', amount: 'сума', recalc: 'Преизчисли', create_btn: '✓ Създай товарителница',
-    res_h: 'Товарителницата е създадена', copy: 'Копирай номера', label_pdf: '🖨 Етикет PDF', view_in_profile: 'Виж в профила', new: '+ Нова',
+    res_h: 'Товарителницата е създадена', copy: 'Копирай номера', label_pdf: 'Етикет PDF', view_in_profile: 'Виж в профила', new: '+ Нова',
     dd_site: 'econt.com', dd_site_sub: 'Официалният сайт на Еконт', dd_profile: 'e-Econt профил', dd_profile_sub: 'Пратките във вашия акаунт',
-    reply_copy: '📋 Отговор за клиента', reply_copied: 'Отговорът е копиран ✓', track_link: '🔎 Проследи',
+    reply_copy: 'Отговор за клиента', reply_copied: 'Отговорът е копиран ✓', track_link: 'Проследи',
     reply_template: 'Готово! 📦 Пратката е подадена.\nТоварителница: {num}\nПроследяване: {url}\nНа гише отваряш, проверяваш и плащаш само ако всичко е наред.',
-    match_high: '✓ сигурно съвпадение', match_mid: 'вероятно съвпадение', match_lo: '⚠ провери офиса',
+    match_high: '✓ сигурно съвпадение', match_mid: 'вероятно съвпадение', match_lo: 'провери офиса',
     parcels_h: 'Вашите пратки', parcels_refresh: 'Обнови',
     clear_all: 'Изчисти всички', clear_confirm: 'Да се премахнат ли ВСИЧКИ пратки от списъка?', del_confirm: 'Премахни пратката от списъка?', yes: 'Да', no: 'Не', removed: 'Премахнато ✓', del_aria: 'Изтрий пратката', parcels_note: 'Показва пратките, създадени през това приложение, с актуален статус от Еконт.',
     parcels_empty: 'Все още няма пратки тук. Създайте първата от раздел „Нова“.', exp_delivery: 'Очаквана доставка', collected: 'Събрано НП',
@@ -92,8 +93,8 @@ const I18N = {
     cod_blank: 'Наложеният платеж е включен, но сумата е празна — въведете сума или го изключете.',
     saved: 'Запазено ✓', creating: 'Създаване…', getting_price: 'Изчисляване на цена…', validated: 'Проверено ✓',
     est_price: 'Очаквана цена: <span class="price">{v} {cur}</span>', price_label: 'Цена: {v} {cur}',
-    no_match: 'няма съвпадащ офис за „{q}“ — търсете отдолу', office_err: '⚠ грешка със списъка офиси: {err}',
-    demo_hint: '⚠ ДЕМО списък с офиси (~585) — превключете на Реален в ⚙ за всички офиси.',
+    no_match: 'няма съвпадащ офис за „{q}“ — търсете отдолу', office_err: 'Грешка със списъка офиси: {err}',
+    demo_hint: 'ДЕМО списък с офиси (~585). Въведете реалния си вход в Настройки, за да преминете на реален режим.',
     wrong_pin: 'Грешен PIN.', forget_confirm: 'Да премахна ли запазения Еконт вход и настройки от това устройство?',
     refreshing: 'Обновяване…', offices_loaded: 'Заредени {n} офиса ✓', searching: 'търсене…', no_matches: 'няма резултати',
     no_number: '(няма върнат номер)', econt_prefix: 'Еконт: ', error_prefix: 'Грешка: ',
@@ -121,6 +122,7 @@ const I18N = {
     setup_s1: 'Choose a PIN', setup_s1_sub: 'Locks the app and encrypts your Econt password on this device.',
     setup_pin: 'PIN (4–6 digits)', setup_pin2: 'Repeat PIN', setup_s2: 'Your Econt account', setup_mode: 'Mode', mode_prod: 'Production', mode_demo: 'Demo',
     setup_user: 'Econt username (exact, case-sensitive)', setup_pass: 'Econt password', setup_test: 'Test login',
+    setup_demo_try: 'No Econt login — try the DEMO account', demo_note: 'You are in DEMO mode. Enter your real username and password and save — you switch to your real account automatically.',
     setup_s3: 'You (the sender)', setup_yourname: 'Your name', setup_yourphone: 'Your phone', setup_youroffice: 'Your drop-off office',
     setup_search_office: 'search by city / office name…', find: 'Find', setup_s4: 'Your usual options', weight: 'Weight (kg)', contents: 'Contents', who_pays: 'Who pays',
     receiver_pays: 'Receiver pays', i_pay: 'I pay', setup_cod: 'Usually cash-on-delivery (you type the amount per parcel)',
@@ -131,7 +133,7 @@ const I18N = {
     set_sender: 'Sender', name: 'Name', phone: 'Phone', set_office_code: 'Your drop-off office code', search: 'search…',
     set_defaults: 'Default options', receiver: 'Receiver', sender: 'Sender', set_cod_default: 'COD on by default',
     set_shiptype: 'Shipment type', shiptype_pack: 'Parcel', shiptype_doc: 'Documents', set_packcount: 'Number of packs',
-    set_sms: 'SMS notification to the recipient for every parcel', cod_warn: '⚠ No cash-on-delivery on this parcel',
+    set_sms: 'SMS notification to the recipient for every parcel', cod_warn: 'No cash-on-delivery on this parcel',
     offices_status: '{n} active offices · list from {m} min ago', offices_added: '+{d} new offices',
     gaps_prefix: 'Could not read: ', gap_name: 'name', gap_phone: 'phone', gap_office: 'office', gap_addr: 'address', gaps_hint: ' — fill in manually.',
     decl: 'Declared value', decl_default: 'Declared value by default (= the COD amount unless set otherwise)',
@@ -139,9 +141,9 @@ const I18N = {
     ret_label: 'If the receiver refuses — where to return the parcel', ret_default: 'As configured with Econt', ret_office: 'To an office (enter code)', ret_address: 'To an address', ret_office_ph: 'office code, e.g. 9049',
     batch_h: 'Batch — several parcels', batch_found: '{n} parcels found · {c} to create · {t} to track', batch_create: '✓ Run selected', batch_cancel: 'Close',
     batch_edit: 'Open', batch_no_office: '— pick an office —', batch_addr_row: 'to address: {a}',
-    st_create: 'new parcel', st_track: 'has a waybill → tracking', st_missing: '⚠ office missing', st_creating: 'creating…', st_ok: '✓ {num}', st_tracked: '✓ added to tracking', st_skip: 'skipped',
+    st_create: 'new parcel', st_track: 'has a waybill → tracking', st_missing: 'office missing', st_creating: 'creating…', st_ok: '✓ {num}', st_tracked: '✓ added to tracking', st_skip: 'skipped',
     batch_done: 'Done: {ok} created · {fail} errors · {skip} skipped',
-    row_label: 'Row {n}', ret_incomplete: '⚠ Return option not saved — fill in the office code / address.',
+    row_label: 'Row {n}', ret_incomplete: 'Return option not saved — fill in the office code / address.',
     back_to_batch: '← Back to batch ({n})',
     payout_label: 'COD payout', payout_default: 'As configured with Econt', payout_load: 'Load accounts',
     payout_bank: 'bank transfer', payout_office: 'at office', payout_address: 'to address',
@@ -158,11 +160,11 @@ const I18N = {
     addr_city: 'City', addr_post: 'Post code', addr_street: 'Street / quarter', addr_num: 'No.', addr_note: 'Landmark (optional)', need_addr: 'City and street/quarter are required for address delivery.',
     wrong_office: 'wrong office? search by name/city…', search_btn: 'Search', description: 'Description', pays: 'Pays',
     cod: 'COD', amount: 'amount', recalc: 'Recalculate', create_btn: '✓ Create shipment number',
-    res_h: 'Shipment created', copy: 'Copy number', label_pdf: '🖨 Label PDF', view_in_profile: 'View in profile', new: '+ New',
+    res_h: 'Shipment created', copy: 'Copy number', label_pdf: 'Label PDF', view_in_profile: 'View in profile', new: '+ New',
     dd_site: 'econt.com', dd_site_sub: 'Official Econt website', dd_profile: 'e-Econt profile', dd_profile_sub: 'Shipments in your account',
-    reply_copy: '📋 Customer reply', reply_copied: 'Reply copied ✓', track_link: '🔎 Track',
+    reply_copy: 'Customer reply', reply_copied: 'Reply copied ✓', track_link: 'Track',
     reply_template: 'Done! 📦 Your parcel is on its way.\nTracking number: {num}\nTrack it: {url}\nAt the counter you can open, check and pay only if everything is fine.',
-    match_high: '✓ strong match', match_mid: 'likely match', match_lo: '⚠ check the office',
+    match_high: '✓ strong match', match_mid: 'likely match', match_lo: 'check the office',
     parcels_h: 'Your parcels', parcels_refresh: 'Refresh',
     clear_all: 'Clear all', clear_confirm: 'Remove ALL parcels from the list?', del_confirm: 'Remove this parcel from the list?', yes: 'Yes', no: 'No', removed: 'Removed ✓', del_aria: 'Delete parcel', parcels_note: 'Shows parcels created through this app, with live status from Econt.',
     parcels_empty: 'No parcels yet. Create your first from the New tab.', exp_delivery: 'Expected delivery', collected: 'COD collected',
@@ -182,8 +184,8 @@ const I18N = {
     cod_blank: 'COD is on but the amount is empty — enter the amount or uncheck COD.',
     saved: 'Saved ✓', creating: 'Creating…', getting_price: 'Getting price…', validated: 'Validated ✓',
     est_price: 'Estimated price: <span class="price">{v} {cur}</span>', price_label: 'Price: {v} {cur}',
-    no_match: 'no office matched “{q}” — search below', office_err: '⚠ office list error: {err}',
-    demo_hint: '⚠ DEMO office list (~585) — switch to Production in ⚙ for all offices.',
+    no_match: 'no office matched “{q}” — search below', office_err: 'Office list error: {err}',
+    demo_hint: 'DEMO office list (~585). Enter your real login in Settings to switch to production.',
     wrong_pin: 'Wrong PIN.', forget_confirm: 'Remove your saved Econt login and settings from this device?',
     refreshing: 'Refreshing…', offices_loaded: 'Loaded {n} offices ✓', searching: 'searching…', no_matches: 'no matches',
     no_number: '(no number returned)', econt_prefix: 'Econt: ', error_prefix: 'Error: ',
@@ -201,6 +203,34 @@ const I18N = {
   },
 };
 let LANG = ['bg', 'en'].includes(localStorage.getItem('econt_lang')) ? localStorage.getItem('econt_lang') : 'bg';
+// One consistent line-icon family (stroke = currentColor, so icons follow the theme).
+const ICONS = {
+  gear: '<circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>',
+  lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5z"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.6 4.6 6 6M18 18l1.4 1.4M19.4 4.6 18 6M6 18l-1.4 1.4"/>',
+  camera: '<path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/>',
+  refresh: '<path d="M21 4v6h-6"/><path d="M20.2 14a8.2 8.2 0 1 1-1.9-8.4L21 8.2"/>',
+  trash: '<path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/>',
+  pin: '<path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  money: '<rect x="3" y="7" width="18" height="10" rx="2"/><circle cx="12" cy="12" r="2.5"/>',
+  shield: '<path d="M12 3l7 3v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/>',
+  eye: '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  clipboard: '<rect x="5" y="5" width="14" height="16" rx="2"/><rect x="9" y="3" width="6" height="4" rx="1"/>',
+  printer: '<path d="M7 9V3h10v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v7H7z"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="M20.5 20.5 16 16"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  box: '<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  send: '<path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>',
+  copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  instagram: '<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor" stroke="none"/>',
+  facebook: '<path d="M15 3h-3a4 4 0 0 0-4 4v3H6v4h2v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>',
+};
+function svgi(name, cls) {
+  return `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
+}
 // Escape untrusted text before it goes into innerHTML.
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function t(key, params) {
@@ -355,6 +385,14 @@ $('suTestBtn').onclick = async () => {
 };
 for (const id of ['suUser', 'suPass', 'suMode']) $(id).addEventListener('input', () => { wizardTested = false; $('suFinishBtn').disabled = true; });
 $('suSenderSearchBtn').onclick = () => fillOfficeSelect($('suSenderOffice'), $('suSenderOfficeSearch').value, wizardCreds());
+// First-timers without an Econt login can try the public DEMO account. This is
+// the ONLY place demo exists — settings always drives toward the real account.
+$('suDemoBtn').onclick = () => {
+  $('suMode').value = 'demo';
+  $('suUser').value = 'iasp-dev'; $('suPass').value = '1Asp-dev';
+  $('suTestBtn').onclick();
+};
+for (const id of ['suUser', 'suPass']) $(id).addEventListener('input', () => { $('suMode').value = 'production'; });
 $('suFinishBtn').onclick = async () => {
   const pin = $('suPin').value, e = $('suFinishMsg');
   if (pin.length < 4) { e.textContent = t('pin_short'); return; }
@@ -412,8 +450,9 @@ function switchTab(which) {
   if (which === 'parcels') openParcels(); else stopTimers();
 }
 function enterApp() {
-  const badge = $('modeBadge'); badge.textContent = CONFIG.mode.toUpperCase(); badge.className = 'app-ctl badge ' + CONFIG.mode;
-  $('cfgMode').value = CONFIG.mode; $('cfgUser').value = CONFIG.username || ''; $('cfgPass').value = '';
+  const badge = $('modeBadge'); badge.textContent = 'ДЕМО'; badge.className = 'app-ctl badge demo'; badge.style.display = CONFIG.mode === 'demo' ? '' : 'none';
+  $('cfgUser').value = CONFIG.username || ''; $('cfgPass').value = '';
+  $('cfgDemoNote').classList.toggle('hide', CONFIG.mode !== 'demo');
   const s = CONFIG.sender, d = CONFIG.defaults;
   $('cfgSenderName').value = s.name || ''; $('cfgSenderPhone').value = s.phone || ''; $('cfgSenderOffice').value = s.officeCode || '';
   $('cfgWeight').value = d.weight ?? 1; $('cfgDesc').value = d.shipmentDescription || '';
@@ -439,16 +478,19 @@ $('navNew').onclick = () => switchTab('new');
 $('navParcels').onclick = () => switchTab('parcels');
 $('settingsBtn').onclick = () => { show('settings'); fetchOfficeStatus(); };
 $('settingsBackBtn').onclick = () => show('app');
+// Credentials being tested/saved in settings: brand-new username+password mean
+// the real account (production); otherwise stay in the current mode.
+function cfgCreds() {
+  const fresh = $('cfgPass').value && $('cfgUser').value.trim();
+  return { mode: fresh ? 'production' : CONFIG.mode, username: $('cfgUser').value.trim(), password: $('cfgPass').value || SESSION.password };
+}
 $('cfgTestBtn').onclick = async () => {
-  const c = { mode: $('cfgMode').value, username: $('cfgUser').value.trim(), password: $('cfgPass').value || SESSION.password };
+  const c = cfgCreds();
   $('cfgMsg').textContent = t('testing');
   const r = await api('/api/test', { creds: c });
   $('cfgMsg').textContent = r.ok ? t('login_ok', { n: r.officeCount }) : ('✗ ' + r.error);
 };
-$('cfgSenderSearchBtn').onclick = () => {
-  const c = { mode: $('cfgMode').value, username: $('cfgUser').value.trim(), password: $('cfgPass').value || SESSION.password };
-  fillOfficeSelect($('cfgSenderOfficeSel'), $('cfgSenderSearch').value, c);
-};
+$('cfgSenderSearchBtn').onclick = () => fillOfficeSelect($('cfgSenderOfficeSel'), $('cfgSenderSearch').value, cfgCreds());
 $('cfgSenderOfficeSel').onchange = () => { $('cfgSenderOffice').value = $('cfgSenderOfficeSel').value; };
 $('refreshOfficesBtn').onclick = async (ev) => {
   btnBusy(ev.currentTarget, true); $('cfgMsg').textContent = t('refreshing');
@@ -459,7 +501,7 @@ $('refreshOfficesBtn').onclick = async (ev) => {
     : (t('error_prefix') + r.error);
 };
 $('saveCfgBtn').onclick = async () => {
-  CONFIG.mode = $('cfgMode').value; CONFIG.username = $('cfgUser').value.trim();
+  CONFIG.mode = cfgCreds().mode; CONFIG.username = $('cfgUser').value.trim();
   if ($('cfgPass').value) SESSION.password = $('cfgPass').value;
   CONFIG.sender = { name: $('cfgSenderName').value.trim(), phone: $('cfgSenderPhone').value.trim(), officeCode: $('cfgSenderOffice').value.trim(), address: CONFIG.sender.address || null };
   const rm = $('cfgReviewMode').value, rf = reviewFlags(rm);
@@ -513,8 +555,7 @@ $('cfgPayoutBtn').onclick = async (ev) => {
   const btn = ev.currentTarget;
   btnBusy(btn, true);
   $('cfgPayoutMsg').textContent = t('loading');
-  const c = { mode: $('cfgMode').value, username: $('cfgUser').value.trim(), password: $('cfgPass').value || SESSION.password };
-  const r = await api('/api/payouts', { creds: c });
+  const r = await api('/api/payouts', { creds: cfgCreds() });
   btnBusy(btn, false);
   if (!r.ok) { $('cfgPayoutMsg').textContent = t('error_prefix') + r.error; return; }
   PAYOUTS = r.options || [];
@@ -691,10 +732,10 @@ function updateSummary() {
   const declOn = $('pDeclOn').checked, declAmt = Number($('pDeclAmount').value);
   const parts = [];
   if (name) parts.push(`<b>${esc(name)}</b>`);
-  if (dest) parts.push(`📍 ${esc(dest)}`);
-  if (cod) parts.push(`💰 ${esc(cod)}`);
-  if (declOn && declAmt > 0) parts.push(`🛡 ${esc(declAmt + ' ' + $('pDeclCur').value)}`);
-  if (rl) parts.push(`👁 ${esc(rl)}`);
+  if (dest) parts.push(`${svgi('pin', 'ic-s')} ${esc(dest)}`);
+  if (cod) parts.push(`${svgi('money', 'ic-s')} ${esc(cod)}`);
+  if (declOn && declAmt > 0) parts.push(`${svgi('shield', 'ic-s')} ${esc(declAmt + ' ' + $('pDeclCur').value)}`);
+  if (rl) parts.push(`${svgi('eye', 'ic-s')} ${esc(rl)}`);
   const box = $('prevSummary');
   if (parts.length) { box.innerHTML = parts.join('<span class="dot-sep">·</span>'); box.classList.remove('hide'); }
   else box.classList.add('hide');
@@ -834,7 +875,7 @@ function batchRowHTML(row, i) {
     <div class="brow-top">
       <input type="checkbox" data-f="on" aria-label="${esc(t('row_label', { n: i + 1 }))}" ${row.on ? 'checked' : ''}>
       <span class="idx">#${i + 1}</span>
-      ${row.trackNum ? `<span class="track-tag">📦 ${esc(row.trackNum)}</span>` : ''}
+      ${row.trackNum ? `<span class="track-tag">${svgi('box', 'ic-s')} ${esc(row.trackNum)}</span>` : ''}
       <span class="brow-status" data-status>${esc(st)}</span>
     </div>
     <div class="brow-grid">
@@ -940,7 +981,7 @@ $('batchCancelBtn').onclick = () => $('batch').classList.add('hide');
 $('batchCreateBtn').onclick = async () => {
   // Creating without a contents description fails at Econt for every row — stop early.
   if (!(CONFIG.defaults.shipmentDescription || '').trim() && BATCH.some((r) => r.on && !r.trackNum && !r.done)) {
-    $('batchErr').textContent = t('need_desc') + ' → ⚙'; return;
+    $('batchErr').textContent = t('need_desc'); return;
   }
   const btn = $('batchCreateBtn'); btnBusy(btn, true, t('creating'));
   $('parseBtn').disabled = true; $('clearBtn').disabled = true;
@@ -1204,11 +1245,11 @@ function parcelCardHTML(p) {
     <div class="parcel-sub" data-sub>${esc(p.recipient || '')}${p.office ? ' · ' + esc(p.office) : ''}</div>
     <div class="parcel-timer t-muted" data-timer></div>
     <div class="parcel-row">
-      <button data-copy>${t('copy')}</button>
-      <a class="btnlink" href="${esc(econtTrackUrl(p.number))}" target="_blank" rel="noopener">${t('track_link')}</a>
-      <a class="btnlink" data-pdf hidden target="_blank">${t('reprint')}</a>
+      <button data-copy>${svgi('copy', 'ic-s')} ${t('copy')}</button>
+      <a class="btnlink" href="${esc(econtTrackUrl(p.number))}" target="_blank" rel="noopener">${svgi('search', 'ic-s')} ${t('track_link')}</a>
+      <a class="btnlink" data-pdf hidden target="_blank">${svgi('printer', 'ic-s')} ${t('reprint')}</a>
       <button class="ghost" data-toggle>${t('details')}</button>
-      <button class="ghost" data-del aria-label="${esc(t('del_aria'))}">🗑</button>
+      <button class="ghost" data-del aria-label="${esc(t('del_aria'))}">${svgi('trash', 'ic-s')}</button>
     </div>
     <div class="warn-box confirmrow hide" data-confirm role="alertdialog">
       <span>${t('del_confirm')}</span>
@@ -1290,9 +1331,9 @@ function renderAbout() {
   $('creatorName').textContent = name;
   $('creatorAvatar').textContent = name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
   const s = [];
-  if (CREATOR.instagram) s.push(`<a class="social" target="_blank" rel="noopener noreferrer" href="https://instagram.com/${esc(CREATOR.instagram)}">📸 Instagram</a>`);
-  if (CREATOR.facebook) s.push(`<a class="social" target="_blank" rel="noopener noreferrer" href="${esc(fbUrl(CREATOR.facebook))}">📘 Facebook</a>`);
-  if (CREATOR.email) s.push(`<a class="social" href="mailto:${esc(CREATOR.email)}">✉️ ${esc(CREATOR.email)}</a>`);
+  if (CREATOR.instagram) s.push(`<a class="social" target="_blank" rel="noopener noreferrer" href="https://instagram.com/${esc(CREATOR.instagram)}">${svgi('instagram', 'ic-s')} Instagram</a>`);
+  if (CREATOR.facebook) s.push(`<a class="social" target="_blank" rel="noopener noreferrer" href="${esc(fbUrl(CREATOR.facebook))}">${svgi('facebook', 'ic-s')} Facebook</a>`);
+  if (CREATOR.email) s.push(`<a class="social" href="mailto:${esc(CREATOR.email)}">${svgi('mail', 'ic-s')} ${esc(CREATOR.email)}</a>`);
   $('socialRow').innerHTML = s.join('');
   $('copyLine').textContent = `© ${new Date().getFullYear()} ${name} · ${t('rights')}`;
 }
@@ -1328,7 +1369,7 @@ document.addEventListener('keydown', (e) => {
 // ---------- theme (light / dark) ----------
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  $('themeBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
+  $('themeBtn').innerHTML = svgi(theme === 'dark' ? 'sun' : 'moon');
   syncThemeBtnLabel();
   const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = theme === 'dark' ? '#080c12' : '#0a4ea8';
 }
