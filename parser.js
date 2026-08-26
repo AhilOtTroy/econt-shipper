@@ -17,6 +17,7 @@ const STOP_NAME = new Set([
   'изпратете', 'съобщение', 'снимка', 'номер', 'сериен', 'кутия', 'кутията', 'едно', 'центру', 'център',
   'лева', 'лев', 'лв', 'евро', 'eur', 'bgn', 'наложен', 'наложена', 'платеж', 'нп', 'сума', 'сумата', 'плати',
   'град', 'гр', 'село', 'ул', 'бул', 'блок', 'бл', 'вход', 'вх', 'етаж', 'ет', 'апартамент', 'ап', 'кв', 'жк', 'район',
+  'отпаднал', 'отпаднали', 'изпратени', 'изпратена', 'доставени', 'доставена', 'тръгнали', 'подаване', 'анулиране', 'платено', 'чакащи', 'нови', 'последните',
 ]);
 
 // Major Bulgarian cities/towns (and the words of multi-word names) — never a name.
@@ -30,6 +31,14 @@ const CITIES = new Set([
   'мездра', 'троян', 'тетевен', 'сандански', 'разлог', 'симитли', 'харманли', 'свиленград', 'елхово',
   'средец', 'айтос', 'карнобат', 'котел', 'твърдица', 'панагюрище', 'ихтиман', 'костинброд', 'нови',
   'пазар', 'омуртаг', 'берковица', 'чирпан', 'раднево', 'гълъбово', 'първомай', 'смолян', 'девин',
+]);
+
+// Well-known quarter names — places, never a person's name. Deliberately excludes
+// words that double as Bulgarian first names (Надежда, Изгрев is kept out too).
+const QUARTERS = new Set([
+  'люлин', 'младост', 'дружба', 'тракия', 'лагера', 'обеля', 'слатина', 'подуяне',
+  'хиподрума', 'стрелбище', 'бояна', 'драгалевци', 'симеоново', 'капана', 'аспарухово',
+  'владиславово', 'кършияка', 'каменица', 'въстанически', 'чайка', 'тросково', 'meden', 'рудник',
 ]);
 
 const STOP_OFFICE = new Set([
@@ -64,7 +73,7 @@ function isNameWord(tok) {
   if (/\d/.test(tok)) return false;
   if (tok === tok.toUpperCase()) return false;
   const b = bare(tok);
-  return !STOP_NAME.has(b) && !CITIES.has(b);
+  return !STOP_NAME.has(b) && !CITIES.has(b) && !QUARTERS.has(b);
 }
 // Up to 3 consecutive name words from the front / back of a token list —
 // Bulgarian recipients are usually given with all three names (трите имена).
@@ -251,17 +260,25 @@ function matchOffices(locationText, offices, limit) {
 // ---------- batch input & noise filtering ----------
 const PHONE_RE_G = new RegExp(PHONE_RE.source, 'g');
 function countPhones(text) { return (String(text).match(PHONE_RE_G) || []).length; }
+// Existing Econt waybill number in a chunk (13 digits, 12-14 tolerated for OCR).
+// Phones are stripped first so +359/00359 numbers can never be mistaken for one.
+function findWaybill(text) {
+  const noPhones = String(text).replace(PHONE_RE_G, ' ');
+  const m = noPhones.match(/(?:^|[^\d])(\d{12,14})(?!\d)/);
+  return m ? m[1] : null;
+}
 
 // Lines that carry no shipment signal at all — chat furniture, timestamps, read
 // receipts, emoji rows, platform labels. Dropped before parsing OCR/batch input
 // so junk never leaks into names, addresses or descriptions.
 const NOISE_LINE = [
   /^\d{1,2}[:.]\d{2}(\s*(ч|h|am|pm)\.?)?$/i,                                   // bare timestamp
-  /^(днес|вчера|today|yesterday|online|на линия|активен|typing|пише)\b.{0,20}$/i,
-  /^(изпратено|доставено|видяно|прочетено|seen|delivered|sent|edited|редактирано)\b.{0,20}$/i,
-  /^(viber|whatsapp|messenger|instagram|facebook|olx|bazar)\b.{0,25}$/i,
+  // NB: JS \b and \W are ASCII-only — Cyrillic needs explicit lookaheads/classes.
+  /^(?:днес|вчера|today|yesterday|online|на линия|активен|typing|пише)(?![а-яёa-z]).{0,20}$/i,
+  /^(?:изпратено|доставено|видяно|прочетено|seen|delivered|sent|edited|редактирано)(?![а-яёa-z]).{0,20}$/i,
+  /^(?:viber|whatsapp|messenger|instagram|facebook|olx|bazar)(?![а-яёa-z]).{0,25}$/i,
   /^id[:\s]*\d+$/i,
-  /^[\W_]+$/u,                                                                  // punctuation / emoji only
+  /^[^\p{L}\p{N}]+$/u,                                                          // punctuation / emoji only
 ];
 function isNoiseLine(line) {
   const t = line.trim();
@@ -300,7 +317,17 @@ function splitBatch(text) {
   // разговор, без данни" lists) — merging it in would pollute the last row's
   // COD/location, so it is dropped unless it is the only content at all.
   if (pending && !merged.length) merged.push(pending);
-  return merged;
+  // The same phone repeated across chunks is one conversation, not two parcels —
+  // merge those chunks so a quoted/confirmed number can't duplicate a shipment.
+  const byPhone = new Map(), result = [];
+  for (const c of merged) {
+    const m = PHONE_RE.exec(c);
+    const key = m ? normalizePhone(m[0]) : null;
+    if (key && byPhone.has(key)) { const idx = byPhone.get(key); result[idx] += '\n' + c; continue; }
+    if (key) byPhone.set(key, result.length);
+    result.push(c);
+  }
+  return result;
 }
 
-module.exports = { parseMessage, matchOffices, normalizePhone, tokenize, detectCod, isCustomerOffice, stripNoise, splitBatch, countPhones };
+module.exports = { parseMessage, matchOffices, normalizePhone, tokenize, detectCod, isCustomerOffice, stripNoise, splitBatch, countPhones, findWaybill };

@@ -17,7 +17,7 @@ try {
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="preconnect" href="https://tessdata.projectnaptha.com" crossorigin>
 <link rel="dns-prefetch" href="https://tessdata.projectnaptha.com">
-<title>Econt — съобщение → товарителница</title>
+<title>Econt Shipper — текст → пратка</title>
 <style>
   :root {
     color-scheme: light;
@@ -235,7 +235,7 @@ try {
   .brow-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .brow-top .idx { font-weight: 800; color: var(--brand); font-size: 13px; flex: none; }
   .brow-top input[type=checkbox] { width: auto; transform: scale(1.25); accent-color: var(--brand); }
-  .brow-status { margin-left: auto; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .brow-status { margin-left: auto; font-size: 12px; font-weight: 700; text-align: right; max-width: 100%; overflow-wrap: anywhere; }
   .brow-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
   .brow-grid input, .brow-grid select { flex: 1 1 150px; min-width: 0; padding: 9px 11px; font-size: 14px; }
   .brow-grid .bamt { flex: 0 1 100px; }
@@ -243,7 +243,7 @@ try {
   .brow.done { opacity: .62; }
   /* Section labels inside the preview — orientation without noise */
   .sec { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--brand); margin: 18px 0 2px; padding-top: 12px; border-top: 1px solid var(--line); }
-  .sec:first-of-type { margin-top: 8px; padding-top: 0; border-top: 0; }
+  .sec-first { margin-top: 8px; padding-top: 0 !important; border-top: 0 !important; }
   .optline { margin-top: 10px !important; }
   .optline .amt { width: 110px; margin-left: 6px; }
   /* Inline caution note (e.g. no cash-on-delivery on this parcel) */
@@ -679,7 +679,7 @@ try {
         <h3 data-i18n="prev_h">Проверете и потвърдете</h3>
         <div id="prevSummary" class="summary hide"></div>
         <div id="parseGaps" class="warn-box hide" role="status"></div>
-        <div class="sec" data-i18n="sec_recipient">Получател</div>
+        <div class="sec sec-first" data-i18n="sec_recipient">Получател</div>
         <div class="row">
           <div><label data-i18n="recipient">Име на получателя</label><input id="pName" data-enter="recalcBtn"></div>
           <div><label data-i18n="phone">Телефон</label><input id="pPhone" inputmode="tel" data-enter="recalcBtn"></div>

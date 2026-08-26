@@ -10,7 +10,7 @@ const path = require('path');
 const crypto = require('crypto');
 const zlib = require('zlib');
 const econt = require('./econt');
-const { parseMessage, matchOffices, splitBatch, stripNoise } = require('./parser');
+const { parseMessage, matchOffices, splitBatch, stripNoise, findWaybill } = require('./parser');
 
 const ROOT = __dirname;
 const PORT = process.env.PORT || 5005;
@@ -132,7 +132,7 @@ async function handleApi(req, res, url) {
     catch (e) { officesError = errorPayload(e).error; }
     const rows = chunks.map((chunk) => {
       const parsed = parseMessage(chunk);
-      const trackNum = (chunk.match(/\b\d{12,14}\b/) || [null])[0];
+      const trackNum = findWaybill(chunk);
       let candidates = [];
       if (offices && parsed.deliveryType === 'office') {
         if (parsed.locationText) candidates = matchOffices(parsed.locationText, offices);
