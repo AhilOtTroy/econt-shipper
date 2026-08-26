@@ -20,6 +20,7 @@ const CREATOR = {
 // ===================== i18n =====================
 const I18N = {
   bg: {
+    page_title: 'Econt Shipper — текст → пратка', parse_failed: 'Неуспешно разчитане.',
     land_pill: 'За продавачи в OLX, Bazar, Instagram и Facebook', land_title: 'Текст → пратка.',
     land_sub: 'Постави текст или снимка — получи готова товарителница в твоя Еконт. Както ти работиш.',
     land_cta: 'Започнете безплатно', land_what_h: 'Накратко',
@@ -51,6 +52,7 @@ const I18N = {
     st_create: 'нова пратка', st_track: 'има товарителница → проследяване', st_missing: '⚠ липсва офис', st_creating: 'създаване…', st_ok: '✓ {num}', st_tracked: '✓ добавена за проследяване', st_skip: 'пропусната',
     batch_done: 'Готово: {ok} успешни · {fail} грешки · {skip} пропуснати',
     row_label: 'Ред {n}', ret_incomplete: '⚠ Опцията за връщане не е запазена — попълнете офис код / адрес.',
+    back_to_batch: '← Към партидата ({n})',
     payout_label: 'Изплащане на наложения платеж', payout_default: 'Както е зададено в Еконт', payout_load: 'Зареди сметките',
     payout_bank: 'банков превод', payout_office: 'в офис', payout_address: 'на адрес',
     payout_hint: 'Парите се превеждат по сметката от избраното споразумение с Еконт.',
@@ -59,6 +61,7 @@ const I18N = {
     refresh_offices: 'Обнови офисите', save: 'Запази',
     paste_label: 'Поставете съобщението на клиента', paste_ph: 'Моля да ги изпратите в Офис на еконт: …  Име – 08xx xxx xxx', paste_hint: 'Съвет: Ctrl+Enter за преглед',
     img_cta: 'Снимка → товарителница', img_hint: 'Пуснете, поставете или изберете снимка на чата', or_paste: 'или поставете текста',
+    comp_hint: 'Постави текст или снимка от чата — или ги пусни тук.', a11y_attach: 'Прикачи снимка',
     ocr_loading: 'Подготовка на четеца…', ocr_reading: 'Разчитане на снимката… {p}%', ocr_empty: 'Не открих текст в снимката. Опитайте по-ясна снимка.', ocr_fail: 'Неуспешно разчитане. Поставете текста ръчно.',
     clear: 'Изчисти', preview: 'Преглед →', prev_h: 'Проверете и потвърдете', recipient: 'Име на получателя', deliver_office: 'Доставка до офис',
     deliver_to: 'Доставка', to_office: 'До офис', to_address: 'До адрес',
@@ -106,6 +109,7 @@ const I18N = {
     a11y_info: 'За приложението', a11y_settings: 'Настройки', a11y_lock: 'Заключи', a11y_home: 'Начало',
   },
   en: {
+    page_title: 'Econt Shipper — text → parcel', parse_failed: 'Could not parse that.',
     land_pill: 'For sellers on OLX, Bazar, Instagram & Facebook', land_title: 'Text → parcel.',
     land_sub: 'Paste text or a screenshot — get a ready waybill in your Econt. However you work.',
     land_cta: 'Start for free', land_what_h: 'In short',
@@ -137,14 +141,16 @@ const I18N = {
     st_create: 'new parcel', st_track: 'has a waybill → tracking', st_missing: '⚠ office missing', st_creating: 'creating…', st_ok: '✓ {num}', st_tracked: '✓ added to tracking', st_skip: 'skipped',
     batch_done: 'Done: {ok} created · {fail} errors · {skip} skipped',
     row_label: 'Row {n}', ret_incomplete: '⚠ Return option not saved — fill in the office code / address.',
+    back_to_batch: '← Back to batch ({n})',
     payout_label: 'COD payout', payout_default: 'As configured with Econt', payout_load: 'Load accounts',
     payout_bank: 'bank transfer', payout_office: 'at office', payout_address: 'to address',
     payout_hint: 'COD money is paid out to the account in the agreement you pick with Econt.',
     payout_found: 'Found {n} agreements ({b} bank) — pick where your money is paid out.',
     payout_none: 'No payout agreements on your account. To be paid by bank transfer, sign an agreement with Econt.',
     refresh_offices: 'Refresh offices', save: 'Save',
-    paste_label: "Paste the customer's message", paste_ph: 'Моля да ги изпратите в Офис на еконт: …  Name – 08xx xxx xxx', paste_hint: 'Tip: Ctrl+Enter to preview',
+    paste_label: "Paste the customer's message", paste_ph: 'Please send to Econt office: Varna Chataldzha…  Ivan Petrov – 08xx xxx xxx', paste_hint: 'Tip: Ctrl+Enter to preview',
     img_cta: 'Screenshot → label', img_hint: 'Drop, paste or pick a screenshot of the chat', or_paste: 'or paste the text',
+    comp_hint: 'Paste text or a chat screenshot — or drop them here.', a11y_attach: 'Attach a screenshot',
     ocr_loading: 'Preparing the reader…', ocr_reading: 'Reading the screenshot… {p}%', ocr_empty: 'No text found in the image. Try a clearer screenshot.', ocr_fail: 'Could not read it. Paste the text manually.',
     clear: 'Clear', preview: 'Preview →', prev_h: 'Check & confirm', recipient: 'Recipient name', deliver_office: 'Deliver to office',
     deliver_to: 'Delivery', to_office: 'To office', to_address: 'To address',
@@ -205,6 +211,7 @@ function t(key, params) {
 function applyLang() {
   const dict = I18N[LANG] || I18N.en;
   document.documentElement.lang = LANG;
+  document.title = dict.page_title || I18N.en.page_title;
   document.querySelectorAll('[data-i18n]').forEach((el) => { const k = el.getAttribute('data-i18n'); if (dict[k] != null) el.textContent = dict[k]; });
   document.querySelectorAll('[data-i18n-ph]').forEach((el) => { const k = el.getAttribute('data-i18n-ph'); if (dict[k] != null) el.placeholder = dict[k]; });
   $('langBg').classList.toggle('active', LANG === 'bg');
@@ -212,7 +219,7 @@ function applyLang() {
   $('footerCopy').textContent = `© ${new Date().getFullYear()} ${CREATOR.name || 'Econt Shipper'}`;
   $('footerAbout').textContent = dict.footer_about || I18N.en.footer_about;
   // Translated accessible names for the emoji-only controls.
-  for (const [id, k] of [['infoBtn', 'a11y_info'], ['settingsBtn', 'a11y_settings'], ['lockNowBtn', 'a11y_lock'], ['brandHome', 'a11y_home']]) {
+  for (const [id, k] of [['infoBtn', 'a11y_info'], ['settingsBtn', 'a11y_settings'], ['lockNowBtn', 'a11y_lock'], ['brandHome', 'a11y_home'], ['attachBtn', 'a11y_attach'], ['msg', 'paste_label']]) {
     const el = $(id); if (el) { el.setAttribute('aria-label', t(k)); el.title = t(k); }
   }
   syncThemeBtnLabel();
@@ -310,7 +317,10 @@ const saveParcels = (a) => localStorage.setItem(PKEY, JSON.stringify(a.slice(0, 
 const addParcel = (p) => { const a = loadParcels(); a.unshift(p); saveParcels(a); };
 
 // ---------- views ----------
-function show(view) { for (const v of ['landing', 'setup', 'lock', 'app', 'about']) $('view-' + v).classList.toggle('hide', v !== view); }
+function show(view) {
+  for (const v of ['landing', 'setup', 'lock', 'app', 'about', 'settings']) $('view-' + v).classList.toggle('hide', v !== view);
+  document.querySelectorAll('.app-ctl').forEach((el) => el.classList.toggle('hide', view !== 'app'));
+}
 const creds = () => ({ mode: CONFIG.mode, username: CONFIG.username, password: SESSION.password });
 // Official e-Econt account ("profile") URL for the active environment, so the
 // user can log in and confirm the shipment really landed in their account.
@@ -319,7 +329,7 @@ const econtProfileUrl = () => (CONFIG.mode === 'production' ? 'https://ee.econt.
 const econtTrackUrl = (num) => `https://www.econt.com/${LANG === 'en' ? 'en/' : ''}services/track-shipment/${encodeURIComponent(String(num))}`;
 // Ready-to-send reply for the customer: number + tracking link + counter note.
 const buildReply = (num) => t('reply_template', { num, url: econtTrackUrl(num) });
-const api = async (path, body) => (await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })).json();
+const api = async (path, body) => (await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ lang: LANG }, body || {})) })).json();
 function officeLabel(c) { return `${c.name} — ${c.address}${c.city ? ', ' + c.city : ''}${c.postCode ? ' (' + c.postCode + ')' : ''}`; }
 async function fillOfficeSelect(sel, q, credsObj) {
   sel.classList.remove('hide'); sel.innerHTML = `<option>${t('searching')}</option>`;
@@ -400,7 +410,7 @@ function switchTab(which) {
   if (which === 'parcels') openParcels(); else stopTimers();
 }
 function enterApp() {
-  const badge = $('modeBadge'); badge.textContent = CONFIG.mode.toUpperCase(); badge.className = 'badge ' + CONFIG.mode;
+  const badge = $('modeBadge'); badge.textContent = CONFIG.mode.toUpperCase(); badge.className = 'app-ctl badge ' + CONFIG.mode;
   $('cfgMode').value = CONFIG.mode; $('cfgUser').value = CONFIG.username || ''; $('cfgPass').value = '';
   const s = CONFIG.sender, d = CONFIG.defaults;
   $('cfgSenderName').value = s.name || ''; $('cfgSenderPhone').value = s.phone || ''; $('cfgSenderOffice').value = s.officeCode || '';
@@ -425,7 +435,8 @@ function enterApp() {
 }
 $('navNew').onclick = () => switchTab('new');
 $('navParcels').onclick = () => switchTab('parcels');
-$('settingsBtn').onclick = () => { switchTab('new'); $('settings').classList.toggle('hide'); if (!$('settings').classList.contains('hide')) fetchOfficeStatus(); };
+$('settingsBtn').onclick = () => { show('settings'); fetchOfficeStatus(); };
+$('settingsBackBtn').onclick = () => show('app');
 $('cfgTestBtn').onclick = async () => {
   const c = { mode: $('cfgMode').value, username: $('cfgUser').value.trim(), password: $('cfgPass').value || SESSION.password };
   $('cfgMsg').textContent = t('testing');
@@ -463,7 +474,7 @@ $('saveCfgBtn').onclick = async () => {
   await persist(); enterApp(); toast(t('saved'));
   $('cfgMsg').textContent = '';
   if (retWanted && !(CONFIG.defaults.returnTo && CONFIG.defaults.returnTo.mode)) {
-    $('settings').classList.remove('hide');
+    show('settings');
     $('cfgRetMode').value = retWanted; applyRetUI();
     $('cfgMsg').textContent = t('ret_incomplete');
   }
@@ -579,10 +590,11 @@ async function doParse(ev, opts) {
     if (handled) return;
   }
   $('batch').classList.add('hide');
+  if (!(opts && opts.keepBatchEdit)) { BATCH_EDIT = -1; showBatchBackBtns(); }
   const btn = $('parseBtn'); btnBusy(btn, true);
   try {
     const r = await api('/api/parse', { text, creds: creds() });
-    if (!r.ok) { $('parseErr').textContent = r.error || 'Parse failed'; return; }
+    if (!r.ok) { $('parseErr').textContent = r.error || t('parse_failed'); return; }
     const p = r.parsed;
     $('pName').value = p.recipientName || ''; $('pPhone').value = p.phone || '';
     CANDIDATES = r.candidates || [];
@@ -755,16 +767,61 @@ async function doCreate() {
     $('resultMeta').textContent = st.totalPrice != null ? t('price_label', { v: Number(st.totalPrice).toFixed(2), cur: st.totalPriceCurrency || $('pCodCur').value || 'EUR' }) : '';
     const destLabel = deliverMode === 'address' ? [o.address.city, o.address.street, o.address.num].filter(Boolean).join(' ') : o.officeCode;
     if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, office: destLabel, weight: o.weight, description: o.description, cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
+    // Created from a batch row → mark that row done so the batch stays truthful.
+    if (BATCH_EDIT >= 0 && BATCH[BATCH_EDIT] && st.shipmentNumber) {
+      const row = BATCH[BATCH_EDIT];
+      row.done = true; row.on = true; row.statusText = t('st_ok', { num: st.shipmentNumber });
+      row.name = o.recipientName; row.phone = o.phone;
+    }
+    showBatchBackBtns();
     $('preview').classList.add('hide'); $('result').classList.remove('hide');
     playCheck();
     $('result').scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
   } finally { btnBusy(btn, false); }
 }
-$('clearBtn').onclick = () => { $('msg').value = ''; $('preview').classList.add('hide'); $('result').classList.add('hide'); };
+$('clearBtn').onclick = () => { $('msg').value = ''; $('preview').classList.add('hide'); $('result').classList.add('hide'); $('batch').classList.add('hide'); BATCH_EDIT = -1; showBatchBackBtns(); };
 $('parseBtn').onclick = doParse;
 
 // ---------- batch: several parcels in one paste ----------
 let BATCH = [];
+let BATCH_EDIT = -1; // row currently opened in the single-parcel editor
+function showBatchBackBtns() {
+  const show = BATCH_EDIT >= 0 && BATCH.length > 0;
+  const label = show ? t('back_to_batch', { n: '#' + (BATCH_EDIT + 1) }) : '';
+  for (const id of ['backToBatchBtn', 'backToBatchBtn2']) {
+    const b = $(id); b.classList.toggle('hide', !show); if (show) b.textContent = label;
+  }
+}
+// Leave the editor and land back on the batch, carrying the edits into the row.
+function returnToBatch(syncFields) {
+  const row = BATCH[BATCH_EDIT];
+  if (row && syncFields && !row.done) {
+    row.name = $('pName').value.trim();
+    row.phone = $('pPhone').value.trim();
+    row.cod = $('pCodAmount').value;
+    row.cur = $('pCodCur').value;
+    if (row.parsed.deliveryType !== 'door') {
+      const sel = $('pOffice');
+      if (sel.value) {
+        row.officeCode = sel.value;
+        if (!row.candidates.some((c) => String(c.code) === sel.value)) {
+          const o = sel.selectedOptions[0];
+          row.candidates.unshift({ code: sel.value, name: o ? o.textContent.split(' — ')[0] : sel.value, address: '', city: '' });
+        }
+      }
+    }
+  }
+  const idx = BATCH_EDIT;
+  BATCH_EDIT = -1;
+  showBatchBackBtns();
+  renderBatch();
+  $('preview').classList.add('hide'); $('result').classList.add('hide');
+  $('batch').classList.remove('hide');
+  const rowEl = $q(`.brow[data-i="${idx}"]`);
+  if (rowEl) rowEl.scrollIntoView({ behavior: scrollBehavior(), block: 'center' });
+}
+$('backToBatchBtn').onclick = () => returnToBatch(true);
+$('backToBatchBtn2').onclick = () => returnToBatch(false);
 function batchRowHTML(row, i) {
   const doorOk = row.parsed.deliveryType === 'door' && row.parsed.address && row.parsed.address.city && row.parsed.address.street;
   const st = row.statusText || (row.trackNum ? t('st_track') : (row.officeCode || doorOk ? t('st_create') : t('st_missing')));
@@ -792,7 +849,7 @@ async function doBatchParse(text) {
   const btn = $('parseBtn'); btnBusy(btn, true);
   try {
     const r = await api('/api/parse-batch', { text, creds: creds() });
-    if (!r.ok) { $('parseErr').textContent = r.error || 'Parse failed'; return true; }
+    if (!r.ok) { $('parseErr').textContent = r.error || t('parse_failed'); return true; }
     if (!r.rows || r.rows.length < 2) return false; // one parcel → normal editor
     BATCH = (r.rows || []).map((row) => ({
       chunk: row.chunk, parsed: row.parsed, candidates: row.candidates || [], trackNum: row.trackNum || null,
@@ -805,6 +862,7 @@ async function doBatchParse(text) {
       done: false,
     }));
     if (r.officesError) $('batchErr').textContent = t('office_err', { err: r.officesError }); else $('batchErr').textContent = '';
+    BATCH_EDIT = -1; showBatchBackBtns();
     renderBatch();
     $('preview').classList.add('hide'); $('result').classList.add('hide');
     $('batch').classList.remove('hide');
@@ -834,12 +892,31 @@ $('batchList').addEventListener('input', (e) => {
   else if (f === 'cod') row.cod = el.value;
   else if (f === 'cur') row.cur = el.value;
 });
-$('batchList').addEventListener('click', (e) => {
+$('batchList').addEventListener('click', async (e) => {
   const btn = e.target.closest('button[data-f="edit"]'); if (!btn) return;
-  const row = BATCH[Number(btn.closest('.brow').dataset.i)];
+  const i = Number(btn.closest('.brow').dataset.i);
+  const row = BATCH[i];
   $('msg').value = row.chunk;
   $('batch').classList.add('hide');
-  doParse(null, { forceSingle: true });
+  BATCH_EDIT = i;
+  await doParse(null, { forceSingle: true, keepBatchEdit: true });
+  // The row's fields may have been edited in the table — they win over a re-parse.
+  if (row.name) $('pName').value = row.name;
+  if (row.phone) $('pPhone').value = row.phone;
+  if (row.cod) { $('pCodOn').checked = true; $('pCodAmount').value = row.cod; $('pCodCur').value = row.cur; }
+  if (row.parsed.deliveryType !== 'door' && row.officeCode) {
+    const sel = $('pOffice');
+    if (![...sel.options].some((o) => o.value === String(row.officeCode))) {
+      const c = row.candidates.find((x) => String(x.code) === String(row.officeCode));
+      const o = document.createElement('option');
+      o.value = String(row.officeCode); o.textContent = c ? officeLabel(c) : String(row.officeCode);
+      sel.insertBefore(o, sel.firstChild);
+    }
+    sel.value = String(row.officeCode);
+  }
+  showBatchBackBtns();
+  updateSummary();
+  doPreview();
 });
 function batchOverrides(row) {
   const d = CONFIG.defaults;
@@ -1018,8 +1095,8 @@ const runOCR = (file) => runOCRFiles(file ? [file] : []);
   const warmOCR = () => { loadTesseract().catch(() => {}); };
   drop.addEventListener('pointerenter', warmOCR, { once: true });
   drop.addEventListener('dragenter', warmOCR, { once: true });
-  drop.addEventListener('click', warmOCR, { once: true });
-  drop.onclick = (e) => { if (e.target !== input) input.click(); };
+  $('attachBtn').addEventListener('click', warmOCR);
+  $('attachBtn').onclick = () => input.click();
   input.onchange = () => { if (input.files && input.files.length) runOCRFiles(input.files); input.value = ''; };
   ['dragover', 'dragenter'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('drag'); }));
   ['dragleave', 'dragend'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('drag'); }));
@@ -1045,7 +1122,7 @@ $('replyBtn').onclick = async () => {
   try { await navigator.clipboard.writeText(buildReply(num)); } catch (e) {}
   toast(t('reply_copied'));
 };
-$('newBtn').onclick = () => { $('msg').value = ''; $('result').classList.add('hide'); $('preview').classList.add('hide'); $('msg').focus(); };
+$('newBtn').onclick = () => { $('msg').value = ''; $('result').classList.add('hide'); $('preview').classList.add('hide'); BATCH_EDIT = -1; showBatchBackBtns(); $('msg').focus(); };
 // Instant: pasting the message auto-parses (no extra click). Live summary follows edits.
 $('msg').addEventListener('paste', () => setTimeout(() => { if ($('msg').value.trim()) doParse(); }, 60));
 ['pName', 'pPhone', 'pCodOn', 'pCodAmount', 'pCodCur', 'pDeclOn', 'pDeclAmount', 'pDeclCur', 'pAddrCity', 'pAddrStreet', 'pAddrNum'].forEach((id) => $(id).addEventListener('input', scheduleSummary));
@@ -1195,7 +1272,7 @@ function renderAbout() {
 }
 let PREV_VIEW = 'landing';
 function openAbout() {
-  for (const v of ['landing', 'setup', 'lock', 'app']) if (!$('view-' + v).classList.contains('hide')) PREV_VIEW = v;
+  for (const v of ['landing', 'setup', 'lock', 'app', 'settings']) if (!$('view-' + v).classList.contains('hide')) PREV_VIEW = v;
   renderAbout(); show('about');
   window.scrollTo({ top: 0, behavior: scrollBehavior() });
 }
@@ -1261,7 +1338,7 @@ document.querySelectorAll('label:not([for])').forEach((l) => {
 applyLang();
 initTheme();
 if (!('crypto' in window) || !crypto.subtle) {
-  document.body.innerHTML = '<div style="padding:24px">This app needs a secure connection (https) to encrypt your PIN. Open it via the https link or http://localhost.</div>';
+  document.body.innerHTML = '<div style="padding:24px">Приложението изисква защитена връзка (https), за да шифрова PIN кода. Отворете го през https или http://localhost.<br><br>This app needs a secure connection (https) to encrypt your PIN. Open it via the https link or http://localhost.</div>';
 } else if (loadStore()) { showLock(); } else { show('landing'); }
 
 // ---------- 3D pointer tilt on showcase cards (desktop, fine pointer only) ----------

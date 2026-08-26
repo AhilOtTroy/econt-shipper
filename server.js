@@ -87,9 +87,17 @@ function errorPayload(e) {
   return { ok: false, error: e.message };
 }
 
+// Friendly (user-facing) messages, in the UI's language — the client sends body.lang.
+const FRIENDLY = {
+  missing_creds: { bg: 'Липсват данни за вход в Еконт.', en: 'Missing Econt credentials.' },
+  sender_missing: { bg: 'Липсват име/телефон на подателя — довършете настройката.', en: 'Sender name/phone missing — finish setup.' },
+  office_missing: { bg: 'Не е избран офис за подаване — отворете Настройки и изберете офис.', en: 'Your sender drop-off office is not set — open Settings and choose your office.' },
+};
+const fr = (body, key) => FRIENDLY[key][body && body.lang === 'en' ? 'en' : 'bg'];
+
 function getCreds(body) {
   const c = body.creds || {};
-  if (!c.username || !c.password) { const e = new Error('Missing Econt credentials'); e.friendly = true; throw e; }
+  if (!c.username || !c.password) { const e = new Error(fr(body, 'missing_creds')); e.friendly = true; throw e; }
   return { mode: c.mode === 'production' ? 'production' : 'demo', username: c.username, password: c.password };
 }
 
@@ -241,8 +249,8 @@ async function handleApi(req, res, url) {
     try {
       const creds = getCreds(body);
       const sender = body.sender || {};
-      if (!sender.name || !sender.phone) return sendJson(res, 200, { ok: false, error: 'Sender name/phone missing — finish setup.' });
-      if (!sender.officeCode && !sender.address) return sendJson(res, 200, { ok: false, error: 'Your sender drop-off office is not set — open Settings and choose your office.' });
+      if (!sender.name || !sender.phone) return sendJson(res, 200, { ok: false, error: fr(body, 'sender_missing') });
+      if (!sender.officeCode && !sender.address) return sendJson(res, 200, { ok: false, error: fr(body, 'office_missing') });
       const mode = url.pathname === '/api/create' ? 'create' : 'calculate';
       const label = econt.buildLabel(sender, body.defaults || {}, body.overrides || {});
       const resp = await econt.createLabel(creds, label, mode);
