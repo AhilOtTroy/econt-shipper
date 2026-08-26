@@ -73,7 +73,8 @@ const I18N = {
     reply_copy: '📋 Отговор за клиента', reply_copied: 'Отговорът е копиран ✓', track_link: '🔎 Проследи',
     reply_template: 'Готово! 📦 Пратката е подадена.\nТоварителница: {num}\nПроследяване: {url}\nНа гише отваряш, проверяваш и плащаш само ако всичко е наред.',
     match_high: '✓ сигурно съвпадение', match_mid: 'вероятно съвпадение', match_lo: '⚠ провери офиса',
-    parcels_h: 'Вашите пратки', parcels_refresh: 'Обнови', parcels_note: 'Показва пратките, създадени през това приложение, с актуален статус от Еконт.',
+    parcels_h: 'Вашите пратки', parcels_refresh: 'Обнови',
+    clear_all: 'Изчисти всички', clear_confirm: 'Да се премахнат ли ВСИЧКИ пратки от списъка?', del_confirm: 'Премахни пратката от списъка?', yes: 'Да', no: 'Не', removed: 'Премахнато ✓', del_aria: 'Изтрий пратката', parcels_note: 'Показва пратките, създадени през това приложение, с актуален статус от Еконт.',
     parcels_empty: 'Все още няма пратки тук. Създайте първата от раздел „Нова“.', exp_delivery: 'Очаквана доставка', collected: 'Събрано НП',
     track_events: 'Проследяване', reprint: 'Етикет', copied: 'Копирано ✓', need_desc: 'Описанието е задължително за колетни пратки.',
     loading: 'Зареждане…', no_status: 'няма статус', other_env: 'друга среда', status_delivered: 'Доставена', status_transit: 'В движение', kg: 'кг',
@@ -162,7 +163,8 @@ const I18N = {
     reply_copy: '📋 Customer reply', reply_copied: 'Reply copied ✓', track_link: '🔎 Track',
     reply_template: 'Done! 📦 Your parcel is on its way.\nTracking number: {num}\nTrack it: {url}\nAt the counter you can open, check and pay only if everything is fine.',
     match_high: '✓ strong match', match_mid: 'likely match', match_lo: '⚠ check the office',
-    parcels_h: 'Your parcels', parcels_refresh: 'Refresh', parcels_note: 'Shows parcels created through this app, with live status from Econt.',
+    parcels_h: 'Your parcels', parcels_refresh: 'Refresh',
+    clear_all: 'Clear all', clear_confirm: 'Remove ALL parcels from the list?', del_confirm: 'Remove this parcel from the list?', yes: 'Yes', no: 'No', removed: 'Removed ✓', del_aria: 'Delete parcel', parcels_note: 'Shows parcels created through this app, with live status from Econt.',
     parcels_empty: 'No parcels yet. Create your first from the New tab.', exp_delivery: 'Expected delivery', collected: 'COD collected',
     track_events: 'Tracking', reprint: 'Label', copied: 'Copied ✓', need_desc: 'Description is required for parcels.',
     loading: 'Loading…', no_status: 'no status', other_env: 'other env', status_delivered: 'Delivered', status_transit: 'In transit', kg: 'kg',
@@ -219,7 +221,7 @@ function applyLang() {
   $('footerCopy').textContent = `© ${new Date().getFullYear()} ${CREATOR.name || 'Econt Shipper'}`;
   $('footerAbout').textContent = dict.footer_about || I18N.en.footer_about;
   // Translated accessible names for the emoji-only controls.
-  for (const [id, k] of [['infoBtn', 'a11y_info'], ['settingsBtn', 'a11y_settings'], ['lockNowBtn', 'a11y_lock'], ['brandHome', 'a11y_home'], ['attachBtn', 'a11y_attach'], ['msg', 'paste_label']]) {
+  for (const [id, k] of [['infoBtn', 'a11y_info'], ['settingsBtn', 'a11y_settings'], ['lockNowBtn', 'a11y_lock'], ['brandHome', 'a11y_home'], ['attachBtn', 'a11y_attach'], ['msg', 'paste_label'], ['refreshParcelsBtn', 'parcels_refresh']]) {
     const el = $(id); if (el) { el.setAttribute('aria-label', t(k)); el.title = t(k); }
   }
   syncThemeBtnLabel();
@@ -1206,6 +1208,12 @@ function parcelCardHTML(p) {
       <a class="btnlink" href="${esc(econtTrackUrl(p.number))}" target="_blank" rel="noopener">${t('track_link')}</a>
       <a class="btnlink" data-pdf hidden target="_blank">${t('reprint')}</a>
       <button class="ghost" data-toggle>${t('details')}</button>
+      <button class="ghost" data-del aria-label="${esc(t('del_aria'))}">🗑</button>
+    </div>
+    <div class="warn-box confirmrow hide" data-confirm role="alertdialog">
+      <span>${t('del_confirm')}</span>
+      <button class="ghost btn-xs" data-yes>${t('yes')}</button>
+      <button class="ghost btn-xs" data-no>${t('no')}</button>
     </div>
     <div class="details hide" data-details></div>
   </div>`;
@@ -1232,6 +1240,9 @@ async function openParcels() {
   if (!list.length) { box.innerHTML = `<div class="card muted" style="text-align:center">${t('parcels_empty')}</div>`; stopTimers(); return; }
   box.innerHTML = list.map(parcelCardHTML).join('');
   box.querySelectorAll('[data-copy]').forEach((b) => { const num = b.closest('.parcel').getAttribute('data-num'); b.onclick = () => { navigator.clipboard.writeText(num); toast(t('copied')); }; });
+  box.querySelectorAll('[data-del]').forEach((b) => { b.onclick = () => b.closest('.parcel').querySelector('[data-confirm]').classList.toggle('hide'); });
+  box.querySelectorAll('[data-confirm] [data-yes]').forEach((b) => { b.onclick = () => removeParcel(b.closest('.parcel').getAttribute('data-num')); });
+  box.querySelectorAll('[data-confirm] [data-no]').forEach((b) => { b.onclick = () => b.closest('[data-confirm]').classList.add('hide'); });
   await refreshParcels();
   startTimers();
 }
@@ -1247,7 +1258,22 @@ async function refreshParcels() {
     (r.parcels || []).forEach(updateParcelCard);
   } finally { btnBusy(btn, false); }
 }
+function removeParcel(num) {
+  saveParcels(loadParcels().filter((x) => x.number !== num));
+  delete TICK[num];
+  openParcels();
+  toast(t('removed'));
+}
 $('refreshParcelsBtn').onclick = refreshParcels;
+$('clearParcelsBtn').onclick = () => $('clearAllConfirm').classList.toggle('hide');
+$('clearAllNo').onclick = () => $('clearAllConfirm').classList.add('hide');
+$('clearAllYes').onclick = () => {
+  saveParcels([]);
+  for (const k in TICK) delete TICK[k];
+  $('clearAllConfirm').classList.add('hide');
+  openParcels();
+  toast(t('removed'));
+};
 $('trackNumBtn').onclick = () => {
   const v = ($('trackNumInput').value || '').replace(/\D/g, '');
   if (v.length < 8) { toast(t('invalid_number')); return; }
