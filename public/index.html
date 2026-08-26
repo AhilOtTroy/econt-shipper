@@ -53,7 +53,7 @@ try {
   :root[data-theme="dark"] .t-amber { color: #f0b659; }
   :root[data-theme="dark"] #toast { background: #243244; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html { scroll-behavior: smooth; background: var(--bg); overscroll-behavior-y: contain;
+  html { scroll-behavior: smooth; background: var(--bg); overscroll-behavior-y: contain; scrollbar-gutter: stable both-edges;
     scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent; }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -250,8 +250,8 @@ try {
   .summary .ic-s, .track-tag .ic-s { color: var(--brand); }
   .lock-ico { margin-bottom: 4px; }
   /* Menu-like views float in the middle of the screen */
-  #view-lock:not(.hide) { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 240px); }
-  #view-lock .card { width: min(460px, 100%); margin-left: auto; margin-right: auto; }
+  #view-lock:not(.hide) { display: flex; flex-direction: column; justify-content: center; min-height: calc(100vh - 240px); }
+  #view-lock .card { width: 100%; }
   .btn-xs { padding: 6px 14px; font-size: 13px; }
   @media (max-width: 560px) { .composer-bar .chint { display: none; } }
 
