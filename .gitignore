@@ -4,3 +4,11 @@ config.json
 offices.cache.json
 test-*.js
 .DS_Store
+
+__pycache__/
+
+# watermark remover: private runtime and models live in the folder
+python/
+models/
+.venv/
+python-download.tar.gz
