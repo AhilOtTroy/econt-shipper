@@ -77,12 +77,26 @@ function flattenEcontError(node, acc) {
   return acc;
 }
 
+// Econt does NOT reliably use 401 for a wrong login: it often answers 400/500
+// with "Невалидно потребителско име и/или парола" in the body. Detect both.
+// A 403 with a non-JSON body is a proxy/firewall page, not a password problem.
+const AUTH_MSG_RE = /потребителско име|парол|password|unauthori[sz]ed|credential|authenticat/i;
+function isAuthFail(e) {
+  if (!e || e.kind !== 'http') return false;
+  if (e.status === 401) return true;
+  if (e.status === 403 && e.body && e.body.raw) return false;
+  if (e.status === 403) return true;
+  return AUTH_MSG_RE.test(flattenEcontError(e.body || {}, []).join(' '));
+}
+
 function errorPayload(e) {
   if (e.kind === 'http') {
     const b = e.body || {};
     const msgs = flattenEcontError(b, []);
     const msg = msgs.length ? [...new Set(msgs)].join(' — ') : ('Econt HTTP ' + e.status);
-    return { ok: false, error: msg, status: e.status, body: b };
+    const out = { ok: false, error: msg, status: e.status, body: b };
+    if (isAuthFail(e)) out.code = 'bad_login';
+    return out;
   }
   return { ok: false, error: e.message };
 }
@@ -115,21 +129,20 @@ async function handleApi(req, res, url) {
   if (url.pathname === '/api/test') {
     try {
       const creds = getCreds(body);
-      // Econt rejects bad logins with 401 (sometimes 403 + JSON body). A 403 with a
-      // non-JSON body is a proxy/firewall page, not a password problem.
-      const isAuthFail = (e) => e.kind === 'http' && (e.status === 401 || (e.status === 403 && !(e.body && e.body.raw)));
       try { await econt.getClientProfiles(creds); }
       catch (e) {
         if (isAuthFail(e)) return sendJson(res, 200, { ok: false, code: 'bad_login', error: fr(body, 'bad_login') });
         if (e.kind === 'network') return sendJson(res, 200, { ok: false, code: 'network', error: fr(body, 'econt_down') });
-        // Profile service unavailable for this account: fall back to a live (uncached) office call.
+        // Only if the profile service itself is missing do we fall back to an office
+        // call; anything else is reported, never turned into a false "OK".
+        if (!(e.kind === 'http' && (e.status === 404 || e.status === 405))) throw e;
         await econt.getOffices(creds, 'BGR');
       }
       let officeCount = 0;
       try { officeCount = (await loadOffices(creds)).length; } catch {}
       return sendJson(res, 200, { ok: true, mode: creds.mode, officeCount });
     } catch (e) {
-      if (e.kind === 'http' && e.status === 401) return sendJson(res, 200, { ok: false, code: 'bad_login', error: fr(body, 'bad_login') });
+      if (isAuthFail(e)) return sendJson(res, 200, { ok: false, code: 'bad_login', error: fr(body, 'bad_login') });
       return sendJson(res, 200, e.friendly ? { ok: false, error: e.message } : errorPayload(e));
     }
   }

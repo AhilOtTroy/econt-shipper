@@ -86,7 +86,7 @@ const I18N = {
     details: 'Детайли', hide_details: 'Скрий детайли', in_operation: 'Във движение от', delivered_ok: 'Доставена успешно', returned_ok: 'Върната към подателя', awaiting_dispatch: 'Очаква изпращане',
     d_status: 'Статус', d_sender: 'Подател', d_recipient: 'Получател', d_phone: 'Телефон', d_office: 'Офис получател', d_sender_office: 'Офис подател', d_storage: 'Съхранява се в', d_type: 'Тип', d_packs: 'Брой', d_weight: 'Тегло', d_contents: 'Съдържание', d_review: 'Преглед', d_created: 'Създадена', d_sent: 'Изпратена', d_expected: 'Очаквана доставка', d_delivered: 'Доставена на', d_cod: 'Наложен платеж', d_price: 'Цена', d_attempts: 'Опити за доставка', d_routing: 'Маршрут',
     dd: 'д', dh: 'ч', dm: 'м', ds: 'с',
-    testing: 'Проверка…', server_waking: 'Сървърът се събужда. Изчакайте 30 секунди и опитайте пак.', net_down: 'Няма интернет връзка.', login_ok: '✓ Входът работи. Налични са {n} офиса.', need_creds: 'Първо въведете потребител и парола.',
+    testing: 'Проверка…', login_saved: 'Запазено.', fix_login_hint: 'Отворете Настройки (зъбното колело горе) и натиснете „Проверка на входа“ с паролата ви за e-econt.com.', server_waking: 'Сървърът се събужда. Изчакайте 30 секунди и опитайте пак.', net_down: 'Няма интернет връзка.', login_ok: '✓ Входът работи. Налични са {n} офиса.', need_creds: 'Първо въведете потребител и парола.',
     pin_short: 'PIN трябва да е поне 4 цифри.', pin_mismatch: 'PIN кодовете не съвпадат.', test_first: 'Първо проверете входа за Еконт (стъпка 2).',
     fill_sender: 'Попълнете име, телефон и изберете офис за подаване (стъпка 3).',
     paste_first: 'Първо поставете съобщение.', pick_office: 'Първо изберете офис.', need_recip: 'Нужни са име, телефон и офис.',
@@ -177,7 +177,7 @@ const I18N = {
     details: 'Details', hide_details: 'Hide details', in_operation: 'In transit for', delivered_ok: 'Delivered successfully', returned_ok: 'Returned to sender', awaiting_dispatch: 'Awaiting dispatch',
     d_status: 'Status', d_sender: 'Sender', d_recipient: 'Recipient', d_phone: 'Phone', d_office: 'Receiver office', d_sender_office: 'Sender office', d_storage: 'Stored at', d_type: 'Type', d_packs: 'Packs', d_weight: 'Weight', d_contents: 'Contents', d_review: 'Review', d_created: 'Created', d_sent: 'Dispatched', d_expected: 'Expected delivery', d_delivered: 'Delivered at', d_cod: 'COD', d_price: 'Price', d_attempts: 'Delivery attempts', d_routing: 'Routing',
     dd: 'd', dh: 'h', dm: 'm', ds: 's',
-    testing: 'Testing…', server_waking: 'The server is waking up. Wait 30 seconds and try again.', net_down: 'No internet connection.', login_ok: '✓ Login works. {n} offices available.', need_creds: 'Enter username and password first.',
+    testing: 'Testing…', login_saved: 'Saved.', fix_login_hint: 'Open Settings (the cog at the top) and press "Test login" with your e-econt.com password.', server_waking: 'The server is waking up. Wait 30 seconds and try again.', net_down: 'No internet connection.', login_ok: '✓ Login works. {n} offices available.', need_creds: 'Enter username and password first.',
     pin_short: 'PIN must be at least 4 digits.', pin_mismatch: 'PINs do not match.', test_first: 'Test your Econt login first (step 2).',
     fill_sender: 'Fill your name, phone and pick your drop-off office (step 3).',
     paste_first: 'Paste a message first.', pick_office: 'Pick an office first.', need_recip: 'Need recipient name, phone and an office.',
@@ -501,6 +501,14 @@ async function cfgTestLogin(btn) {
   btnBusy(btn, false);
   m.className = r.ok ? 'good' : 'err';
   m.textContent = r.ok ? t('login_ok', { n: r.officeCount }) : ('✗ ' + r.error);
+  // A login that just passed is saved immediately, so parcels use exactly the
+  // account that was checked (before, it stayed unsaved until "Запази").
+  if (r.ok && (c.username !== CONFIG.username || c.password !== SESSION.password || c.mode !== CONFIG.mode)) {
+    CONFIG.mode = c.mode; CONFIG.username = c.username; SESSION.password = c.password;
+    await persist(); $('cfgPass').value = '';
+    m.textContent += ' ' + t('login_saved');
+    $('cfgDemoNote').classList.toggle('hide', CONFIG.mode !== 'demo');
+  }
   return !!r.ok;
 }
 $('cfgTestBtn').onclick = (ev) => cfgTestLogin(ev.currentTarget);
@@ -801,7 +809,7 @@ async function doPreview(ev) {
   btnBusy(btn, true); $('priceBox').innerHTML = '<span class="sk">price price price</span>';
   const r = await api('/api/preview', shipBody(o));
   btnBusy(btn, false);
-  if (!r.ok) { $('priceBox').textContent = ''; $('previewErr').textContent = t('econt_prefix') + r.error; return; }
+  if (!r.ok) { $('priceBox').textContent = ''; $('previewErr').textContent = t('econt_prefix') + r.error + (r.code === 'bad_login' ? '\n' + t('fix_login_hint') : ''); return; }
   $('priceBox').innerHTML = showPrice(r.response);
 }
 function playCheck() {
@@ -820,7 +828,7 @@ async function doCreate() {
   const btn = $('createBtn'); btnBusy(btn, true, t('creating'));
   try {
     const r = await api('/api/create', shipBody(o));
-    if (!r.ok) { $('previewErr').textContent = t('econt_prefix') + r.error; return; }
+    if (!r.ok) { $('previewErr').textContent = t('econt_prefix') + r.error + (r.code === 'bad_login' ? '\n' + t('fix_login_hint') : ''); return; }
     const st = r.response.label || r.response;
     const num = st.shipmentNumber || t('no_number');
     $('shipNum').textContent = num;
