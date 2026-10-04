@@ -91,6 +91,8 @@ function errorPayload(e) {
 const FRIENDLY = {
   missing_creds: { bg: 'Липсват данни за вход в Еконт.', en: 'Missing Econt credentials.' },
   sender_missing: { bg: 'Липсват име/телефон на подателя — довършете настройката.', en: 'Sender name/phone missing — finish setup.' },
+  bad_login: { bg: 'Грешен потребител или парола за Еконт. Използвайте същите данни, с които влизате в e-econt.com (главните и малките букви имат значение).', en: 'Wrong Econt username or password. Use the same details you sign in to e-econt.com with (case-sensitive).' },
+  econt_down: { bg: 'Няма връзка с Еконт в момента. Опитайте пак след малко.', en: 'Cannot reach Econt right now. Try again in a moment.' },
   office_missing: { bg: 'Не е избран офис за подаване — отворете Настройки и изберете офис.', en: 'Your sender drop-off office is not set — open Settings and choose your office.' },
 };
 const fr = (body, key) => FRIENDLY[key][body && body.lang === 'en' ? 'en' : 'bg'];
@@ -106,13 +108,30 @@ async function handleApi(req, res, url) {
   if (req.method !== 'POST') return sendJson(res, 405, { ok: false, error: 'POST only' });
   const body = await readBody(req);
 
-  // Validate Econt credentials (used by the setup wizard) — returns office count.
+  // Validate Econt credentials (setup wizard + settings). Uses the client-profile
+  // call because it always requires a valid login; the office list is public on
+  // some Econt hosts and was also served from cache, so it could say "OK" for a
+  // wrong password. Office count is best-effort and never masks a login failure.
   if (url.pathname === '/api/test') {
     try {
       const creds = getCreds(body);
-      const offices = await loadOffices(creds, true);
-      return sendJson(res, 200, { ok: true, mode: creds.mode, officeCount: offices.length });
-    } catch (e) { return sendJson(res, 200, e.friendly ? { ok: false, error: e.message } : errorPayload(e)); }
+      // Econt rejects bad logins with 401 (sometimes 403 + JSON body). A 403 with a
+      // non-JSON body is a proxy/firewall page, not a password problem.
+      const isAuthFail = (e) => e.kind === 'http' && (e.status === 401 || (e.status === 403 && !(e.body && e.body.raw)));
+      try { await econt.getClientProfiles(creds); }
+      catch (e) {
+        if (isAuthFail(e)) return sendJson(res, 200, { ok: false, code: 'bad_login', error: fr(body, 'bad_login') });
+        if (e.kind === 'network') return sendJson(res, 200, { ok: false, code: 'network', error: fr(body, 'econt_down') });
+        // Profile service unavailable for this account: fall back to a live (uncached) office call.
+        await econt.getOffices(creds, 'BGR');
+      }
+      let officeCount = 0;
+      try { officeCount = (await loadOffices(creds)).length; } catch {}
+      return sendJson(res, 200, { ok: true, mode: creds.mode, officeCount });
+    } catch (e) {
+      if (e.kind === 'http' && e.status === 401) return sendJson(res, 200, { ok: false, code: 'bad_login', error: fr(body, 'bad_login') });
+      return sendJson(res, 200, e.friendly ? { ok: false, error: e.message } : errorPayload(e));
+    }
   }
 
   if (url.pathname === '/api/parse') {

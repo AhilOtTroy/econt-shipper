@@ -86,7 +86,7 @@ const I18N = {
     details: 'Детайли', hide_details: 'Скрий детайли', in_operation: 'Във движение от', delivered_ok: 'Доставена успешно', returned_ok: 'Върната към подателя', awaiting_dispatch: 'Очаква изпращане',
     d_status: 'Статус', d_sender: 'Подател', d_recipient: 'Получател', d_phone: 'Телефон', d_office: 'Офис получател', d_sender_office: 'Офис подател', d_storage: 'Съхранява се в', d_type: 'Тип', d_packs: 'Брой', d_weight: 'Тегло', d_contents: 'Съдържание', d_review: 'Преглед', d_created: 'Създадена', d_sent: 'Изпратена', d_expected: 'Очаквана доставка', d_delivered: 'Доставена на', d_cod: 'Наложен платеж', d_price: 'Цена', d_attempts: 'Опити за доставка', d_routing: 'Маршрут',
     dd: 'д', dh: 'ч', dm: 'м', ds: 'с',
-    testing: 'Проверка…', login_ok: '✓ Входът работи. Налични са {n} офиса.', need_creds: 'Първо въведете потребител и парола.',
+    testing: 'Проверка…', server_waking: 'Сървърът се събужда. Изчакайте 30 секунди и опитайте пак.', net_down: 'Няма интернет връзка.', login_ok: '✓ Входът работи. Налични са {n} офиса.', need_creds: 'Първо въведете потребител и парола.',
     pin_short: 'PIN трябва да е поне 4 цифри.', pin_mismatch: 'PIN кодовете не съвпадат.', test_first: 'Първо проверете входа за Еконт (стъпка 2).',
     fill_sender: 'Попълнете име, телефон и изберете офис за подаване (стъпка 3).',
     paste_first: 'Първо поставете съобщение.', pick_office: 'Първо изберете офис.', need_recip: 'Нужни са име, телефон и офис.',
@@ -177,7 +177,7 @@ const I18N = {
     details: 'Details', hide_details: 'Hide details', in_operation: 'In transit for', delivered_ok: 'Delivered successfully', returned_ok: 'Returned to sender', awaiting_dispatch: 'Awaiting dispatch',
     d_status: 'Status', d_sender: 'Sender', d_recipient: 'Recipient', d_phone: 'Phone', d_office: 'Receiver office', d_sender_office: 'Sender office', d_storage: 'Stored at', d_type: 'Type', d_packs: 'Packs', d_weight: 'Weight', d_contents: 'Contents', d_review: 'Review', d_created: 'Created', d_sent: 'Dispatched', d_expected: 'Expected delivery', d_delivered: 'Delivered at', d_cod: 'COD', d_price: 'Price', d_attempts: 'Delivery attempts', d_routing: 'Routing',
     dd: 'd', dh: 'h', dm: 'm', ds: 's',
-    testing: 'Testing…', login_ok: '✓ Login works. {n} offices available.', need_creds: 'Enter username and password first.',
+    testing: 'Testing…', server_waking: 'The server is waking up. Wait 30 seconds and try again.', net_down: 'No internet connection.', login_ok: '✓ Login works. {n} offices available.', need_creds: 'Enter username and password first.',
     pin_short: 'PIN must be at least 4 digits.', pin_mismatch: 'PINs do not match.', test_first: 'Test your Econt login first (step 2).',
     fill_sender: 'Fill your name, phone and pick your drop-off office (step 3).',
     paste_first: 'Paste a message first.', pick_office: 'Pick an office first.', need_recip: 'Need recipient name, phone and an office.',
@@ -361,7 +361,15 @@ const econtProfileUrl = () => (CONFIG.mode === 'production' ? 'https://ee.econt.
 const econtTrackUrl = (num) => `https://www.econt.com/${LANG === 'en' ? 'en/' : ''}services/track-shipment/${encodeURIComponent(String(num))}`;
 // Ready-to-send reply for the customer: number + tracking link + counter note.
 const buildReply = (num) => t('reply_template', { num, url: econtTrackUrl(num) });
-const api = async (path, body) => (await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ lang: LANG }, body || {})) })).json();
+// Never throws: a sleeping/restarting server (HTML 502, timeout, offline) comes
+// back as { ok:false, error } so every button shows a message instead of hanging.
+const api = async (path, body) => {
+  try {
+    const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ lang: LANG }, body || {})) });
+    const txt = await res.text();
+    try { return JSON.parse(txt); } catch { return { ok: false, error: t('server_waking') }; }
+  } catch { return { ok: false, error: t('net_down') }; }
+};
 function officeLabel(c) { return `${c.name} · ${c.address}${c.city ? ', ' + c.city : ''}${c.postCode ? ' (' + c.postCode + ')' : ''}`; }
 async function fillOfficeSelect(sel, q, credsObj) {
   sel.classList.remove('hide'); sel.innerHTML = `<option>${t('searching')}</option>`;
@@ -484,12 +492,19 @@ function cfgCreds() {
   const fresh = $('cfgPass').value && $('cfgUser').value.trim();
   return { mode: fresh ? 'production' : CONFIG.mode, username: $('cfgUser').value.trim(), password: $('cfgPass').value || SESSION.password };
 }
-$('cfgTestBtn').onclick = async () => {
-  const c = cfgCreds();
-  $('cfgMsg').textContent = t('testing');
+// Login check result is shown right under the button (not at the page bottom).
+async function cfgTestLogin(btn) {
+  const c = cfgCreds(), m = $('cfgTestMsg');
+  if (!c.username || !c.password) { m.className = 'err'; m.textContent = t('need_creds'); return false; }
+  m.className = 'muted'; m.textContent = t('testing'); btnBusy(btn, true);
   const r = await api('/api/test', { creds: c });
-  $('cfgMsg').textContent = r.ok ? t('login_ok', { n: r.officeCount }) : ('✗ ' + r.error);
-};
+  btnBusy(btn, false);
+  m.className = r.ok ? 'good' : 'err';
+  m.textContent = r.ok ? t('login_ok', { n: r.officeCount }) : ('✗ ' + r.error);
+  return !!r.ok;
+}
+$('cfgTestBtn').onclick = (ev) => cfgTestLogin(ev.currentTarget);
+for (const id of ['cfgUser', 'cfgPass']) $(id).addEventListener('input', () => { $('cfgTestMsg').textContent = ''; });
 $('cfgSenderSearchBtn').onclick = () => fillOfficeSelect($('cfgSenderOfficeSel'), $('cfgSenderSearch').value, cfgCreds());
 $('cfgSenderOfficeSel').onchange = () => { $('cfgSenderOffice').value = $('cfgSenderOfficeSel').value; };
 $('refreshOfficesBtn').onclick = async (ev) => {
@@ -500,7 +515,13 @@ $('refreshOfficesBtn').onclick = async (ev) => {
     ? t('offices_loaded', { n: r.count }) + (r.added > 0 ? ' · ' + t('offices_added', { d: r.added }) : '')
     : (t('error_prefix') + r.error);
 };
-$('saveCfgBtn').onclick = async () => {
+$('saveCfgBtn').onclick = async (ev) => {
+  // Changed login? Prove it works before saving, so a typo can't lock the app out.
+  const loginChanged = $('cfgPass').value || $('cfgUser').value.trim() !== (CONFIG.username || '');
+  if (loginChanged && !(await cfgTestLogin(ev.currentTarget))) {
+    $('cfgTestMsg').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
   CONFIG.mode = cfgCreds().mode; CONFIG.username = $('cfgUser').value.trim();
   if ($('cfgPass').value) SESSION.password = $('cfgPass').value;
   CONFIG.sender = { name: $('cfgSenderName').value.trim(), phone: $('cfgSenderPhone').value.trim(), officeCode: $('cfgSenderOffice').value.trim(), address: CONFIG.sender.address || null };
