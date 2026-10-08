@@ -113,6 +113,7 @@ const I18N = {
     wake_wait: 'Сървърът се събужда, още няколко секунди…', price_waiting: 'Цената идва след малко, сървърът се събужда.',
     create_unsure: 'Не стана ясно дали товарителницата е създадена. Провери в e-Econt профила, преди да опиташ пак.', create_unsure_link: 'Отвори e-Econt',
     st_unsure: 'неясно, провери в e-Econt', badge_demo: 'ДЕМО',
+    busy_wait: 'Изчакай, създавам пратка…',
     // paste / live price / keyboard
     a11y_paste: 'Постави от клипборда', clip_denied: 'Нямам достъп до клипборда. Постави текста в полето.', clip_empty: 'Клипбордът е празен.',
     create_hint: '{k}+Enter създава товарителницата',
@@ -231,6 +232,7 @@ const I18N = {
     wake_wait: 'The server is waking up, a few more seconds…', price_waiting: 'The price will show in a moment, the server is waking up.',
     create_unsure: 'Could not tell whether the waybill was created. Check your e-Econt profile before trying again.', create_unsure_link: 'Open e-Econt',
     st_unsure: 'unclear, check e-Econt', badge_demo: 'DEMO',
+    busy_wait: 'Hold on, a parcel is being created…',
     // paste / live price / keyboard
     a11y_paste: 'Paste from clipboard', clip_denied: 'No clipboard access. Paste the text into the box.', clip_empty: 'The clipboard is empty.',
     create_hint: '{k}+Enter creates the waybill',
@@ -301,7 +303,7 @@ function applyLang() {
   const dict = I18N[LANG] || I18N.en;
   document.documentElement.lang = LANG;
   document.title = dict.page_title || I18N.en.page_title;
-  document.querySelectorAll('[data-i18n]').forEach((el) => { const k = el.getAttribute('data-i18n'); if (dict[k] != null) el.textContent = dict[k]; });
+  document.querySelectorAll('[data-i18n]').forEach((el) => { const k = el.getAttribute('data-i18n'); if (dict[k] != null && !el.hasAttribute('aria-busy')) el.textContent = dict[k]; });
   document.querySelectorAll('[data-i18n-ph]').forEach((el) => { const k = el.getAttribute('data-i18n-ph'); if (dict[k] != null) el.placeholder = dict[k]; });
   $('langBg').classList.toggle('active', LANG === 'bg');
   $('langEn').classList.toggle('active', LANG === 'en');
@@ -323,6 +325,7 @@ function setLang(l) {
   LANG = l; localStorage.setItem('econt_lang', l); applyLang();
   syncCreateLabel();
   if (!$('result').classList.contains('hide')) renderReplyPreview();
+  if (!$('batchNoCodConfirm').classList.contains('hide')) renderBatchNoCodMsg();
   if (!$('preview').classList.contains('hide')) updateSummary();
   if (!$('tab-parcels').classList.contains('hide')) openParcels();
   if (!$('view-about').classList.contains('hide')) renderAbout();
@@ -342,6 +345,8 @@ function btnBusy(btn, on, label) {
   } else {
     btn.disabled = false; btn.removeAttribute('aria-busy');
     if (btn.dataset.html != null) { btn.innerHTML = btn.dataset.html; delete btn.dataset.html; }
+    // The language may have changed while it was busy.
+    const k = btn.getAttribute('data-i18n'); if (k) btn.textContent = t(k);
   }
 }
 // Econt times may come as epoch seconds, epoch ms or date strings.
@@ -468,8 +473,11 @@ const api = async (path, body, opts) => {
     if (!opts.retry || kind === 'offline' || attempt >= RETRY_WAITS.length) return fail;
     if (opts.alive && !opts.alive()) return Object.assign(fail, { stale: true });
     if (opts.onWait) opts.onWait(attempt);
-    await sleep(RETRY_WAITS[attempt]);
-    if (opts.alive && !opts.alive()) return Object.assign(fail, { stale: true });
+    // Wait in short steps so a superseded call stops at once, not after 30 s.
+    for (let waited = 0; waited < RETRY_WAITS[attempt]; waited += 250) {
+      await sleep(250);
+      if (opts.alive && !opts.alive()) return Object.assign(fail, { stale: true });
+    }
   }
 };
 // Fire-and-forget wake-up; carries no credentials.
@@ -507,12 +515,15 @@ function debounce(fn, ms) { let h = 0; const d = (...a) => { clearTimeout(h); h 
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || '');
 function officeLabel(c) { return `${c.name} · ${c.address}${c.city ? ', ' + c.city : ''}${c.postCode ? ' (' + c.postCode + ')' : ''}`; }
 async function fillOfficeSelect(sel, q, credsObj) {
+  const seq = PARSE_SEQ, live = () => sel !== $('pOffice') || seq === PARSE_SEQ;
   sel.classList.remove('hide'); sel.innerHTML = `<option>${t('searching')}</option>`;
-  const r = await api('/api/offices', { creds: credsObj, q }, { retry: true });
+  const r = await api('/api/offices', { creds: credsObj, q }, { retry: true, alive: live });
+  if (!live()) return false;
   if (!r.ok) { sel.innerHTML = `<option value="">${esc(r.error)}</option>`; return; }
   sel.innerHTML = '';
   for (const c of (r.candidates || [])) { const o = document.createElement('option'); o.value = c.code; o.textContent = officeLabel(c); sel.appendChild(o); }
   if (!sel.options.length) sel.innerHTML = `<option value="">${t('no_matches')}</option>`;
+  return true;
 }
 
 // ===================== WIZARD =====================
@@ -554,7 +565,7 @@ $('suFinishBtn').onclick = async () => {
 };
 
 // ===================== LOCK =====================
-function showLock() { show('lock'); $('lockMsg').textContent = ''; $('lockPin').value = ''; setTimeout(() => $('lockPin').focus(), 50); ping(); }
+function showLock() { show('lock'); $('forgetConfirm').classList.add('hide'); $('lockMsg').textContent = ''; $('lockPin').value = ''; setTimeout(() => $('lockPin').focus(), 50); ping(); }
 let UNLOCKING = false;
 async function tryUnlock(silentOnFail) {
   if (UNLOCKING) return;
@@ -577,11 +588,11 @@ $('lockPin').addEventListener('input', () => {
   if (expected) { if (len === expected) tryUnlock(false); }
   else if (len >= 4) tryUnlock(len < 6); // legacy store: only show error at the 6-char cap
 });
-// In-place confirm (no native dialog). Forgetting also wipes the parcel list,
-// which now holds customer phone numbers.
+// In-place confirm (no native dialog). Removes the login and settings only, as
+// the prompt says; the parcel list stays so nothing in transit is lost.
 $('forgetBtn').onclick = () => $('forgetConfirm').classList.toggle('hide');
 $('forgetNo').onclick = () => $('forgetConfirm').classList.add('hide');
-$('forgetYes').onclick = () => { localStorage.removeItem(KEY); localStorage.removeItem(PKEY); location.reload(); };
+$('forgetYes').onclick = () => { localStorage.removeItem(KEY); location.reload(); };
 $('lockNowBtn').onclick = () => { SESSION.password = null; SESSION.pin = null; showLock(); };
 
 // ===================== APP =====================
@@ -803,26 +814,29 @@ const parseRetry = (seq) => ({
   retry: true, alive: () => seq === PARSE_SEQ,
   onWait: () => { if (seq === PARSE_SEQ) { $('parseErr').className = 'muted'; $('parseErr').textContent = t('wake_wait'); } },
 });
+// Returns true only when THIS call filled the editor (or the batch), so callers
+// that post-edit the result (batch Open, OCR) never touch a newer message.
 async function doParse(ev, opts) {
+  if (createBusy()) { toast(t('busy_wait')); return false; }
   const seq = ++PARSE_SEQ;
   $('parseErr').className = 'err'; $('parseErr').textContent = '';
   const text = $('msg').value.trim();
-  if (!text) { $('parseErr').textContent = t('paste_first'); return; }
+  if (!text) { $('parseErr').textContent = t('paste_first'); return false; }
   resetCreateGuards();
   // Several phone numbers MAY mean a batch — but only if the splitter really
   // finds 2+ parcels (an alternate number in one message is still one parcel).
   if (!(opts && opts.forceSingle) && (text.match(PHONE_COUNT_RE) || []).length >= 2) {
     const handled = await doBatchParse(text, seq);
-    if (handled || seq !== PARSE_SEQ) return;
+    if (handled || seq !== PARSE_SEQ) return handled === 'applied';
   }
   $('batch').classList.add('hide');
   if (!(opts && opts.keepBatchEdit)) { BATCH_EDIT = -1; showBatchBackBtns(); }
   parseBusy(true);
   try {
     const r = await api('/api/parse', { text, creds: creds() }, parseRetry(seq));
-    if (seq !== PARSE_SEQ) return;
+    if (seq !== PARSE_SEQ || createBusy()) return false;
     $('parseErr').className = 'err'; $('parseErr').textContent = '';
-    if (!r.ok) { $('parseErr').textContent = r.error || t('parse_failed'); return; }
+    if (!r.ok) { $('parseErr').textContent = r.error || t('parse_failed'); return false; }
     const p = r.parsed;
     PARSED_CUR = !!(p.cod && p.cod.amount && p.cod.currency);
     $('pName').value = p.recipientName || ''; $('pPhone').value = p.phone || '';
@@ -860,6 +874,7 @@ async function doParse(ev, opts) {
     $('preview').classList.remove('hide'); $('result').classList.add('hide');
     $('preview').scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
     doPreview();
+    return true;
   } finally { parseBusy(false); }
 }
 // Show the per-shipment review selector only when settings does NOT anchor a mode.
@@ -901,9 +916,9 @@ function showPrice(resp) {
 function currentReviewMode() { return reviewAnchor(CONFIG.defaults) || $('pReviewMode').value || 'none'; }
 // One-glance confirmation chip-line so the user verifies the whole shipment in ~1s,
 // plus a caution note when the parcel carries no cash-on-delivery.
-function updateSummary() {
+// What the summary line shows, read from the editor (also captured at create time).
+function summaryData() {
   const sel = $('pOffice');
-  const name = $('pName').value.trim();
   let dest = '';
   if (deliverMode === 'address') {
     const c = $('pAddrCity').value.trim(), st = [$('pAddrStreet').value.trim(), $('pAddrNum').value.trim()].filter(Boolean).join(' ');
@@ -912,18 +927,30 @@ function updateSummary() {
     const opt = sel.selectedOptions[0];
     dest = opt && sel.value ? opt.textContent.split(' · ')[0] : '';
   }
-  const codOn = $('pCodOn').checked, codAmt = Number($('pCodAmount').value);
-  const cod = codOn && codAmt > 0 ? `${codAmt} ${$('pCodCur').value}` : '';
-  const rl = reviewLabel(currentReviewMode());
-  const declOn = $('pDeclOn').checked, declAmt = Number($('pDeclAmount').value);
-  const parts = [];
-  if (name) parts.push(`<b>${esc(name)}</b>`);
-  if (dest) parts.push(`${svgi('pin', 'ic-s')} ${esc(dest)}`);
-  if (cod) parts.push(`${svgi('money', 'ic-s')} ${esc(cod)}`);
-  if (declOn && declAmt > 0) parts.push(`${svgi('shield', 'ic-s')} ${esc(declAmt + ' ' + $('pDeclCur').value)}`);
+  const codAmt = Number($('pCodAmount').value), declAmt = Number($('pDeclAmount').value);
+  return {
+    name: $('pName').value.trim(), dest,
+    cod: $('pCodOn').checked && codAmt > 0 ? codAmt + ' ' + $('pCodCur').value : '',
+    decl: $('pDeclOn').checked && declAmt > 0 ? declAmt + ' ' + $('pDeclCur').value : '',
+    review: currentReviewMode(),
+  };
+}
+function summaryHTML(d) {
+  const parts = [], rl = reviewLabel(d.review);
+  if (d.name) parts.push(`<b>${esc(d.name)}</b>`);
+  if (d.dest) parts.push(`${svgi('pin', 'ic-s')} ${esc(d.dest)}`);
+  if (d.cod) parts.push(`${svgi('money', 'ic-s')} ${esc(d.cod)}`);
+  if (d.decl) parts.push(`${svgi('shield', 'ic-s')} ${esc(d.decl)}`);
   if (rl) parts.push(`${svgi('eye', 'ic-s')} ${esc(rl)}`);
+  return parts.join('<span class="dot-sep">·</span>');
+}
+function updateSummary() {
+  const sel = $('pOffice');
+  const name = $('pName').value.trim();
+  const codOn = $('pCodOn').checked, codAmt = Number($('pCodAmount').value);
+  const html = summaryHTML(summaryData());
   const box = $('prevSummary');
-  if (parts.length) { box.innerHTML = parts.join('<span class="dot-sep">·</span>'); box.classList.remove('hide'); }
+  if (html) { box.innerHTML = html; box.classList.remove('hide'); }
   else box.classList.add('hide');
   // Warn when there is no cash-on-delivery on this parcel.
   $('codWarn').classList.toggle('hide', codOn && codAmt > 0);
@@ -992,23 +1019,36 @@ function playCheck() {
   const old = $q('#result .check-c'); if (!old) return;
   old.replaceWith(old.cloneNode(true));
 }
-// Guards before a create: COD missing although it is the default, or a parcel to
-// the same phone in the last 72 h. Each needs one deliberate extra click.
-let NOCOD_ACK = false, DUP_ACK = '', LAST_UNSURE = '', PARSED_CUR = false, LAST_RESULT = null;
+// Guards before a create: COD missing although it is the default, a parcel to
+// the same phone in the last 72 h, or an earlier create whose outcome is unclear.
+// Each needs one deliberate extra click (never a double-click or key repeat).
+let NOCOD_ACK = false, DUP_ACK = '', DUP_ACK_AT = 0, PARSED_CUR = false, LAST_RESULT = null;
 const BGN_PER_EUR = 1.95583;
+const createBusy = () => $('createBtn').hasAttribute('aria-busy') || $('batchCreateBtn').hasAttribute('aria-busy');
 function syncCreateLabel() {
   const b = $('createBtn'); if (b.hasAttribute('aria-busy')) return;
   b.textContent = DUP_ACK ? t('dup_confirm_btn') : t('create_btn');
 }
 function resetCreateGuards() {
-  NOCOD_ACK = false; DUP_ACK = '';
+  NOCOD_ACK = false; DUP_ACK = ''; DUP_ACK_AT = 0;
   $('noCodConfirm').classList.add('hide');
   syncCreateLabel();
 }
 const normPhone9 = (v) => { const d = String(v || '').replace(/\D/g, ''); return d.length >= 9 ? d.slice(-9) : ''; };
 const destKey = (o) => (o.officeCode ? String(o.officeCode) : o.address ? [o.address.city, o.address.street].filter(Boolean).join('|') : '');
-const dupKey = (o) => [normPhone9(o.phone), destKey(o), (o.cod && o.cod.enabled && o.cod.amount) || 0].join('|');
 const DUP_WINDOW = 72 * 3600 * 1000;
+// Creates whose outcome is unknown (reply lost). Persisted so the warning
+// survives edits, reloads and the batch. Cleared by a deliberate create.
+const UKEY = 'econt_unsure';
+function loadUnsure() { try { const now = Date.now(); return (JSON.parse(localStorage.getItem(UKEY)) || []).filter((u) => now - u.at < DUP_WINDOW); } catch { return []; } }
+function saveUnsure(a) { try { localStorage.setItem(UKEY, JSON.stringify(a.slice(0, 100))); } catch {} }
+function markUnsure(phone) {
+  const ph = normPhone9(phone); if (!ph) return;
+  const a = loadUnsure().filter((u) => !(u.phone9 === ph && u.mode === CONFIG.mode));
+  a.unshift({ phone9: ph, mode: CONFIG.mode, at: Date.now() }); saveUnsure(a);
+}
+function clearUnsure(phone) { const ph = normPhone9(phone); if (ph) saveUnsure(loadUnsure().filter((u) => !(u.phone9 === ph && u.mode === CONFIG.mode))); }
+function findUnsure(phone) { const ph = normPhone9(phone); return ph ? loadUnsure().find((u) => u.phone9 === ph && u.mode === CONFIG.mode) || null : null; }
 // Newest parcel to this phone in the last 72 h (same environment, not returned).
 function findDup(phone) {
   const ph = normPhone9(phone);
@@ -1018,8 +1058,9 @@ function findDup(phone) {
     && now - (p.createdAt || 0) < DUP_WINDOW && !(p.snap && classify(p.snap) === 'returned')) || null;
 }
 function dupInfo() {
-  if (LAST_UNSURE && LAST_UNSURE === dupKey(gatherOverrides())) return { key: 'unsure', text: t('create_unsure'), num: '' };
-  const d = findDup($('pPhone').value);
+  const phone = $('pPhone').value, u = findUnsure(phone);
+  if (u) return { key: 'unsure:' + u.phone9 + ':' + u.at, text: t('create_unsure'), num: '' };
+  const d = findDup(phone);
   return d ? { key: d.number, text: t('dup_warn', { num: d.number, date: fmtDate(d.createdAt) }), num: d.number } : null;
 }
 function renderDupWarn() {
@@ -1031,14 +1072,19 @@ function renderDupWarn() {
   if (DUP_ACK && DUP_ACK !== d.key) { DUP_ACK = ''; syncCreateLabel(); }
   return d;
 }
-// Result card extras: receipt line + the exact text the customer will get.
+// Result card extras: receipt line (from the data that was SENT, re-rendered on a
+// language switch) + the exact text the customer will get.
 function renderReplyPreview() {
-  if (!LAST_RESULT) { $('replyPreview').classList.add('hide'); return; }
+  if (!LAST_RESULT) { $('replyPreview').classList.add('hide'); $('resultSummary').classList.add('hide'); return; }
+  const sum = $('resultSummary'); sum.innerHTML = summaryHTML(LAST_RESULT.sum); sum.classList.toggle('hide', !sum.innerHTML);
   $('replyText').textContent = buildReply(LAST_RESULT.num, LAST_RESULT.info);
   $('replyPreview').classList.remove('hide');
 }
+// While a create is in flight (wake-up wait included) the editor is frozen, so
+// what Econt receives is exactly what is on screen.
+function freezeEditor(on) { $('preview').inert = on; $('preview').classList.toggle('frozen', on); }
 async function doCreate() {
-  schedulePreview.cancel(); PREVIEW_SEQ++;
+  if (createBusy()) return;
   $('previewErr').textContent = '';
   const o = gatherOverrides();
   if (!o.recipientName || !o.phone) { $('previewErr').textContent = t('need_recip'); return; }
@@ -1048,21 +1094,31 @@ async function doCreate() {
   if (!o.description) { $('previewErr').textContent = t('need_desc'); $('pDesc').focus(); return; }
   if (o.cod.enabled && !(o.cod.amount > 0)) { $('previewErr').textContent = t('cod_blank'); return; }
   if (CONFIG.defaults.cod && CONFIG.defaults.cod.enabled && !o.cod.enabled && !NOCOD_ACK) {
-    $('noCodConfirm').classList.remove('hide'); $('noCodGo').focus({ preventScroll: true }); return;
+    // Focus the safe choice: a stray Enter must not confirm shipping without COD.
+    $('noCodConfirm').classList.remove('hide'); $('noCodFix').focus({ preventScroll: true }); return;
   }
   const dup = renderDupWarn();
-  if (dup && DUP_ACK !== dup.key) { DUP_ACK = dup.key; syncCreateLabel(); toast(dup.text); return; }
+  if (dup && !(DUP_ACK === dup.key && Date.now() - DUP_ACK_AT > 700)) {
+    if (DUP_ACK !== dup.key) { DUP_ACK = dup.key; DUP_ACK_AT = Date.now(); syncCreateLabel(); toast(dup.text); }
+    return; // a double-click or key repeat inside 700 ms does not count as the confirm
+  }
+  // Everything below uses what was captured here, before any wait.
+  const sum = summaryData();
+  const editRow = BATCH_EDIT >= 0 ? BATCH[BATCH_EDIT] : null;
   const btn = $('createBtn');
   let created = false;
+  freezeEditor(true);
   try {
     const awake = await ensureAwake(btn);
     if (!awake.ok) { $('previewErr').textContent = awake.error; return; }
     btnBusy(btn, true, t('creating'));
+    schedulePreview.cancel(); PREVIEW_SEQ++;   // a late quote must not overwrite the create's messages
     const r = await api('/api/create', shipBody(o));   // never retried
     if (!r.ok) {
-      if (r.transient) {
+      if (r.transient || r.unsure) {
         // The request may have reached Econt. Make a retry a deliberate act.
-        LAST_UNSURE = dupKey(o);
+        markUnsure(o.phone);
+        if (editRow && !editRow.done) { editRow.unsure = true; editRow.on = false; editRow.statusTpl = { k: 'st_unsure' }; editRow.statusColor = 'var(--warn)'; }
         $('previewErr').innerHTML = esc(t('create_unsure')) + ` <a href="${esc(econtProfileUrl())}" target="_blank" rel="noopener noreferrer">${esc(t('create_unsure_link'))}</a>`;
         DUP_ACK = '';
         renderDupWarn();
@@ -1071,7 +1127,7 @@ async function doCreate() {
       $('previewErr').textContent = t('econt_prefix') + r.error + (r.code === 'bad_login' ? '\n' + t('fix_login_hint') : ''); return;
     }
     created = true;
-    if (LAST_UNSURE === dupKey(o)) LAST_UNSURE = '';
+    clearUnsure(o.phone);
     const st = r.response.label || r.response;
     const num = st.shipmentNumber || t('no_number');
     $('shipNum').textContent = num;
@@ -1079,18 +1135,17 @@ async function doCreate() {
     if (pdf) { $('pdfLink').href = pdf; $('pdfLink').style.display = ''; } else { $('pdfLink').style.display = 'none'; }
     $('profileLink').href = econtProfileUrl();
     if (st.shipmentNumber) { $('trackLink').href = econtTrackUrl(num); $('trackLink').style.display = ''; } else { $('trackLink').style.display = 'none'; }
-    $('resultMeta').textContent = st.totalPrice != null ? t('price_label', { v: Number(st.totalPrice).toFixed(2), cur: st.totalPriceCurrency || $('pCodCur').value || 'EUR' }) : '';
-    const destLabel = deliverMode === 'address' ? [o.address.city, o.address.street, o.address.num].filter(Boolean).join(' ') : o.officeCode;
+    $('resultMeta').textContent = st.totalPrice != null ? t('price_label', { v: Number(st.totalPrice).toFixed(2), cur: st.totalPriceCurrency || o.cod.currency || 'EUR' }) : '';
+    const destLabel = o.address ? [o.address.city, o.address.street, o.address.num].filter(Boolean).join(' ') : o.officeCode;
     const info = { cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode };
     if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, phone: o.phone, phone9: normPhone9(o.phone), dest: destKey(o), office: destLabel, weight: o.weight, description: o.description, cod: info.cod, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
-    // Created from a batch row → mark that row done so the batch stays truthful.
-    if (BATCH_EDIT >= 0 && BATCH[BATCH_EDIT] && st.shipmentNumber) {
-      const row = BATCH[BATCH_EDIT];
-      row.done = true; row.on = true; row.statusTpl = { k: 'st_ok', p: { num: st.shipmentNumber } }; row.statusColor = 'var(--go-d)';
-      row.name = o.recipientName; row.phone = o.phone; row.num = st.shipmentNumber; row.replyInfo = info;
+    // Created from a batch row → mark THAT row done (captured before the wait).
+    if (editRow && st.shipmentNumber) {
+      editRow.done = true; editRow.on = true; editRow.unsure = false;
+      editRow.statusTpl = { k: 'st_ok', p: { num: st.shipmentNumber } }; editRow.statusColor = 'var(--go-d)';
+      editRow.name = o.recipientName; editRow.phone = o.phone; editRow.num = st.shipmentNumber; editRow.replyInfo = info;
     }
-    LAST_RESULT = st.shipmentNumber ? { num: st.shipmentNumber, info } : null;
-    const sum = $('resultSummary'); sum.innerHTML = $('prevSummary').innerHTML; sum.classList.toggle('hide', !sum.innerHTML);
+    LAST_RESULT = st.shipmentNumber ? { num: st.shipmentNumber, info, sum } : null;
     renderReplyPreview();
     $('replyBtn').classList.toggle('hide', !LAST_RESULT);
     showBatchBackBtns();
@@ -1098,7 +1153,15 @@ async function doCreate() {
     playCheck();
     $('result').scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
     $('srLive').textContent = t('created_sr', { num });
-  } finally { btnBusy(btn, false); if (!created) syncCreateLabel(); }
+  } finally {
+    freezeEditor(false);
+    btnBusy(btn, false);
+    if (!created) {
+      syncCreateLabel();
+      // A quote cancelled for the create must not leave a skeleton behind.
+      if ($('priceBox').querySelector('.sk') || $('priceBox').textContent === t('price_waiting')) $('priceBox').textContent = '';
+    }
+  }
   if (created) { resetCreateGuards(); if (LAST_RESULT) $('replyBtn').focus({ preventScroll: true }); }
 }
 $('noCodGo').onclick = () => { NOCOD_ACK = true; $('noCodConfirm').classList.add('hide'); doCreate(); };
@@ -1109,7 +1172,7 @@ $('dupShowBtn').onclick = () => {
   const c = $q(`.parcel[data-num="${num}"]`);
   if (c) { c.scrollIntoView({ behavior: scrollBehavior(), block: 'center' }); c.classList.remove('fresh'); void c.offsetWidth; c.classList.add('fresh'); }
 };
-$('clearBtn').onclick = () => { PARSE_SEQ++; resetCreateGuards(); $('msg').value = ''; $('preview').classList.add('hide'); $('result').classList.add('hide'); $('batch').classList.add('hide'); BATCH_EDIT = -1; showBatchBackBtns(); };
+$('clearBtn').onclick = () => { if (createBusy()) return; PARSE_SEQ++; resetCreateGuards(); $('parseErr').textContent = ''; $('msg').value = ''; $('preview').classList.add('hide'); $('result').classList.add('hide'); $('batch').classList.add('hide'); BATCH_EDIT = -1; showBatchBackBtns(); };
 $('parseBtn').onclick = doParse;
 
 // ---------- batch: several parcels in one paste ----------
@@ -1177,7 +1240,7 @@ function batchRowHTML(row, i) {
   const officeUI = row.parsed.deliveryType === 'door' && row.parsed.address
     ? `<input data-f="addr" value="${esc(t('batch_addr_row', { a: [row.parsed.address.city, row.parsed.address.street, row.parsed.address.num].filter(Boolean).join(' ') }))}" disabled>`
     : `<select data-f="office">${row.candidates.length ? '' : `<option value="">${t('batch_no_office')}</option>`}${row.candidates.map((c) => `<option value="${esc(c.code)}">${esc(officeLabel(c))}</option>`).join('')}</select>`;
-  return `<div class="brow" data-i="${i}">
+  return `<div class="brow${row.done ? ' done' : ''}" data-i="${i}">
     <div class="brow-top">
       <input type="checkbox" data-f="on" aria-label="${esc(t('row_label', { n: i + 1 }))}" ${row.on ? 'checked' : ''}>
       <span class="idx">#${i + 1}</span>
@@ -1199,7 +1262,7 @@ async function doBatchParse(text, seq) {
   parseBusy(true);
   try {
     const r = await api('/api/parse-batch', { text, creds: creds() }, parseRetry(seq));
-    if (seq !== PARSE_SEQ) return true;
+    if (seq !== PARSE_SEQ || createBusy()) return true;
     $('parseErr').className = 'err'; $('parseErr').textContent = '';
     if (!r.ok) { $('parseErr').textContent = r.error || t('parse_failed'); return true; }
     if (!r.rows || r.rows.length < 2) return false; // one parcel → normal editor
@@ -1214,19 +1277,22 @@ async function doBatchParse(text, seq) {
       done: false,
     }));
     // Already shipped to this phone in the last 72 h → start unticked; ticking is the confirm.
+    // An unclear earlier create or a recent parcel to the same phone → start
+    // unticked; ticking the row is the deliberate confirm.
     for (const row of BATCH) {
       if (row.trackNum) continue;
+      if (findUnsure(row.phone)) { row.on = false; row.unsure = true; row.statusTpl = { k: 'st_unsure' }; row.statusColor = 'var(--warn)'; continue; }
       const d = findDup(row.phone);
       if (d) { row.on = false; row.statusTpl = { k: 'st_dup', p: { num: d.number } }; row.statusColor = 'var(--warn)'; }
     }
-    BATCH_NOCOD_OK = false; $('batchNoCodConfirm').classList.add('hide');
+    BATCH_NOCOD_OK = ''; $('batchNoCodConfirm').classList.add('hide');
     if (r.officesError) $('batchErr').textContent = t('office_err', { err: r.officesError }); else $('batchErr').textContent = '';
     BATCH_EDIT = -1; showBatchBackBtns();
     renderBatch();
     $('preview').classList.add('hide'); $('result').classList.add('hide');
     $('batch').classList.remove('hide');
     $('batch').scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
-    return true;
+    return 'applied';
   } finally { parseBusy(false); }
 }
 function renderBatch() {
@@ -1244,24 +1310,27 @@ $('batchList').addEventListener('input', (e) => {
   const el = e.target, brow = el.closest('.brow'); if (!brow) return;
   const row = BATCH[Number(brow.dataset.i)], f = el.dataset.f;
   if (!row || !f) return;
-  if (f === 'on') { row.on = el.checked; if (row.on && row.unsure) { row.unsure = false; row.statusTpl = null; row.statusColor = ''; } }
+  if (f === 'on') {
+    row.on = el.checked;
+    if (row.on && row.statusTpl && (row.statusTpl.k === 'st_skip' || row.unsure)) { row.unsure = false; row.statusTpl = null; row.statusColor = ''; }
+  }
   else if (f === 'name') row.name = el.value;
   else if (f === 'phone') row.phone = el.value;
   else if (f === 'office') row.officeCode = el.value;
-  else if (f === 'cod') { row.cod = el.value; BATCH_NOCOD_OK = false; }
+  else if (f === 'cod') row.cod = el.value;
   else if (f === 'cur') row.cur = el.value;
   if (f === 'on' || f === 'office' || f === 'cod' || f === 'cur') syncRowStatus(Number(brow.dataset.i));
 });
 $('batchList').addEventListener('click', async (e) => {
   const sb = e.target.closest('button[data-f="send"]');
   if (sb) { const r = BATCH[Number(sb.closest('.brow').dataset.i)]; if (r && r.num) sendReply(r.num, sb, r.replyInfo); return; }
-  const btn = e.target.closest('button[data-f="edit"]'); if (!btn) return;
+  const btn = e.target.closest('button[data-f="edit"]'); if (!btn || createBusy()) return;
   const i = Number(btn.closest('.brow').dataset.i);
   const row = BATCH[i];
   $('msg').value = row.chunk;
   $('batch').classList.add('hide');
   BATCH_EDIT = i;
-  await doParse(null, { forceSingle: true, keepBatchEdit: true });
+  if (!(await doParse(null, { forceSingle: true, keepBatchEdit: true }))) return;
   // The row's fields may have been edited in the table — they win over a re-parse.
   if (row.name) $('pName').value = row.name;
   if (row.phone) $('pPhone').value = row.phone;
@@ -1297,50 +1366,60 @@ function batchOverrides(row) {
   return o;
 }
 $('batchCancelBtn').onclick = () => $('batch').classList.add('hide');
-let BATCH_NOCOD_OK = false;
-$('batchNoCodGo').onclick = () => { BATCH_NOCOD_OK = true; $('batchNoCodConfirm').classList.add('hide'); $('batchCreateBtn').onclick(); };
+// "Yes, ship without COD" covers exactly the rows it named, for one run only.
+let BATCH_NOCOD_OK = '', BATCH_NOCOD_IDX = [];
+const batchNoCodIdx = (rows) => rows.map((r, i) => (r.on && !r.done && !r.trackNum && !(Number(r.cod) > 0) ? i : -1)).filter((i) => i >= 0);
+function renderBatchNoCodMsg() { $('batchNoCodMsg').textContent = t('batch_nocod', { rows: BATCH_NOCOD_IDX.map((i) => '#' + (i + 1)).join(', ') }); }
+$('batchNoCodGo').onclick = () => { BATCH_NOCOD_OK = BATCH_NOCOD_IDX.join(','); $('batchNoCodConfirm').classList.add('hide'); $('batchCreateBtn').onclick(); };
 $('batchNoCodFix').onclick = () => {
   $('batchNoCodConfirm').classList.add('hide');
-  const i = BATCH.findIndex((r) => r.on && !r.done && !r.trackNum && !(Number(r.cod) > 0));
-  const el = i >= 0 && $q(`.brow[data-i="${i}"] [data-f="cod"]`); if (el) el.focus();
+  const i = batchNoCodIdx(BATCH)[0];
+  const el = i != null && $q(`.brow[data-i="${i}"] [data-f="cod"]`); if (el) el.focus();
 };
+// Re-render one row from its state (survives a language switch mid-run).
+function repaintRow(i) {
+  const el = $q(`.brow[data-i="${i}"]`), row = BATCH[i]; if (!el || !row) return;
+  el.outerHTML = batchRowHTML(row, i);
+  const sel = $q(`.brow[data-i="${i}"] select[data-f="office"]`); if (sel && row.officeCode) sel.value = row.officeCode;
+}
 $('batchCreateBtn').onclick = async () => {
+  if (createBusy()) return;
   $('batchErr').textContent = '';
+  const rows = BATCH; // snapshot BEFORE any wait: a paste meanwhile must never be acted upon
   // Creating without a contents description fails at Econt for every row — stop early.
-  if (!(CONFIG.defaults.shipmentDescription || '').trim() && BATCH.some((r) => r.on && !r.trackNum && !r.done)) {
+  if (!(CONFIG.defaults.shipmentDescription || '').trim() && rows.some((r) => r.on && !r.trackNum && !r.done)) {
     $('batchErr').textContent = t('need_desc'); return;
   }
-  // COD is the default but some ticked rows have no amount: ask once, never ship silently.
-  if (CONFIG.defaults.cod && CONFIG.defaults.cod.enabled && !BATCH_NOCOD_OK) {
-    const idx = BATCH.map((r, i) => (r.on && !r.done && !r.trackNum && !(Number(r.cod) > 0) ? i : -1)).filter((i) => i >= 0);
-    if (idx.length) {
-      $('batchNoCodMsg').textContent = t('batch_nocod', { rows: idx.map((i) => '#' + (i + 1)).join(', ') });
-      $('batchNoCodConfirm').classList.remove('hide'); $('batchNoCodGo').focus({ preventScroll: true });
+  // COD is the default but some ticked rows have no amount: ask, never ship silently.
+  if (CONFIG.defaults.cod && CONFIG.defaults.cod.enabled) {
+    const idx = batchNoCodIdx(rows);
+    if (idx.length && idx.join(',') !== BATCH_NOCOD_OK) {
+      BATCH_NOCOD_IDX = idx; renderBatchNoCodMsg();
+      $('batchNoCodConfirm').classList.remove('hide'); $('batchNoCodFix').focus({ preventScroll: true });
       return;
     }
   }
   $('batchNoCodConfirm').classList.add('hide');
   const btn = $('batchCreateBtn');
-  const awake = await ensureAwake(btn);
-  if (!awake.ok) { btnBusy(btn, false); $('batchErr').textContent = awake.error; return; }
   btnBusy(btn, true, t('creating'));
-  $('parseBtn').disabled = true; $('clearBtn').disabled = true;
-  const rows = BATCH; // snapshot: a new paste mid-run must never be acted upon
+  $('parseBtn').disabled = true; $('clearBtn').disabled = true; $('batchList').inert = true;
   let ok = 0, fail = 0, skip = 0;
   try {
+    const awake = await ensureAwake(btn);
+    if (!awake.ok) { $('batchErr').textContent = awake.error; return; }
+    if (BATCH !== rows || $('batch').classList.contains('hide')) return;
+    btnBusy(btn, false); btnBusy(btn, true, t('creating'));
     for (let i = 0; i < rows.length; i++) {
       if (BATCH !== rows) break; // the batch was replaced mid-run — stop cleanly
       const row = rows[i]; if (row.done) continue;
-      const el = $q(`.brow[data-i="${i}"] [data-status]`);
       // Stored as a template so a language switch re-renders it correctly.
-      const set = (k, p, color) => { row.statusTpl = typeof k === 'object' ? k : { k, p }; row.statusColor = color || ''; if (el) { el.textContent = batchRowStatus(row).text; el.style.color = color || ''; } };
+      const set = (k, p, color) => { row.statusTpl = typeof k === 'object' ? k : { k, p }; row.statusColor = color || ''; if (BATCH === rows) repaintRow(i); };
       if (!row.on) { skip++; set('st_skip'); continue; }
       if (row.trackNum) {
         if (!loadParcels().some((x) => x.number === row.trackNum)) {
           addParcel({ number: row.trackNum, recipient: row.name.trim(), office: row.officeCode || '', cod: Number(row.cod) || 0, currency: row.cur, createdAt: Date.now(), mode: CONFIG.mode, manual: true });
         }
         row.done = true; ok++; set('st_tracked', null, 'var(--go-d)');
-        $q(`.brow[data-i="${i}"]`).classList.add('done');
         continue;
       }
       const o = batchOverrides(row);
@@ -1352,19 +1431,22 @@ $('batchCreateBtn').onclick = async () => {
       if (r.ok && st && st.shipmentNumber) {
         const info = { cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode };
         addParcel({ number: st.shipmentNumber, recipient: o.recipientName, phone: o.phone, phone9: normPhone9(o.phone), dest: destKey(o), office: o.officeCode || (o.address && o.address.city) || '', weight: o.weight, description: o.description, cod: info.cod, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: st.pdfURL, mode: CONFIG.mode });
+        clearUnsure(o.phone);
         row.done = true; row.num = st.shipmentNumber; row.replyInfo = info; ok++; set('st_ok', { num: st.shipmentNumber }, 'var(--go-d)');
-        const rowEl = $q(`.brow[data-i="${i}"]`);
-        if (rowEl) { rowEl.classList.add('done'); rowEl.querySelector('.brow-top').insertAdjacentHTML('beforeend', batchSendBtn()); }
-      } else if (r.transient) {
-        // Unknown outcome: untick so a re-run can't silently create a second waybill.
+      } else if (r.transient || r.unsure) {
+        // Unknown outcome: untick and remember, so neither a re-run nor the editor
+        // can silently create a second waybill.
+        markUnsure(o.phone);
         fail++; row.unsure = true; row.on = false; set('st_unsure', null, 'var(--warn)');
-        const cb = $q(`.brow[data-i="${i}"] [data-f="on"]`); if (cb) cb.checked = false;
       } else {
         fail++; set({ raw: '✗ ' + ((r && r.error) || 'error').slice(0, 120) }, null, 'var(--warn)');
       }
     }
-    $('batchInfo').textContent = t('batch_done', { ok, fail, skip });
-  } finally { btnBusy(btn, false); $('parseBtn').disabled = false; $('clearBtn').disabled = false; }
+    if (BATCH === rows) $('batchInfo').textContent = t('batch_done', { ok, fail, skip });
+  } finally {
+    btnBusy(btn, false); $('parseBtn').disabled = false; $('clearBtn').disabled = false; $('batchList').inert = false;
+    BATCH_NOCOD_OK = ''; // consent was for this run only
+  }
 };
 
 // ---------- screenshot → text (client-side OCR, nothing leaves the device) ----------
@@ -1469,9 +1551,9 @@ async function runOCRFiles(files) {
     const text = texts[0];
     const desc = guessDescription(text);
     $('msg').value = isolateMessage(text);
-    await doParse();
+    const applied = await doParse();
     // The product from the screenshot is the most relevant description for this parcel.
-    if (desc && !$('preview').classList.contains('hide')) { $('pDesc').value = desc; doPreview(); }
+    if (applied && desc && !$('preview').classList.contains('hide')) { $('pDesc').value = desc; doPreview(); }
   } catch (e) {
     box.classList.add('hide');
     $('parseErr').textContent = t('ocr_fail');
@@ -1502,7 +1584,8 @@ const runOCR = (file) => runOCRFiles(file ? [file] : []);
     // app) goes straight into the composer and is read at once.
     const tg = e.target;
     if (tg && tg.closest && tg.closest('input, textarea, select, [contenteditable]')) return;
-    if ($('batchCreateBtn').hasAttribute('aria-busy')) return;
+    // Never replace an open preview or batch (edits would be lost) or race a create.
+    if (createBusy() || !$('preview').classList.contains('hide') || !$('batch').classList.contains('hide')) return;
     const txt = e.clipboardData && e.clipboardData.getData('text');
     if (!txt || !txt.trim()) return;
     e.preventDefault();
@@ -1513,6 +1596,7 @@ const runOCR = (file) => runOCRFiles(file ? [file] : []);
   const pb = $('pasteBtn');
   if (navigator.clipboard && navigator.clipboard.readText) pb.classList.remove('hide');
   pb.onclick = async () => {
+    if (createBusy()) { toast(t('busy_wait')); return; }
     $('parseErr').className = 'err'; $('parseErr').textContent = '';
     try {
       if (navigator.clipboard.read) {
@@ -1538,7 +1622,7 @@ $('recalcBtn').onclick = doPreview;
 initSeg('pReviewSeg', 'pReviewMode', doPreview);
 initSeg('cfgReviewSeg', 'cfgReviewMode');
 $('createBtn').onclick = doCreate;
-$('officeSearchBtn').onclick = async () => { await fillOfficeSelect($('pOffice'), $('officeSearch').value, creds()); doPreview(); };
+$('officeSearchBtn').onclick = async () => { if (await fillOfficeSelect($('pOffice'), $('officeSearch').value, creds())) doPreview(); };
 $('pOffice').onchange = () => doPreview();
 $('copyBtn').onclick = async (e) => {
   const btn = e.currentTarget;
@@ -1569,7 +1653,8 @@ $('msg').addEventListener('paste', () => setTimeout(() => { if ($('msg').value.t
 ['pName', 'pPhone', 'pCodOn', 'pCodAmount', 'pCodCur', 'pDeclOn', 'pDeclAmount', 'pDeclCur', 'pAddrCity', 'pAddrStreet', 'pAddrNum'].forEach((id) => $(id).addEventListener('input', scheduleSummary));
 // Live price: anything that changes Econt's price re-quotes after a short pause.
 const schedulePreview = debounce(() => {
-  if ($('preview').classList.contains('hide') || $('createBtn').hasAttribute('aria-busy')) return;
+  if ($('preview').classList.contains('hide')) return;
+  if (createBusy()) { schedulePreview(); return; }
   doPreview();
 }, 700);
 ['pCodAmount', 'pCodCur', 'pWeight', 'pDeclAmount', 'pDeclCur', 'pAddrCity', 'pAddrStreet', 'pAddrNum'].forEach((id) => $(id).addEventListener('input', schedulePreview));
@@ -1690,7 +1775,7 @@ function parcelCardHTML(p) {
       <button class="ghost btn-xs" data-yes>${esc(t('yes'))}</button>
       <button class="ghost btn-xs" data-no>${esc(t('no'))}</button>
     </div>
-    <div class="details hide" data-details><div class="muted">${esc(other ? t('other_env') : t('loading'))}</div></div>
+    <div class="details hide" data-details><div class="muted"${other ? '' : ' data-loading'}>${esc(other ? t('other_env') : t('loading'))}</div></div>
   </div>`;
 }
 function updateParcelCard(p, local) {
@@ -1722,11 +1807,16 @@ function updateParcelCard(p, local) {
 }
 // Cards still waiting for a status after a refresh: stop the shimmer, say so.
 function markUnknown(nums) {
+  const list = loadParcels();
   for (const n of nums) {
     const c = $q(`.parcel[data-num="${n}"]`); if (!c) continue;
-    const s = c.querySelector('.statusb.sk'); if (!s) continue;
-    s.className = 'statusb s-gray'; s.textContent = t('no_status');
-    const det = c.querySelector('[data-details]'); det.innerHTML = `<div class="muted">${esc(t('no_status'))}</div>`;
+    const s = c.querySelector('.statusb.sk');
+    if (s) { s.className = 'statusb s-gray'; s.textContent = t('no_status'); }
+    const det = c.querySelector('[data-details]');
+    if (!det.querySelector('[data-loading]')) continue;
+    const lp = list.find((x) => x.number === n) || {};
+    const rows = lp.snap ? detailRows(Object.assign({ recipient: lp.recipient, description: lp.description, weight: lp.weight }, lp.snap), lp) : [];
+    det.innerHTML = rows.length ? rows.map(([k, v]) => `<div class="drow"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('') : `<div class="muted">${esc(t('no_status'))}</div>`;
   }
 }
 // "Updated 3 min ago" from the newest snapshot of the current environment.
@@ -1918,8 +2008,10 @@ document.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter') return;
   const el = e.target;
   if (el && el.id === 'msg') { if (e.ctrlKey || e.metaKey) { e.preventDefault(); $('parseBtn').click(); } return; }
-  if ((e.ctrlKey || e.metaKey) && !$('view-app').classList.contains('hide') && !$('preview').classList.contains('hide') && $('batch').classList.contains('hide')) {
-    e.preventDefault(); const b = $('createBtn'); if (!b.disabled) b.click(); return;
+  if ((e.ctrlKey || e.metaKey) && !$('view-app').classList.contains('hide') && !$('tab-new').classList.contains('hide')
+    && !$('preview').classList.contains('hide') && $('batch').classList.contains('hide') && ($('preview').contains(el) || el === document.body)) {
+    e.preventDefault(); if (e.repeat) return;
+    const b = $('createBtn'); if (!b.disabled && b.offsetParent !== null) b.click(); return;
   }
   if (el && el.tagName === 'INPUT' && el.dataset.enter) { e.preventDefault(); const b = $(el.dataset.enter); if (b && !b.disabled) b.click(); }
 });

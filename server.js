@@ -296,7 +296,16 @@ async function handleApi(req, res, url) {
       const label = econt.buildLabel(sender, body.defaults || {}, body.overrides || {});
       const resp = await econt.createLabel(creds, label, mode);
       return sendJson(res, 200, { ok: true, mode, label, response: resp });
-    } catch (e) { return sendJson(res, 200, e.friendly ? { ok: false, error: e.message } : errorPayload(e)); }
+    } catch (e) {
+      if (e.friendly) return sendJson(res, 200, { ok: false, error: e.message });
+      const out = errorPayload(e);
+      // A create whose reply was lost (connection dropped, gateway 502/503/504
+      // without an Econt error body) may still have produced a waybill. Flag it
+      // so the client treats it as "unclear", never as a free retry.
+      if (url.pathname === '/api/create' && (e.kind === 'network'
+        || (e.kind === 'http' && [502, 503, 504].includes(e.status) && !flattenEcontError(e.body || {}, []).length))) out.unsure = true;
+      return sendJson(res, 200, out);
+    }
   }
 
   return sendJson(res, 404, { ok: false, error: 'Unknown endpoint' });

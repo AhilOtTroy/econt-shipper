@@ -382,6 +382,8 @@ try {
     .topbar .icon { width: 36px; height: 36px; }
     .brand { font-size: 15px; gap: 8px; }
     .lang { padding: 7px 10px; }
+    /* DEMO badge visible: drop the brand words so the row still fits. */
+    body:has(#modeBadge:not(.hide):not([style*="none"])) .brand > span { display: none; }
   }
   @media (max-width: 379px) { .brand > span { display: none; } }
   .langtoggle { flex: none; }
@@ -447,6 +449,8 @@ try {
   /* Honest copy feedback on the button itself */
   .is-done { color: var(--go-d) !important; border-color: var(--go) !important; }
   .cur-hint { margin-top: 6px; font-size: 12.5px; }
+  /* Editor frozen while a create is in flight (what is sent = what is shown) */
+  #preview.frozen > :not(.confirm-bar) { opacity: .55; transition: opacity .2s; }
   /* What the customer receives */
   .reply-prev { margin-top: 14px; padding: 10px 13px; border-radius: 10px; background: var(--brand-soft); border-left: 3px solid var(--brand-2); cursor: pointer; transition: background .2s; }
   .reply-prev:hover { background: color-mix(in srgb, var(--brand-2) 18%, transparent); }
