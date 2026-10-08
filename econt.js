@@ -28,7 +28,14 @@ async function callEcont(creds, path, body) {
     err.kind = 'network';
     throw err;
   }
-  const text = await res.text();
+  // The body read can fail too (socket cut mid-reply): same as a network loss,
+  // and for a create it means the waybill may exist.
+  let text;
+  try { text = await res.text(); } catch (e) {
+    const err = new Error('Econt reply cut off (' + url + '): ' + e.message);
+    err.kind = 'network';
+    throw err;
+  }
   let json;
   try { json = text ? JSON.parse(text) : {}; } catch { json = { raw: text }; }
   if (!res.ok) {

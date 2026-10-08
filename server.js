@@ -299,11 +299,12 @@ async function handleApi(req, res, url) {
     } catch (e) {
       if (e.friendly) return sendJson(res, 200, { ok: false, error: e.message });
       const out = errorPayload(e);
-      // A create whose reply was lost (connection dropped, gateway 502/503/504
-      // without an Econt error body) may still have produced a waybill. Flag it
-      // so the client treats it as "unclear", never as a free retry.
-      if (url.pathname === '/api/create' && (e.kind === 'network'
-        || (e.kind === 'http' && [502, 503, 504].includes(e.status) && !flattenEcontError(e.body || {}, []).length))) out.unsure = true;
+      // A create that did not end in a clear Econt answer (connection or body lost,
+      // any non-HTTP failure, gateway 502/503/504 without an Econt error body) may
+      // still have produced a waybill. Flag it so the client treats it as
+      // "unclear", never as a free retry.
+      if (url.pathname === '/api/create' && (e.kind !== 'http'
+        || ([502, 503, 504].includes(e.status) && !flattenEcontError(e.body || {}, []).length))) out.unsure = true;
       return sendJson(res, 200, out);
     }
   }
