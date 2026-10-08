@@ -72,7 +72,7 @@ const I18N = {
     res_h: 'Товарителницата е създадена', copy: 'Копирай номера', label_pdf: 'Етикет PDF', view_in_profile: 'Виж в профила', new: '+ Нова',
     dd_site: 'econt.com', dd_site_sub: 'Официалният сайт на Еконт', dd_profile: 'e-Econt профил', dd_profile_sub: 'Пратките във вашия акаунт',
     reply_copy: 'Отговор за клиента', reply_copied: 'Отговорът е копиран ✓', track_link: 'Проследи',
-    reply_template: 'Готово! 📦 Пратката е подадена.\nТоварителница: {num}\nПроследяване: {url}\nНа гише отваряш, проверяваш и плащаш само ако всичко е наред.',
+    reply_template: 'Готово! Пратката е подадена.\nТоварителница: {num}\nПроследяване: {url}',
     match_high: '✓ сигурно съвпадение', match_mid: 'вероятно съвпадение', match_lo: 'провери офиса',
     parcels_h: 'Вашите пратки', parcels_refresh: 'Обнови',
     clear_all: 'Изчисти всички', clear_confirm: 'Да се премахнат ли ВСИЧКИ пратки от списъка?', del_confirm: 'Премахни пратката от списъка?', yes: 'Да', no: 'Не', removed: 'Премахнато ✓', del_aria: 'Изтрий пратката', parcels_note: 'Показва пратките, създадени през това приложение, с актуален статус от Еконт.',
@@ -109,6 +109,33 @@ const I18N = {
     about_back: '← Назад', footer_about: 'За приложението · Контакти', rights: 'Всички права запазени.',
     a11y_theme_dark: 'Превключи към тъмна тема', a11y_theme_light: 'Превключи към светла тема',
     a11y_info: 'За приложението', a11y_settings: 'Настройки', a11y_lock: 'Заключи', a11y_home: 'Начало',
+    // wake-up / retry / unsure create
+    wake_wait: 'Сървърът се събужда, още няколко секунди…', price_waiting: 'Цената идва след малко, сървърът се събужда.',
+    create_unsure: 'Не стана ясно дали товарителницата е създадена. Провери в e-Econt профила, преди да опиташ пак.', create_unsure_link: 'Отвори e-Econt',
+    st_unsure: 'неясно, провери в e-Econt', badge_demo: 'ДЕМО',
+    // paste / live price / keyboard
+    a11y_paste: 'Постави от клипборда', clip_denied: 'Нямам достъп до клипборда. Постави текста в полето.', clip_empty: 'Клипбордът е празен.',
+    create_hint: '{k}+Enter създава товарителницата',
+    // telling the customer
+    send_customer: 'Прати на клиента', parcel_reply: 'Отговор', reply_prev_h: 'Това получава клиентът',
+    reply_paste_now: 'Отговорът е копиран, постави го в чата.', copied_btn: 'Копирано',
+    copy_fail: 'Не успях да копирам. Задръж пръст върху текста и го копирай.', created_sr: 'Товарителницата е създадена. Номер {num}.',
+    reply_review: 'На гише отваряш, проверяваш и плащаш само ако всичко е наред.',
+    reply_review_test: 'На гише отваряш, проверяваш и тестваш, и плащаш само ако всичко е наред.',
+    reply_cod: 'Наложен платеж: {amt}.',
+    // COD guard
+    st_nocod: 'без наложен платеж', batch_nocod: 'Без наложен платеж ще тръгнат: {rows}. Да продължа ли?',
+    nocod_confirm: 'Тази пратка тръгва без наложен платеж. Да продължа ли?', nocod_go: 'Да, без наложен платеж', nocod_fix: 'Ще добавя сума',
+    cod_conv: '{a} лв са около {e} €. Провери в каква валута е цената в обявата.',
+    cod_conv_rev: '{a} € са около {b} лв. Провери в каква валута е цената в обявата.',
+    // duplicate guard
+    dup_warn: 'Вече има пратка до този номер: {num} от {date}.', dup_show: 'Покажи', dup_confirm_btn: 'Създай втора пратка',
+    st_dup: 'вече изпратена ({num})',
+    // parcels tab
+    upd_now: 'Обновено току-що', upd_min: 'Обновено преди {m} мин', upd_hours: 'Обновено преди {h} ч',
+    upd_failed: 'Не успях да обновя. Виждаш последния известен статус.',
+    parcels_empty_t: 'Тук ще се появят пратките ти', parcels_empty_s: 'Създай първата от „Нова“ или добави номер на товарителница отгоре.',
+    parcels_empty_cta: 'Нова пратка', a11y_details: 'Подробности за пратката',
   },
   en: {
     page_title: 'Econt Shipper: from text to parcel', parse_failed: 'Could not parse that.',
@@ -163,7 +190,7 @@ const I18N = {
     res_h: 'Shipment created', copy: 'Copy number', label_pdf: 'Label PDF', view_in_profile: 'View in profile', new: '+ New',
     dd_site: 'econt.com', dd_site_sub: 'Official Econt website', dd_profile: 'e-Econt profile', dd_profile_sub: 'Shipments in your account',
     reply_copy: 'Customer reply', reply_copied: 'Reply copied ✓', track_link: 'Track',
-    reply_template: 'Done! 📦 Your parcel is on its way.\nTracking number: {num}\nTrack it: {url}\nAt the counter you can open, check and pay only if everything is fine.',
+    reply_template: 'Done! Your parcel is on its way.\nTracking number: {num}\nTrack it: {url}',
     match_high: '✓ strong match', match_mid: 'likely match', match_lo: 'check the office',
     parcels_h: 'Your parcels', parcels_refresh: 'Refresh',
     clear_all: 'Clear all', clear_confirm: 'Remove ALL parcels from the list?', del_confirm: 'Remove this parcel from the list?', yes: 'Yes', no: 'No', removed: 'Removed ✓', del_aria: 'Delete parcel', parcels_note: 'Shows parcels created through this app, with live status from Econt.',
@@ -200,6 +227,33 @@ const I18N = {
     about_back: '← Back', footer_about: 'About · Contact', rights: 'All rights reserved.',
     a11y_theme_dark: 'Switch to dark theme', a11y_theme_light: 'Switch to light theme',
     a11y_info: 'About this app', a11y_settings: 'Settings', a11y_lock: 'Lock', a11y_home: 'Home',
+    // wake-up / retry / unsure create
+    wake_wait: 'The server is waking up, a few more seconds…', price_waiting: 'The price will show in a moment, the server is waking up.',
+    create_unsure: 'Could not tell whether the waybill was created. Check your e-Econt profile before trying again.', create_unsure_link: 'Open e-Econt',
+    st_unsure: 'unclear, check e-Econt', badge_demo: 'DEMO',
+    // paste / live price / keyboard
+    a11y_paste: 'Paste from clipboard', clip_denied: 'No clipboard access. Paste the text into the box.', clip_empty: 'The clipboard is empty.',
+    create_hint: '{k}+Enter creates the waybill',
+    // telling the customer
+    send_customer: 'Send to customer', parcel_reply: 'Reply', reply_prev_h: 'What the customer gets',
+    reply_paste_now: 'Reply copied, paste it into the chat.', copied_btn: 'Copied',
+    copy_fail: 'Could not copy. Press and hold the text to copy it.', created_sr: 'Shipment created. Number {num}.',
+    reply_review: 'At the counter you can open and check it, and pay only if everything is fine.',
+    reply_review_test: 'At the counter you can open, check and test it, and pay only if everything is fine.',
+    reply_cod: 'Cash on delivery: {amt}.',
+    // COD guard
+    st_nocod: 'no COD', batch_nocod: 'These go out without cash on delivery: {rows}. Go ahead?',
+    nocod_confirm: 'This parcel goes out without cash on delivery. Go ahead?', nocod_go: 'Yes, without COD', nocod_fix: 'I will add an amount',
+    cod_conv: '{a} BGN is about {e} EUR. Check which currency the listing used.',
+    cod_conv_rev: '{a} EUR is about {b} BGN. Check which currency the listing used.',
+    // duplicate guard
+    dup_warn: 'There is already a parcel to this number: {num} from {date}.', dup_show: 'Show', dup_confirm_btn: 'Create a second parcel',
+    st_dup: 'already sent ({num})',
+    // parcels tab
+    upd_now: 'Updated just now', upd_min: 'Updated {m} min ago', upd_hours: 'Updated {h} h ago',
+    upd_failed: "Couldn't refresh. You're seeing the last known status.",
+    parcels_empty_t: 'Your parcels will show up here', parcels_empty_s: 'Create one from New, or add a waybill number above.',
+    parcels_empty_cta: 'New parcel', a11y_details: 'Parcel details',
   },
 };
 let LANG = ['bg', 'en'].includes(localStorage.getItem('econt_lang')) ? localStorage.getItem('econt_lang') : 'bg';
@@ -225,6 +279,9 @@ const ICONS = {
   mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
   send: '<path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>',
   copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
+  clock: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4"/>',
   instagram: '<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor" stroke="none"/>',
   facebook: '<path d="M15 3h-3a4 4 0 0 0-4 4v3H6v4h2v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>',
 };
@@ -251,9 +308,10 @@ function applyLang() {
   $('footerCopy').textContent = `© ${new Date().getFullYear()} ${CREATOR.name || 'Econt Shipper'}`;
   $('footerAbout').textContent = dict.footer_about || I18N.en.footer_about;
   // Translated accessible names for the emoji-only controls.
-  for (const [id, k] of [['infoBtn', 'a11y_info'], ['settingsBtn', 'a11y_settings'], ['lockNowBtn', 'a11y_lock'], ['brandHome', 'a11y_home'], ['attachBtn', 'a11y_attach'], ['msg', 'paste_label'], ['refreshParcelsBtn', 'parcels_refresh']]) {
+  for (const [id, k] of [['infoBtn', 'a11y_info'], ['settingsBtn', 'a11y_settings'], ['lockNowBtn', 'a11y_lock'], ['brandHome', 'a11y_home'], ['attachBtn', 'a11y_attach'], ['pasteBtn', 'a11y_paste'], ['recalcBtn', 'recalc'], ['msg', 'paste_label'], ['refreshParcelsBtn', 'parcels_refresh']]) {
     const el = $(id); if (el) { el.setAttribute('aria-label', t(k)); el.title = t(k); }
   }
+  $('createHint').textContent = t('create_hint', { k: isMac ? '⌘' : 'Ctrl' });
   syncThemeBtnLabel();
 }
 function syncThemeBtnLabel() {
@@ -263,6 +321,9 @@ function syncThemeBtnLabel() {
 }
 function setLang(l) {
   LANG = l; localStorage.setItem('econt_lang', l); applyLang();
+  syncCreateLabel();
+  if (!$('result').classList.contains('hide')) renderReplyPreview();
+  if (!$('preview').classList.contains('hide')) updateSummary();
   if (!$('tab-parcels').classList.contains('hide')) openParcels();
   if (!$('view-about').classList.contains('hide')) renderAbout();
   if (!$('batch').classList.contains('hide')) renderBatch();
@@ -283,7 +344,15 @@ function btnBusy(btn, on, label) {
     if (btn.dataset.html != null) { btn.innerHTML = btn.dataset.html; delete btn.dataset.html; }
   }
 }
-function fmtDate(ms) { if (!ms) return ''; let n = Number(ms); if (n < 1e12) n *= 1000; const d = new Date(n); if (isNaN(d.getTime())) return ''; return d.toLocaleDateString(LANG === 'bg' ? 'bg-BG' : 'en-GB', { day: '2-digit', month: 'short' }); }
+// Econt times may come as epoch seconds, epoch ms or date strings.
+function toMs(v) {
+  if (v == null || v === '') return null;
+  let n = Number(v);
+  if (!isNaN(n)) { if (!n) return null; if (n < 1e12) n *= 1000; return n; }
+  const d = Date.parse(String(v).replace(/^(\d{4}-\d{2}-\d{2}) /, '$1T'));
+  return isNaN(d) ? null : d;
+}
+function fmtDate(v) { const ms = toMs(v); if (!ms) return ''; const d = new Date(ms); if (isNaN(d.getTime())) return ''; return d.toLocaleDateString(LANG === 'bg' ? 'bg-BG' : 'en-GB', { day: '2-digit', month: 'short' }); }
 // Review service (преглед): one setting, three states — None / Review / Review & Test.
 function reviewFlags(mode) { return { payAfterAccept: mode === 'review' || mode === 'review_test', payAfterTest: mode === 'review_test' }; }
 // The review mode "anchored" in settings: '' = not anchored (user picks per shipment).
@@ -360,20 +429,86 @@ const econtProfileUrl = () => (CONFIG.mode === 'production' ? 'https://ee.econt.
 // Public tracking page for a shipment number (locale-aware), for seller + customer.
 const econtTrackUrl = (num) => `https://www.econt.com/${LANG === 'en' ? 'en/' : ''}services/track-shipment/${encodeURIComponent(String(num))}`;
 // Ready-to-send reply for the customer: number + tracking link + counter note.
-const buildReply = (num) => t('reply_template', { num, url: econtTrackUrl(num) });
+// The review line is only promised when the parcel really has review/test.
+function buildReply(num, info) {
+  info = info || {};
+  const lines = [t('reply_template', { num, url: econtTrackUrl(num) })];
+  if (Number(info.cod) > 0) lines.push(t('reply_cod', { amt: Number(info.cod).toFixed(2).replace(/\.00$/, '') + ' ' + (info.currency === 'BGN' ? 'лв' : '€') }));
+  if (info.reviewMode === 'review_test') lines.push(t('reply_review_test'));
+  else if (info.reviewMode === 'review') lines.push(t('reply_review'));
+  return lines.join('\n');
+}
+// Share sheet on phones (straight into Viber/Messenger), copy on desktop.
+async function sendReply(num, btn, info) {
+  const text = buildReply(num, info);
+  if (navigator.share && window.matchMedia && matchMedia('(pointer: coarse)').matches) {
+    try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  if (await copyText(text)) { flashBtn(btn); $('srLive').textContent = t('reply_paste_now'); }
+  else toast(t('copy_fail'));
+}
 // Never throws: a sleeping/restarting server (HTML 502, timeout, offline) comes
-// back as { ok:false, error } so every button shows a message instead of hanging.
-const api = async (path, body) => {
-  try {
-    const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ lang: LANG }, body || {})) });
-    const txt = await res.text();
-    try { return JSON.parse(txt); } catch { return { ok: false, error: t('server_waking') }; }
-  } catch { return { ok: false, error: t('net_down') }; }
+// back as { ok:false, error, transient:true } so every button shows a message
+// instead of hanging. opts.retry (only for calls that are safe to repeat) keeps
+// trying through a Render cold start: 2+4+8+16+30 s, about a minute in total.
+// /api/create is NEVER retried: a 502 can hide a waybill that was created.
+let LAST_OK = 0;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const RETRY_WAITS = [2000, 4000, 8000, 16000, 30000];
+const api = async (path, body, opts) => {
+  opts = opts || {};
+  for (let attempt = 0; ; attempt++) {
+    let kind;
+    try {
+      const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ lang: LANG }, body || {})) });
+      const txt = await res.text();
+      try { const j = JSON.parse(txt); LAST_OK = Date.now(); return j; } catch { kind = 'waking'; }
+    } catch { kind = navigator.onLine === false ? 'offline' : 'net'; }
+    const fail = { ok: false, error: t(kind === 'waking' ? 'server_waking' : 'net_down'), transient: true };
+    if (!opts.retry || kind === 'offline' || attempt >= RETRY_WAITS.length) return fail;
+    if (opts.alive && !opts.alive()) return Object.assign(fail, { stale: true });
+    if (opts.onWait) opts.onWait(attempt);
+    await sleep(RETRY_WAITS[attempt]);
+    if (opts.alive && !opts.alive()) return Object.assign(fail, { stale: true });
+  }
 };
+// Fire-and-forget wake-up; carries no credentials.
+const ping = () => fetch('/api/ping', { method: 'POST' }).then((r) => { if (r.ok) LAST_OK = Date.now(); }).catch(() => {});
+const warm = () => { if (SESSION.password) api('/api/warm', { creds: creds() }); };
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden || Date.now() - LAST_OK < 10 * 60 * 1000) return;
+  if (SESSION.password) warm(); else ping();
+});
+// Before a call that must not be retried (create), make sure the server is up.
+async function ensureAwake(btn) {
+  if (Date.now() - LAST_OK < 60 * 1000) return { ok: true };
+  if (btn) { btnBusy(btn, false); btnBusy(btn, true, t('wake_wait')); }
+  return api('/api/ping', {}, { retry: true });
+}
+// Clipboard that tells the truth: async API first, then the old execCommand path.
+async function copyText(s) {
+  try { await navigator.clipboard.writeText(s); return true; } catch {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = s; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; ta.style.top = '0';
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand('copy'); ta.remove(); return ok;
+  } catch { return false; }
+}
+// Brief "Copied" state on the button itself (taps are ignored while it shows).
+function flashBtn(btn) {
+  if (!btn || btn.classList.contains('is-done')) return;
+  const html = btn.innerHTML;
+  btn.classList.add('is-done');
+  btn.innerHTML = svgi('check', 'ic-s') + ' ' + esc(t('copied_btn'));
+  setTimeout(() => { btn.innerHTML = html; btn.classList.remove('is-done'); }, 1400);
+}
+function debounce(fn, ms) { let h = 0; const d = (...a) => { clearTimeout(h); h = setTimeout(() => fn(...a), ms); }; d.cancel = () => clearTimeout(h); return d; }
+const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || '');
 function officeLabel(c) { return `${c.name} · ${c.address}${c.city ? ', ' + c.city : ''}${c.postCode ? ' (' + c.postCode + ')' : ''}`; }
 async function fillOfficeSelect(sel, q, credsObj) {
   sel.classList.remove('hide'); sel.innerHTML = `<option>${t('searching')}</option>`;
-  const r = await api('/api/offices', { creds: credsObj, q });
+  const r = await api('/api/offices', { creds: credsObj, q }, { retry: true });
   if (!r.ok) { sel.innerHTML = `<option value="">${esc(r.error)}</option>`; return; }
   sel.innerHTML = '';
   for (const c of (r.candidates || [])) { const o = document.createElement('option'); o.value = c.code; o.textContent = officeLabel(c); sel.appendChild(o); }
@@ -419,7 +554,7 @@ $('suFinishBtn').onclick = async () => {
 };
 
 // ===================== LOCK =====================
-function showLock() { show('lock'); $('lockMsg').textContent = ''; $('lockPin').value = ''; setTimeout(() => $('lockPin').focus(), 50); }
+function showLock() { show('lock'); $('lockMsg').textContent = ''; $('lockPin').value = ''; setTimeout(() => $('lockPin').focus(), 50); ping(); }
 let UNLOCKING = false;
 async function tryUnlock(silentOnFail) {
   if (UNLOCKING) return;
@@ -442,7 +577,11 @@ $('lockPin').addEventListener('input', () => {
   if (expected) { if (len === expected) tryUnlock(false); }
   else if (len >= 4) tryUnlock(len < 6); // legacy store: only show error at the 6-char cap
 });
-$('forgetBtn').onclick = () => { if (confirm(t('forget_confirm'))) { localStorage.removeItem(KEY); location.reload(); } };
+// In-place confirm (no native dialog). Forgetting also wipes the parcel list,
+// which now holds customer phone numbers.
+$('forgetBtn').onclick = () => $('forgetConfirm').classList.toggle('hide');
+$('forgetNo').onclick = () => $('forgetConfirm').classList.add('hide');
+$('forgetYes').onclick = () => { localStorage.removeItem(KEY); localStorage.removeItem(PKEY); location.reload(); };
 $('lockNowBtn').onclick = () => { SESSION.password = null; SESSION.pin = null; showLock(); };
 
 // ===================== APP =====================
@@ -458,7 +597,7 @@ function switchTab(which) {
   if (which === 'parcels') openParcels(); else stopTimers();
 }
 function enterApp() {
-  const badge = $('modeBadge'); badge.textContent = 'ДЕМО'; badge.className = 'app-ctl badge demo'; badge.style.display = CONFIG.mode === 'demo' ? '' : 'none';
+  const badge = $('modeBadge'); badge.textContent = t('badge_demo'); badge.className = 'app-ctl badge demo'; badge.style.display = CONFIG.mode === 'demo' ? '' : 'none';
   $('cfgUser').value = CONFIG.username || ''; $('cfgPass').value = '';
   $('cfgDemoNote').classList.toggle('hide', CONFIG.mode !== 'demo');
   const s = CONFIG.sender, d = CONFIG.defaults;
@@ -481,6 +620,8 @@ function enterApp() {
   applyReviewUI();  // keep the preview's review control in sync after a settings change
   switchTab('new');
   show('app');
+  warm();
+  if (window.matchMedia && matchMedia('(pointer: fine)').matches && $('preview').classList.contains('hide') && $('result').classList.contains('hide')) $('msg').focus({ preventScroll: true });
 }
 $('navNew').onclick = () => switchTab('new');
 $('navParcels').onclick = () => switchTab('parcels');
@@ -651,23 +792,39 @@ function gatherAddress() {
   return { city: $('pAddrCity').value.trim(), postCode: $('pAddrPost').value.trim(), street: $('pAddrStreet').value.trim(), num: $('pAddrNum').value.trim(), other: $('pAddrNote').value.trim(), countryCode: 'BGR' };
 }
 const PHONE_COUNT_RE = /(?:\+?\s?359|0)[\s\-.]?8(?:[\s\-.]?\d){8}/g;
+// A newer paste supersedes an older parse that is still waiting on the server.
+let PARSE_SEQ = 0, PARSE_INFLIGHT = 0;
+function parseBusy(on) {
+  if (on) { if (PARSE_INFLIGHT++ === 0) btnBusy($('parseBtn'), true); }
+  else if (--PARSE_INFLIGHT <= 0) { PARSE_INFLIGHT = 0; btnBusy($('parseBtn'), false); }
+}
+// Retry options for a parse: show "waking up" instead of an error while it waits.
+const parseRetry = (seq) => ({
+  retry: true, alive: () => seq === PARSE_SEQ,
+  onWait: () => { if (seq === PARSE_SEQ) { $('parseErr').className = 'muted'; $('parseErr').textContent = t('wake_wait'); } },
+});
 async function doParse(ev, opts) {
-  $('parseErr').textContent = '';
+  const seq = ++PARSE_SEQ;
+  $('parseErr').className = 'err'; $('parseErr').textContent = '';
   const text = $('msg').value.trim();
   if (!text) { $('parseErr').textContent = t('paste_first'); return; }
+  resetCreateGuards();
   // Several phone numbers MAY mean a batch — but only if the splitter really
   // finds 2+ parcels (an alternate number in one message is still one parcel).
   if (!(opts && opts.forceSingle) && (text.match(PHONE_COUNT_RE) || []).length >= 2) {
-    const handled = await doBatchParse(text);
-    if (handled) return;
+    const handled = await doBatchParse(text, seq);
+    if (handled || seq !== PARSE_SEQ) return;
   }
   $('batch').classList.add('hide');
   if (!(opts && opts.keepBatchEdit)) { BATCH_EDIT = -1; showBatchBackBtns(); }
-  const btn = $('parseBtn'); btnBusy(btn, true);
+  parseBusy(true);
   try {
-    const r = await api('/api/parse', { text, creds: creds() });
+    const r = await api('/api/parse', { text, creds: creds() }, parseRetry(seq));
+    if (seq !== PARSE_SEQ) return;
+    $('parseErr').className = 'err'; $('parseErr').textContent = '';
     if (!r.ok) { $('parseErr').textContent = r.error || t('parse_failed'); return; }
     const p = r.parsed;
+    PARSED_CUR = !!(p.cod && p.cod.amount && p.cod.currency);
     $('pName').value = p.recipientName || ''; $('pPhone').value = p.phone || '';
     CANDIDATES = r.candidates || [];
     const sel = $('pOffice'); sel.innerHTML = '';
@@ -703,7 +860,7 @@ async function doParse(ev, opts) {
     $('preview').classList.remove('hide'); $('result').classList.add('hide');
     $('preview').scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
     doPreview();
-  } finally { btnBusy(btn, false); }
+  } finally { parseBusy(false); }
 }
 // Show the per-shipment review selector only when settings does NOT anchor a mode.
 // When anchored, hide the selector and show a small read-only note instead.
@@ -770,6 +927,13 @@ function updateSummary() {
   else box.classList.add('hide');
   // Warn when there is no cash-on-delivery on this parcel.
   $('codWarn').classList.toggle('hide', codOn && codAmt > 0);
+  if (codOn && codAmt > 0) $('noCodConfirm').classList.add('hide');
+  // BGN vs EUR: show the other currency when it differs from the usual one.
+  const defCur = (CONFIG.defaults.cod && CONFIG.defaults.cod.currency) || 'EUR', cur = $('pCodCur').value, ch = $('codCurHint');
+  if (codOn && codAmt > 0 && cur !== defCur) {
+    ch.textContent = cur === 'BGN' ? t('cod_conv', { a: codAmt, e: (codAmt / BGN_PER_EUR).toFixed(2) }) : t('cod_conv_rev', { a: codAmt, b: (codAmt * BGN_PER_EUR).toFixed(2) });
+    ch.className = 'cur-hint ' + (PARSED_CUR ? 'warn-box' : 'muted');
+  } else ch.className = 'muted cur-hint hide';
   // What the parser could not read — so nothing silently stays empty.
   const gaps = [];
   if (!name) gaps.push(t('gap_name'));
@@ -779,6 +943,12 @@ function updateSummary() {
   const gb = $('parseGaps');
   if (gaps.length) { gb.textContent = t('gaps_prefix') + gaps.join(', ') + t('gaps_hint'); gb.classList.remove('hide'); }
   else gb.classList.add('hide');
+  // Outline exactly the fields that still need something.
+  const addr = deliverMode === 'address';
+  for (const [id, on] of [['pName', !name], ['pPhone', !$('pPhone').value.trim()], ['pOffice', !addr && !sel.value],
+    ['pAddrCity', addr && !$('pAddrCity').value.trim()], ['pAddrStreet', addr && !$('pAddrStreet').value.trim()],
+    ['pCodAmount', codOn && !(codAmt > 0)]]) $(id).classList.toggle('need', !!on);
+  renderDupWarn();
 }
 // Coalesce bursts of input events into a single summary update per frame.
 let _sumRaf = 0;
@@ -798,7 +968,9 @@ function renderOfficeHint() {
   const mh = officeMatchHint(); if (mh) hints.push(mh);
   $('officeHint').innerHTML = hints.join(' ');
 }
+let PREVIEW_SEQ = 0;
 async function doPreview(ev) {
+  const seq = ++PREVIEW_SEQ;
   $('previewErr').textContent = '';
   updateSummary(); renderOfficeHint();
   const o = gatherOverrides();
@@ -807,8 +979,12 @@ async function doPreview(ev) {
   } else if (!o.officeCode) { $('priceBox').textContent = ''; $('previewErr').textContent = t('pick_office'); return; }
   const btn = ev && ev.currentTarget && ev.currentTarget.id === 'recalcBtn' ? $('recalcBtn') : null;
   btnBusy(btn, true); $('priceBox').innerHTML = '<span class="sk">price price price</span>';
-  const r = await api('/api/preview', shipBody(o));
+  const r = await api('/api/preview', shipBody(o), {
+    retry: true, alive: () => seq === PREVIEW_SEQ,
+    onWait: () => { if (seq === PREVIEW_SEQ) $('priceBox').textContent = t('price_waiting'); },
+  });
   btnBusy(btn, false);
+  if (seq !== PREVIEW_SEQ) return;
   if (!r.ok) { $('priceBox').textContent = ''; $('previewErr').textContent = t('econt_prefix') + r.error + (r.code === 'bad_login' ? '\n' + t('fix_login_hint') : ''); return; }
   $('priceBox').innerHTML = showPrice(r.response);
 }
@@ -816,7 +992,53 @@ function playCheck() {
   const old = $q('#result .check-c'); if (!old) return;
   old.replaceWith(old.cloneNode(true));
 }
+// Guards before a create: COD missing although it is the default, or a parcel to
+// the same phone in the last 72 h. Each needs one deliberate extra click.
+let NOCOD_ACK = false, DUP_ACK = '', LAST_UNSURE = '', PARSED_CUR = false, LAST_RESULT = null;
+const BGN_PER_EUR = 1.95583;
+function syncCreateLabel() {
+  const b = $('createBtn'); if (b.hasAttribute('aria-busy')) return;
+  b.textContent = DUP_ACK ? t('dup_confirm_btn') : t('create_btn');
+}
+function resetCreateGuards() {
+  NOCOD_ACK = false; DUP_ACK = '';
+  $('noCodConfirm').classList.add('hide');
+  syncCreateLabel();
+}
+const normPhone9 = (v) => { const d = String(v || '').replace(/\D/g, ''); return d.length >= 9 ? d.slice(-9) : ''; };
+const destKey = (o) => (o.officeCode ? String(o.officeCode) : o.address ? [o.address.city, o.address.street].filter(Boolean).join('|') : '');
+const dupKey = (o) => [normPhone9(o.phone), destKey(o), (o.cod && o.cod.enabled && o.cod.amount) || 0].join('|');
+const DUP_WINDOW = 72 * 3600 * 1000;
+// Newest parcel to this phone in the last 72 h (same environment, not returned).
+function findDup(phone) {
+  const ph = normPhone9(phone);
+  if (!ph || ph === normPhone9(CONFIG.sender && CONFIG.sender.phone)) return null;
+  const now = Date.now();
+  return loadParcels().find((p) => p.mode === CONFIG.mode && !p.manual && p.phone9 === ph
+    && now - (p.createdAt || 0) < DUP_WINDOW && !(p.snap && classify(p.snap) === 'returned')) || null;
+}
+function dupInfo() {
+  if (LAST_UNSURE && LAST_UNSURE === dupKey(gatherOverrides())) return { key: 'unsure', text: t('create_unsure'), num: '' };
+  const d = findDup($('pPhone').value);
+  return d ? { key: d.number, text: t('dup_warn', { num: d.number, date: fmtDate(d.createdAt) }), num: d.number } : null;
+}
+function renderDupWarn() {
+  const d = dupInfo(), box = $('dupWarn');
+  if (!d) { box.classList.add('hide'); if (DUP_ACK) { DUP_ACK = ''; syncCreateLabel(); } return null; }
+  $('dupMsg').textContent = d.text;
+  $('dupShowBtn').classList.toggle('hide', !d.num); $('dupShowBtn').dataset.num = d.num;
+  box.classList.remove('hide');
+  if (DUP_ACK && DUP_ACK !== d.key) { DUP_ACK = ''; syncCreateLabel(); }
+  return d;
+}
+// Result card extras: receipt line + the exact text the customer will get.
+function renderReplyPreview() {
+  if (!LAST_RESULT) { $('replyPreview').classList.add('hide'); return; }
+  $('replyText').textContent = buildReply(LAST_RESULT.num, LAST_RESULT.info);
+  $('replyPreview').classList.remove('hide');
+}
 async function doCreate() {
+  schedulePreview.cancel(); PREVIEW_SEQ++;
   $('previewErr').textContent = '';
   const o = gatherOverrides();
   if (!o.recipientName || !o.phone) { $('previewErr').textContent = t('need_recip'); return; }
@@ -825,10 +1047,31 @@ async function doCreate() {
   }
   if (!o.description) { $('previewErr').textContent = t('need_desc'); $('pDesc').focus(); return; }
   if (o.cod.enabled && !(o.cod.amount > 0)) { $('previewErr').textContent = t('cod_blank'); return; }
-  const btn = $('createBtn'); btnBusy(btn, true, t('creating'));
+  if (CONFIG.defaults.cod && CONFIG.defaults.cod.enabled && !o.cod.enabled && !NOCOD_ACK) {
+    $('noCodConfirm').classList.remove('hide'); $('noCodGo').focus({ preventScroll: true }); return;
+  }
+  const dup = renderDupWarn();
+  if (dup && DUP_ACK !== dup.key) { DUP_ACK = dup.key; syncCreateLabel(); toast(dup.text); return; }
+  const btn = $('createBtn');
+  let created = false;
   try {
-    const r = await api('/api/create', shipBody(o));
-    if (!r.ok) { $('previewErr').textContent = t('econt_prefix') + r.error + (r.code === 'bad_login' ? '\n' + t('fix_login_hint') : ''); return; }
+    const awake = await ensureAwake(btn);
+    if (!awake.ok) { $('previewErr').textContent = awake.error; return; }
+    btnBusy(btn, true, t('creating'));
+    const r = await api('/api/create', shipBody(o));   // never retried
+    if (!r.ok) {
+      if (r.transient) {
+        // The request may have reached Econt. Make a retry a deliberate act.
+        LAST_UNSURE = dupKey(o);
+        $('previewErr').innerHTML = esc(t('create_unsure')) + ` <a href="${esc(econtProfileUrl())}" target="_blank" rel="noopener noreferrer">${esc(t('create_unsure_link'))}</a>`;
+        DUP_ACK = '';
+        renderDupWarn();
+        return;
+      }
+      $('previewErr').textContent = t('econt_prefix') + r.error + (r.code === 'bad_login' ? '\n' + t('fix_login_hint') : ''); return;
+    }
+    created = true;
+    if (LAST_UNSURE === dupKey(o)) LAST_UNSURE = '';
     const st = r.response.label || r.response;
     const num = st.shipmentNumber || t('no_number');
     $('shipNum').textContent = num;
@@ -838,20 +1081,35 @@ async function doCreate() {
     if (st.shipmentNumber) { $('trackLink').href = econtTrackUrl(num); $('trackLink').style.display = ''; } else { $('trackLink').style.display = 'none'; }
     $('resultMeta').textContent = st.totalPrice != null ? t('price_label', { v: Number(st.totalPrice).toFixed(2), cur: st.totalPriceCurrency || $('pCodCur').value || 'EUR' }) : '';
     const destLabel = deliverMode === 'address' ? [o.address.city, o.address.street, o.address.num].filter(Boolean).join(' ') : o.officeCode;
-    if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, office: destLabel, weight: o.weight, description: o.description, cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
+    const info = { cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode };
+    if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, phone: o.phone, phone9: normPhone9(o.phone), dest: destKey(o), office: destLabel, weight: o.weight, description: o.description, cod: info.cod, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
     // Created from a batch row → mark that row done so the batch stays truthful.
     if (BATCH_EDIT >= 0 && BATCH[BATCH_EDIT] && st.shipmentNumber) {
       const row = BATCH[BATCH_EDIT];
-      row.done = true; row.on = true; row.statusText = t('st_ok', { num: st.shipmentNumber });
-      row.name = o.recipientName; row.phone = o.phone;
+      row.done = true; row.on = true; row.statusTpl = { k: 'st_ok', p: { num: st.shipmentNumber } }; row.statusColor = 'var(--go-d)';
+      row.name = o.recipientName; row.phone = o.phone; row.num = st.shipmentNumber; row.replyInfo = info;
     }
+    LAST_RESULT = st.shipmentNumber ? { num: st.shipmentNumber, info } : null;
+    const sum = $('resultSummary'); sum.innerHTML = $('prevSummary').innerHTML; sum.classList.toggle('hide', !sum.innerHTML);
+    renderReplyPreview();
+    $('replyBtn').classList.toggle('hide', !LAST_RESULT);
     showBatchBackBtns();
     $('preview').classList.add('hide'); $('result').classList.remove('hide');
     playCheck();
     $('result').scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
-  } finally { btnBusy(btn, false); }
+    $('srLive').textContent = t('created_sr', { num });
+  } finally { btnBusy(btn, false); if (!created) syncCreateLabel(); }
+  if (created) { resetCreateGuards(); if (LAST_RESULT) $('replyBtn').focus({ preventScroll: true }); }
 }
-$('clearBtn').onclick = () => { $('msg').value = ''; $('preview').classList.add('hide'); $('result').classList.add('hide'); $('batch').classList.add('hide'); BATCH_EDIT = -1; showBatchBackBtns(); };
+$('noCodGo').onclick = () => { NOCOD_ACK = true; $('noCodConfirm').classList.add('hide'); doCreate(); };
+$('noCodFix').onclick = () => { $('noCodConfirm').classList.add('hide'); $('pCodOn').checked = true; $('pCodAmount').focus(); scheduleSummary(); };
+$('dupShowBtn').onclick = () => {
+  const num = $('dupShowBtn').dataset.num; if (!num) return;
+  switchTab('parcels');
+  const c = $q(`.parcel[data-num="${num}"]`);
+  if (c) { c.scrollIntoView({ behavior: scrollBehavior(), block: 'center' }); c.classList.remove('fresh'); void c.offsetWidth; c.classList.add('fresh'); }
+};
+$('clearBtn').onclick = () => { PARSE_SEQ++; resetCreateGuards(); $('msg').value = ''; $('preview').classList.add('hide'); $('result').classList.add('hide'); $('batch').classList.add('hide'); BATCH_EDIT = -1; showBatchBackBtns(); };
 $('parseBtn').onclick = doParse;
 
 // ---------- batch: several parcels in one paste ----------
@@ -894,9 +1152,28 @@ function returnToBatch(syncFields) {
 }
 $('backToBatchBtn').onclick = () => returnToBatch(true);
 $('backToBatchBtn2').onclick = () => returnToBatch(false);
-function batchRowHTML(row, i) {
+// Row status: explicit run results win; otherwise what will happen on "run".
+// A row with no COD while COD is the default is called out before it ships.
+function batchRowStatus(row) {
+  if (row.statusTpl) return { text: row.statusTpl.raw != null ? row.statusTpl.raw : t(row.statusTpl.k, row.statusTpl.p), color: row.statusColor || '', needCod: false };
+  if (row.trackNum) return { text: t('st_track'), color: '', needCod: false };
   const doorOk = row.parsed.deliveryType === 'door' && row.parsed.address && row.parsed.address.city && row.parsed.address.street;
-  const st = row.statusText || (row.trackNum ? t('st_track') : (row.officeCode || doorOk ? t('st_create') : t('st_missing')));
+  if (!(row.officeCode || doorOk)) return { text: t('st_missing'), color: 'var(--warn)', needCod: false };
+  const d = CONFIG.defaults.cod || {}, amt = Number(row.cod) || 0;
+  if (d.enabled && !(amt > 0)) return { text: t('st_nocod'), color: 'var(--warn)', needCod: true };
+  let text = t('st_create');
+  if (amt > 0 && row.cur !== (d.currency || 'EUR')) text += ' · ≈ ' + (row.cur === 'BGN' ? (amt / BGN_PER_EUR).toFixed(2) + ' €' : (amt * BGN_PER_EUR).toFixed(2) + ' лв');
+  return { text, color: '', needCod: false };
+}
+const batchSendBtn = () => `<button class="ghost btn-xs" data-f="send" type="button">${svgi('send', 'ic-s')} ${esc(t('parcel_reply'))}</button>`;
+function syncRowStatus(i) {
+  const row = BATCH[i], el = $q(`.brow[data-i="${i}"]`); if (!row || !el) return;
+  const st = batchRowStatus(row), se = el.querySelector('[data-status]');
+  se.textContent = st.text; se.style.color = st.color;
+  const ci = el.querySelector('[data-f="cod"]'); if (ci) ci.classList.toggle('need', st.needCod);
+}
+function batchRowHTML(row, i) {
+  const rs = batchRowStatus(row), st = rs.text;
   const officeUI = row.parsed.deliveryType === 'door' && row.parsed.address
     ? `<input data-f="addr" value="${esc(t('batch_addr_row', { a: [row.parsed.address.city, row.parsed.address.street, row.parsed.address.num].filter(Boolean).join(' ') }))}" disabled>`
     : `<select data-f="office">${row.candidates.length ? '' : `<option value="">${t('batch_no_office')}</option>`}${row.candidates.map((c) => `<option value="${esc(c.code)}">${esc(officeLabel(c))}</option>`).join('')}</select>`;
@@ -905,22 +1182,25 @@ function batchRowHTML(row, i) {
       <input type="checkbox" data-f="on" aria-label="${esc(t('row_label', { n: i + 1 }))}" ${row.on ? 'checked' : ''}>
       <span class="idx">#${i + 1}</span>
       ${row.trackNum ? `<span class="track-tag">${svgi('box', 'ic-s')} ${esc(row.trackNum)}</span>` : ''}
-      <span class="brow-status" data-status>${esc(st)}</span>
+      <span class="brow-status" data-status${rs.color ? ` style="color:${rs.color}"` : ''}>${esc(st)}</span>
+      ${row.num ? batchSendBtn() : ''}
     </div>
     <div class="brow-grid">
       <input data-f="name" data-i18n-nope value="${esc(row.name)}" placeholder="${esc(t('recipient'))}">
       <input data-f="phone" class="bamt" inputmode="tel" value="${esc(row.phone)}" placeholder="${esc(t('phone'))}">
       ${officeUI}
-      <input data-f="cod" class="bamt" type="number" inputmode="decimal" step="0.01" min="0" value="${row.cod || ''}" placeholder="${esc(t('amount'))}">
+      <input data-f="cod" class="bamt${rs.needCod ? ' need' : ''}" type="number" inputmode="decimal" step="0.01" min="0" value="${esc(row.cod || '')}" placeholder="${esc(t('amount'))}">
       <select data-f="cur" class="bamt"><option value="EUR"${row.cur === 'EUR' ? ' selected' : ''}>€ EUR</option><option value="BGN"${row.cur === 'BGN' ? ' selected' : ''}>лв BGN</option></select>
       <button class="ghost" data-f="edit" type="button" style="flex:0 0 auto">${t('batch_edit')}</button>
     </div>
   </div>`;
 }
-async function doBatchParse(text) {
-  const btn = $('parseBtn'); btnBusy(btn, true);
+async function doBatchParse(text, seq) {
+  parseBusy(true);
   try {
-    const r = await api('/api/parse-batch', { text, creds: creds() });
+    const r = await api('/api/parse-batch', { text, creds: creds() }, parseRetry(seq));
+    if (seq !== PARSE_SEQ) return true;
+    $('parseErr').className = 'err'; $('parseErr').textContent = '';
     if (!r.ok) { $('parseErr').textContent = r.error || t('parse_failed'); return true; }
     if (!r.rows || r.rows.length < 2) return false; // one parcel → normal editor
     BATCH = (r.rows || []).map((row) => ({
@@ -933,6 +1213,13 @@ async function doBatchParse(text) {
       cur: (row.parsed.cod && row.parsed.cod.currency) || (CONFIG.defaults.cod && CONFIG.defaults.cod.currency) || 'EUR',
       done: false,
     }));
+    // Already shipped to this phone in the last 72 h → start unticked; ticking is the confirm.
+    for (const row of BATCH) {
+      if (row.trackNum) continue;
+      const d = findDup(row.phone);
+      if (d) { row.on = false; row.statusTpl = { k: 'st_dup', p: { num: d.number } }; row.statusColor = 'var(--warn)'; }
+    }
+    BATCH_NOCOD_OK = false; $('batchNoCodConfirm').classList.add('hide');
     if (r.officesError) $('batchErr').textContent = t('office_err', { err: r.officesError }); else $('batchErr').textContent = '';
     BATCH_EDIT = -1; showBatchBackBtns();
     renderBatch();
@@ -940,7 +1227,7 @@ async function doBatchParse(text) {
     $('batch').classList.remove('hide');
     $('batch').scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
     return true;
-  } finally { btnBusy(btn, false); }
+  } finally { parseBusy(false); }
 }
 function renderBatch() {
   const creates = BATCH.filter((r) => !r.trackNum).length;
@@ -957,14 +1244,17 @@ $('batchList').addEventListener('input', (e) => {
   const el = e.target, brow = el.closest('.brow'); if (!brow) return;
   const row = BATCH[Number(brow.dataset.i)], f = el.dataset.f;
   if (!row || !f) return;
-  if (f === 'on') row.on = el.checked;
+  if (f === 'on') { row.on = el.checked; if (row.on && row.unsure) { row.unsure = false; row.statusTpl = null; row.statusColor = ''; } }
   else if (f === 'name') row.name = el.value;
   else if (f === 'phone') row.phone = el.value;
   else if (f === 'office') row.officeCode = el.value;
-  else if (f === 'cod') row.cod = el.value;
+  else if (f === 'cod') { row.cod = el.value; BATCH_NOCOD_OK = false; }
   else if (f === 'cur') row.cur = el.value;
+  if (f === 'on' || f === 'office' || f === 'cod' || f === 'cur') syncRowStatus(Number(brow.dataset.i));
 });
 $('batchList').addEventListener('click', async (e) => {
+  const sb = e.target.closest('button[data-f="send"]');
+  if (sb) { const r = BATCH[Number(sb.closest('.brow').dataset.i)]; if (r && r.num) sendReply(r.num, sb, r.replyInfo); return; }
   const btn = e.target.closest('button[data-f="edit"]'); if (!btn) return;
   const i = Number(btn.closest('.brow').dataset.i);
   const row = BATCH[i];
@@ -1007,12 +1297,33 @@ function batchOverrides(row) {
   return o;
 }
 $('batchCancelBtn').onclick = () => $('batch').classList.add('hide');
+let BATCH_NOCOD_OK = false;
+$('batchNoCodGo').onclick = () => { BATCH_NOCOD_OK = true; $('batchNoCodConfirm').classList.add('hide'); $('batchCreateBtn').onclick(); };
+$('batchNoCodFix').onclick = () => {
+  $('batchNoCodConfirm').classList.add('hide');
+  const i = BATCH.findIndex((r) => r.on && !r.done && !r.trackNum && !(Number(r.cod) > 0));
+  const el = i >= 0 && $q(`.brow[data-i="${i}"] [data-f="cod"]`); if (el) el.focus();
+};
 $('batchCreateBtn').onclick = async () => {
+  $('batchErr').textContent = '';
   // Creating without a contents description fails at Econt for every row — stop early.
   if (!(CONFIG.defaults.shipmentDescription || '').trim() && BATCH.some((r) => r.on && !r.trackNum && !r.done)) {
     $('batchErr').textContent = t('need_desc'); return;
   }
-  const btn = $('batchCreateBtn'); btnBusy(btn, true, t('creating'));
+  // COD is the default but some ticked rows have no amount: ask once, never ship silently.
+  if (CONFIG.defaults.cod && CONFIG.defaults.cod.enabled && !BATCH_NOCOD_OK) {
+    const idx = BATCH.map((r, i) => (r.on && !r.done && !r.trackNum && !(Number(r.cod) > 0) ? i : -1)).filter((i) => i >= 0);
+    if (idx.length) {
+      $('batchNoCodMsg').textContent = t('batch_nocod', { rows: idx.map((i) => '#' + (i + 1)).join(', ') });
+      $('batchNoCodConfirm').classList.remove('hide'); $('batchNoCodGo').focus({ preventScroll: true });
+      return;
+    }
+  }
+  $('batchNoCodConfirm').classList.add('hide');
+  const btn = $('batchCreateBtn');
+  const awake = await ensureAwake(btn);
+  if (!awake.ok) { btnBusy(btn, false); $('batchErr').textContent = awake.error; return; }
+  btnBusy(btn, true, t('creating'));
   $('parseBtn').disabled = true; $('clearBtn').disabled = true;
   const rows = BATCH; // snapshot: a new paste mid-run must never be acted upon
   let ok = 0, fail = 0, skip = 0;
@@ -1021,28 +1332,35 @@ $('batchCreateBtn').onclick = async () => {
       if (BATCH !== rows) break; // the batch was replaced mid-run — stop cleanly
       const row = rows[i]; if (row.done) continue;
       const el = $q(`.brow[data-i="${i}"] [data-status]`);
-      const set = (txt, color) => { row.statusText = txt; if (el) { el.textContent = txt; el.style.color = color || ''; } };
-      if (!row.on) { skip++; set(t('st_skip')); continue; }
+      // Stored as a template so a language switch re-renders it correctly.
+      const set = (k, p, color) => { row.statusTpl = typeof k === 'object' ? k : { k, p }; row.statusColor = color || ''; if (el) { el.textContent = batchRowStatus(row).text; el.style.color = color || ''; } };
+      if (!row.on) { skip++; set('st_skip'); continue; }
       if (row.trackNum) {
         if (!loadParcels().some((x) => x.number === row.trackNum)) {
           addParcel({ number: row.trackNum, recipient: row.name.trim(), office: row.officeCode || '', cod: Number(row.cod) || 0, currency: row.cur, createdAt: Date.now(), mode: CONFIG.mode, manual: true });
         }
-        row.done = true; ok++; set(t('st_tracked'), 'var(--go-d)');
+        row.done = true; ok++; set('st_tracked', null, 'var(--go-d)');
         $q(`.brow[data-i="${i}"]`).classList.add('done');
         continue;
       }
       const o = batchOverrides(row);
       const destOk = o.officeCode || (o.address && o.address.city && o.address.street);
-      if (!o.recipientName || !o.phone || !destOk) { fail++; set(t('st_missing'), 'var(--warn)'); continue; }
-      set(t('st_creating'));
-      const r = await api('/api/create', shipBody(o));
+      if (!o.recipientName || !o.phone || !destOk) { fail++; set('st_missing', null, 'var(--warn)'); continue; }
+      set('st_creating');
+      const r = await api('/api/create', shipBody(o));   // never retried
       const st = r.ok ? (r.response.label || r.response) : null;
       if (r.ok && st && st.shipmentNumber) {
-        addParcel({ number: st.shipmentNumber, recipient: o.recipientName, office: o.officeCode || (o.address && o.address.city) || '', weight: o.weight, description: o.description, cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: st.pdfURL, mode: CONFIG.mode });
-        row.done = true; ok++; set(t('st_ok', { num: st.shipmentNumber }), 'var(--go-d)');
-        $q(`.brow[data-i="${i}"]`).classList.add('done');
+        const info = { cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode };
+        addParcel({ number: st.shipmentNumber, recipient: o.recipientName, phone: o.phone, phone9: normPhone9(o.phone), dest: destKey(o), office: o.officeCode || (o.address && o.address.city) || '', weight: o.weight, description: o.description, cod: info.cod, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: st.pdfURL, mode: CONFIG.mode });
+        row.done = true; row.num = st.shipmentNumber; row.replyInfo = info; ok++; set('st_ok', { num: st.shipmentNumber }, 'var(--go-d)');
+        const rowEl = $q(`.brow[data-i="${i}"]`);
+        if (rowEl) { rowEl.classList.add('done'); rowEl.querySelector('.brow-top').insertAdjacentHTML('beforeend', batchSendBtn()); }
+      } else if (r.transient) {
+        // Unknown outcome: untick so a re-run can't silently create a second waybill.
+        fail++; row.unsure = true; row.on = false; set('st_unsure', null, 'var(--warn)');
+        const cb = $q(`.brow[data-i="${i}"] [data-f="on"]`); if (cb) cb.checked = false;
       } else {
-        fail++; set('✗ ' + ((r && r.error) || 'error').slice(0, 120), 'var(--warn)');
+        fail++; set({ raw: '✗ ' + ((r && r.error) || 'error').slice(0, 120) }, null, 'var(--warn)');
       }
     }
     $('batchInfo').textContent = t('batch_done', { ok, fail, skip });
@@ -1179,8 +1497,42 @@ const runOCR = (file) => runOCRFiles(file ? [file] : []);
     const items = (e.clipboardData && e.clipboardData.items) || [];
     const fls = [];
     for (const it of items) { if (it.type && it.type.startsWith('image/')) { const f = it.getAsFile(); if (f) fls.push(f); } }
-    if (fls.length) { e.preventDefault(); runOCRFiles(fls); }
+    if (fls.length) { e.preventDefault(); runOCRFiles(fls); return; }
+    // Text pasted anywhere outside a field (Ctrl/Cmd+V right after opening the
+    // app) goes straight into the composer and is read at once.
+    const tg = e.target;
+    if (tg && tg.closest && tg.closest('input, textarea, select, [contenteditable]')) return;
+    if ($('batchCreateBtn').hasAttribute('aria-busy')) return;
+    const txt = e.clipboardData && e.clipboardData.getData('text');
+    if (!txt || !txt.trim()) return;
+    e.preventDefault();
+    $('msg').value = txt;
+    doParse();
   });
+  // Paste button: images go to OCR, text to the parser. Hidden where unsupported.
+  const pb = $('pasteBtn');
+  if (navigator.clipboard && navigator.clipboard.readText) pb.classList.remove('hide');
+  pb.onclick = async () => {
+    $('parseErr').className = 'err'; $('parseErr').textContent = '';
+    try {
+      if (navigator.clipboard.read) {
+        let items = null;
+        try { items = await navigator.clipboard.read(); } catch (e) { if (e && e.name === 'NotAllowedError') throw e; }
+        if (items) {
+          const files = [];
+          for (const it of items) {
+            const ty = (it.types || []).find((x) => x.startsWith('image/'));
+            if (ty) files.push(new File([await it.getType(ty)], 'clip.' + (ty.split('/')[1] || 'png'), { type: ty }));
+          }
+          if (files.length) { warmOCR(); runOCRFiles(files); return; }
+        }
+      }
+      const txt = await navigator.clipboard.readText();
+      if (!txt || !txt.trim()) { toast(t('clip_empty')); return; }
+      $('msg').value = txt;
+      doParse();
+    } catch { $('parseErr').textContent = t('clip_denied'); }
+  };
 })();
 $('recalcBtn').onclick = doPreview;
 initSeg('pReviewSeg', 'pReviewMode', doPreview);
@@ -1188,16 +1540,42 @@ initSeg('cfgReviewSeg', 'cfgReviewMode');
 $('createBtn').onclick = doCreate;
 $('officeSearchBtn').onclick = async () => { await fillOfficeSelect($('pOffice'), $('officeSearch').value, creds()); doPreview(); };
 $('pOffice').onchange = () => doPreview();
-$('copyBtn').onclick = () => { navigator.clipboard.writeText($('shipNum').textContent); toast(t('copied')); };
-$('replyBtn').onclick = async () => {
-  const num = $('shipNum').textContent.trim(); if (!num) return;
-  try { await navigator.clipboard.writeText(buildReply(num)); } catch (e) {}
-  toast(t('reply_copied'));
+$('copyBtn').onclick = async (e) => {
+  const btn = e.currentTarget;
+  if (await copyText($('shipNum').textContent.trim())) { flashBtn(btn); return; }
+  // Copy blocked (some in-app browsers): select the number so a long-press copies it.
+  const r = document.createRange(); r.selectNodeContents($('shipNum'));
+  const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  toast(t('copy_fail'));
 };
+$('replyBtn').onclick = (e) => { if (LAST_RESULT) sendReply(LAST_RESULT.num, e.currentTarget, LAST_RESULT.info); };
+// The reply preview copies on tap/Enter (always copy, even on phones).
+async function copyReplyPreview() {
+  if (!LAST_RESULT) return;
+  const box = $('replyPreview');
+  if (box.classList.contains('is-done')) return;
+  if (await copyText(buildReply(LAST_RESULT.num, LAST_RESULT.info))) {
+    box.classList.add('is-done'); $('srLive').textContent = t('reply_paste_now');
+    const lbl = box.querySelector('.reply-prev-copy'), html = lbl.innerHTML;
+    lbl.innerHTML = svgi('check', 'ic-s') + ' ' + esc(t('copied_btn'));
+    setTimeout(() => { lbl.innerHTML = html; box.classList.remove('is-done'); }, 1400);
+  } else toast(t('copy_fail'));
+}
+$('replyPreview').onclick = copyReplyPreview;
+$('replyPreview').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copyReplyPreview(); } });
 $('newBtn').onclick = () => { $('msg').value = ''; $('result').classList.add('hide'); $('preview').classList.add('hide'); BATCH_EDIT = -1; showBatchBackBtns(); $('msg').focus(); };
 // Instant: pasting the message auto-parses (no extra click). Live summary follows edits.
 $('msg').addEventListener('paste', () => setTimeout(() => { if ($('msg').value.trim()) doParse(); }, 60));
 ['pName', 'pPhone', 'pCodOn', 'pCodAmount', 'pCodCur', 'pDeclOn', 'pDeclAmount', 'pDeclCur', 'pAddrCity', 'pAddrStreet', 'pAddrNum'].forEach((id) => $(id).addEventListener('input', scheduleSummary));
+// Live price: anything that changes Econt's price re-quotes after a short pause.
+const schedulePreview = debounce(() => {
+  if ($('preview').classList.contains('hide') || $('createBtn').hasAttribute('aria-busy')) return;
+  doPreview();
+}, 700);
+['pCodAmount', 'pCodCur', 'pWeight', 'pDeclAmount', 'pDeclCur', 'pAddrCity', 'pAddrStreet', 'pAddrNum'].forEach((id) => $(id).addEventListener('input', schedulePreview));
+['pPayer', 'pCodOn'].forEach((id) => $(id).addEventListener('change', schedulePreview));
+// A changed COD answer means the "ship without COD?" question must be asked again.
+['pCodOn', 'pCodAmount'].forEach((id) => $(id).addEventListener('input', () => { NOCOD_ACK = false; }));
 $('pDeclOn').addEventListener('change', () => { if ($('pDeclOn').checked && !$('pDeclAmount').value && $('pCodAmount').value) { $('pDeclAmount').value = $('pCodAmount').value; $('pDeclAmount').dataset.auto = '1'; } doPreview(); });
 // A COD amount typed after parsing keeps the declared value in sync until the
 // user edits the declared amount themselves.
@@ -1212,8 +1590,7 @@ $('modeOfficeBtn').onclick = () => setDeliverMode('office');
 $('modeAddressBtn').onclick = () => { if (!$('pAddrCity').value.trim() && PARSED_ADDR) fillAddress(PARSED_ADDR); setDeliverMode('address'); };
 
 // ---------- parcels (live status + operation timer) ----------
-const toMs = (v) => { if (v == null) return null; let n = Number(v); if (!n) return null; if (n < 1e12) n *= 1000; return n; };
-function fmtDateTime(ms) { const d = new Date(toMs(ms)); if (isNaN(d.getTime())) return ''; return d.toLocaleString(LANG === 'bg' ? 'bg-BG' : 'en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+function fmtDateTime(v) { const ms = toMs(v); if (!ms) return ''; const d = new Date(ms); if (isNaN(d.getTime())) return ''; return d.toLocaleString(LANG === 'bg' ? 'bg-BG' : 'en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
 function fmtDuration(ms) {
   if (!(ms > 0)) ms = 0;
   const s = Math.floor(ms / 1000), d = Math.floor(s / 86400), p2 = (x) => String(x).padStart(2, '0');
@@ -1228,8 +1605,26 @@ function classify(p) {
   return 'created';
 }
 function statusClass(p) { const st = classify(p); return st === 'returned' ? 's-red' : st === 'delivered' ? 's-green' : st === 'transit' ? 's-blue' : 's-gray'; }
+// Econt status text in the UI language when Econt sends an English variant.
+const statusText = (p) => ((LANG === 'en' && p.statusEn) ? p.statusEn : p.status) || '';
+// Three-segment progress: created, on the way, finished (green) / returned (amber).
+function trackAttrs(snap) {
+  if (!snap) return 'data-step="0"';
+  const st = classify(snap);
+  return st === 'returned' ? 'data-step="3" data-ret' : 'data-step="' + (st === 'delivered' ? 3 : st === 'transit' ? 2 : 1) + '"';
+}
+function metaText(snap) {
+  if (!snap || !snap.expectedDeliveryDate) return '';
+  const st = classify(snap); if (st === 'delivered' || st === 'returned') return '';
+  const d = fmtDate(snap.expectedDeliveryDate);
+  return d ? esc(t('exp_delivery') + ': ' + d) : '';
+}
+function collectedPill(snap) {
+  const n = snap && Number(snap.cdCollected);
+  return n > 0 ? `<span class="statusb s-green" data-coll>${svgi('money', 'ic-s')} ${esc(t('collected'))}: ${n.toFixed(2)} ${esc(snap.cdCurrency || '')}</span>` : '';
+}
 
-const TICK = {}; let TIMER_INT = null;
+const TICK = {}; let TIMER_INT = null, TICK_N = 0;
 // Each entry caches its .clk node — one DOM write per tick, no per-second selector scans.
 function startTimers() {
   stopTimers();
@@ -1237,22 +1632,23 @@ function startTimers() {
     if (document.hidden) return;
     const now = Date.now();
     for (const num in TICK) { const tk = TICK[num]; if (tk && tk.el && tk.el.isConnected) tk.el.textContent = fmtDuration(now - tk.start); }
+    if (++TICK_N % 30 === 0) renderUpdated();
   }, 1000);
 }
 function stopTimers() { if (TIMER_INT) { clearInterval(TIMER_INT); TIMER_INT = null; } }
 function renderTimer(num, p) {
   const cell = $q(`.parcel[data-num="${num}"] [data-timer]`); if (!cell) return;
   const st = classify(p), sent = toMs(p.sendTime); delete TICK[num];
-  if (st === 'delivered') { const dt = toMs(p.deliveryTime); cell.className = 'parcel-timer t-green'; cell.innerHTML = '✓ ' + t('delivered_ok') + (sent && dt ? ' <span class="clk">· ' + fmtDuration(dt - sent) + '</span>' : ''); }
-  else if (st === 'returned') { const dt = toMs(p.deliveryTime) || Date.now(); cell.className = 'parcel-timer t-amber'; cell.innerHTML = '↩ ' + t('returned_ok') + (sent ? ' <span class="clk">· ' + fmtDuration(dt - sent) + '</span>' : ''); }
-  else if (st === 'transit' && sent) { cell.className = 'parcel-timer t-blue'; cell.innerHTML = '⏱ ' + t('in_operation') + ' <span class="clk">' + fmtDuration(Date.now() - sent) + '</span>'; TICK[num] = { start: sent, el: cell.querySelector('.clk') }; }
-  else { cell.className = 'parcel-timer t-muted'; cell.textContent = '• ' + t('awaiting_dispatch'); }
+  if (st === 'delivered') { const dt = toMs(p.deliveryTime); cell.className = 'parcel-timer t-green'; cell.innerHTML = svgi('check', 'ic-s') + ' ' + esc(t('delivered_ok')) + (sent && dt ? ' <span class="clk">· ' + fmtDuration(dt - sent) + '</span>' : ''); }
+  else if (st === 'returned') { const dt = toMs(p.deliveryTime) || Date.now(); cell.className = 'parcel-timer t-amber'; cell.innerHTML = svgi('undo', 'ic-s') + ' ' + esc(t('returned_ok')) + (sent ? ' <span class="clk">· ' + fmtDuration(dt - sent) + '</span>' : ''); }
+  else if (st === 'transit' && sent) { cell.className = 'parcel-timer t-blue'; cell.innerHTML = svgi('clock', 'ic-s') + ' ' + esc(t('in_operation')) + ' <span class="clk">' + fmtDuration(Date.now() - sent) + '</span>'; TICK[num] = { start: sent, el: cell.querySelector('.clk') }; }
+  else { cell.className = 'parcel-timer t-muted'; cell.innerHTML = svgi('box', 'ic-s') + ' ' + esc(t('awaiting_dispatch')); }
 }
 
 function reviewLabel(mode) { return mode === 'review_test' ? t('review_test') : mode === 'review' ? t('review_only') : null; }
 function detailRows(p, local) {
   const rows = []; const add = (k, v) => { if (v != null && v !== '') rows.push([k, v]); };
-  add(t('d_status'), p.status);
+  add(t('d_status'), statusText(p));
   add(t('d_recipient'), p.recipient); add(t('d_phone'), p.recipientPhone);
   add(t('d_office'), p.office || p.receiverAddress); add(t('d_storage'), p.storageOffice);
   add(t('d_sender'), p.sender); add(t('d_sender_office'), p.senderOffice);
@@ -1268,89 +1664,193 @@ function detailRows(p, local) {
   add(t('d_routing'), p.routingCode);
   return rows;
 }
+// A card paints instantly from the last saved snapshot; live data replaces it.
 function parcelCardHTML(p) {
+  const other = p.mode !== CONFIG.mode;
+  const snap = !other && p.snap ? p.snap : null;
+  const pill = other ? `<span class="statusb s-gray" data-status>${esc(t('other_env'))}</span>`
+    : snap ? `<span class="statusb ${statusClass(snap)}" data-status>${esc(statusText(snap) || t('status_transit'))}</span>`
+    : `<span class="statusb sk" data-status>${esc(t('loading'))}</span>`;
   return `<div class="parcel" data-num="${esc(p.number)}">
-    <div class="parcel-top"><span class="parcel-num">${esc(p.number)}</span><span class="statusb sk" data-status>${t('loading')}</span></div>
+    <div class="parcel-top"><span class="parcel-num">${esc(p.number)}</span><span class="parcel-pills" data-pills>${collectedPill(snap)}${pill}</span></div>
+    <div class="ptrack" data-track ${trackAttrs(snap)} aria-hidden="true"><i></i><i></i><i></i></div>
     <div class="parcel-sub" data-sub>${esc(p.recipient || '')}${p.office ? ' · ' + esc(p.office) : ''}</div>
+    <div class="parcel-meta" data-meta>${metaText(snap)}</div>
     <div class="parcel-timer t-muted" data-timer></div>
     <div class="parcel-row">
-      <button data-copy>${svgi('copy', 'ic-s')} ${t('copy')}</button>
-      <a class="btnlink" href="${esc(econtTrackUrl(p.number))}" target="_blank" rel="noopener">${svgi('search', 'ic-s')} ${t('track_link')}</a>
-      <a class="btnlink" data-pdf hidden target="_blank">${svgi('printer', 'ic-s')} ${t('reprint')}</a>
-      <button class="ghost" data-toggle>${t('details')}</button>
+      <button data-copy>${svgi('copy', 'ic-s')} ${esc(t('copy'))}</button>
+      <button data-reply>${svgi('send', 'ic-s')} ${esc(t('parcel_reply'))}</button>
+      <a class="btnlink" href="${esc(econtTrackUrl(p.number))}" target="_blank" rel="noopener">${svgi('search', 'ic-s')} ${esc(t('track_link'))}</a>
+      <a class="btnlink" data-pdf ${p.pdfURL ? `href="${esc(p.pdfURL)}"` : 'hidden'} target="_blank" rel="noopener">${svgi('printer', 'ic-s')} ${esc(t('reprint'))}</a>
+      <button class="ghost" data-toggle aria-expanded="false">${esc(t('details'))}</button>
       <button class="ghost" data-del aria-label="${esc(t('del_aria'))}">${svgi('trash', 'ic-s')}</button>
     </div>
     <div class="warn-box confirmrow hide" data-confirm role="alertdialog">
-      <span>${t('del_confirm')}</span>
-      <button class="ghost btn-xs" data-yes>${t('yes')}</button>
-      <button class="ghost btn-xs" data-no>${t('no')}</button>
+      <span>${esc(t('del_confirm'))}</span>
+      <button class="ghost btn-xs" data-yes>${esc(t('yes'))}</button>
+      <button class="ghost btn-xs" data-no>${esc(t('no'))}</button>
     </div>
-    <div class="details hide" data-details></div>
+    <div class="details hide" data-details><div class="muted">${esc(other ? t('other_env') : t('loading'))}</div></div>
   </div>`;
 }
-function updateParcelCard(p) {
+function updateParcelCard(p, local) {
   const c = $q(`.parcel[data-num="${p.number}"]`); if (!c) return;
-  const local = loadParcels().find((x) => x.number === p.number) || {};
+  local = local || {};
   const s = c.querySelector('[data-status]');
-  s.className = 'statusb ' + statusClass(p);
-  s.textContent = p.error ? t('no_status') : (p.status || t('status_transit'));
+  s.className = 'statusb ' + (p.error ? 's-gray' : statusClass(p));
+  s.textContent = p.error ? t('no_status') : (statusText(p) || t('status_transit'));
+  const old = c.querySelector('[data-coll]'); if (old) old.remove();
+  if (!p.error) s.insertAdjacentHTML('beforebegin', collectedPill(p));
+  const tr = c.querySelector('[data-track]');
+  tr.removeAttribute('data-ret'); tr.setAttribute('data-step', '0');
+  if (!p.error) { const st = classify(p); tr.setAttribute('data-step', st === 'delivered' || st === 'returned' ? '3' : st === 'transit' ? '2' : '1'); if (st === 'returned') tr.setAttribute('data-ret', ''); }
+  c.querySelector('[data-meta]').innerHTML = p.error ? '' : metaText(p);
   if (p.recipient || p.office) c.querySelector('[data-sub]').textContent = (p.recipient || '') + (p.office ? ' · ' + p.office : '');
   const pdf = p.pdfURL || local.pdfURL, a = c.querySelector('[data-pdf]');
   if (pdf) { a.href = pdf; a.hidden = false; } else { a.hidden = true; }
-  renderTimer(p.number, p);
+  if (p.error) { const cell = c.querySelector('[data-timer]'); delete TICK[p.number]; cell.className = 'parcel-timer t-muted'; cell.textContent = ''; }
+  else renderTimer(p.number, p);
   const det = c.querySelector('[data-details]');
   let html = detailRows(p, local).map(([k, v]) => `<div class="drow"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('');
-  if (p.events && p.events.length) html += '<div class="events">' + p.events.map((ev) => `<div class="event"><span class="dot"></span><span>${[fmtDate(ev.time), esc(ev.office), esc(ev.text)].filter(Boolean).join(' · ')}</span></div>`).join('') + '</div>';
-  det.innerHTML = html || `<div class="muted">${t('no_status')}</div>`;
-  const tg = c.querySelector('[data-toggle]');
-  tg.onclick = () => { det.classList.toggle('hide'); tg.textContent = det.classList.contains('hide') ? t('details') : t('hide_details'); };
+  if (p.events && p.events.length) {
+    // Newest first when every event has a time; otherwise keep Econt's order.
+    const evs = p.events.map((ev) => ({ ev, ms: toMs(ev.time) }));
+    if (evs.every((x) => x.ms)) evs.sort((x, y) => y.ms - x.ms);
+    html += `<div class="events"><div class="events-h">${esc(t('track_events'))}</div>` + evs.map(({ ev }) => `<div class="event"><span class="dot"></span><span>${[esc(fmtDateTime(ev.time)), esc(ev.office), esc(ev.text)].filter(Boolean).join(' · ')}</span></div>`).join('') + '</div>';
+  }
+  det.innerHTML = html || `<div class="muted">${esc(t('no_status'))}</div>`;
+}
+// Cards still waiting for a status after a refresh: stop the shimmer, say so.
+function markUnknown(nums) {
+  for (const n of nums) {
+    const c = $q(`.parcel[data-num="${n}"]`); if (!c) continue;
+    const s = c.querySelector('.statusb.sk'); if (!s) continue;
+    s.className = 'statusb s-gray'; s.textContent = t('no_status');
+    const det = c.querySelector('[data-details]'); det.innerHTML = `<div class="muted">${esc(t('no_status'))}</div>`;
+  }
+}
+// "Updated 3 min ago" from the newest snapshot of the current environment.
+function renderUpdated(list) {
+  const el = $('parcelsUpdated'); if (!el || el.dataset.failed) return;
+  list = list || loadParcels();
+  const at = Math.max(0, ...list.filter((p) => p.mode === CONFIG.mode && p.snapAt).map((p) => p.snapAt));
+  if (!at) { el.textContent = ''; return; }
+  const m = Math.floor((Date.now() - at) / 60000);
+  el.textContent = m < 1 ? t('upd_now') : m < 60 ? t('upd_min', { m }) : t('upd_hours', { h: Math.floor(m / 60) });
+}
+function syncParcelsChrome(n) {
+  $('clearParcelsBtn').classList.toggle('hide', !n);
+  if (!n) { $('clearAllConfirm').classList.add('hide'); $('parcelsUpdated').textContent = ''; }
+}
+function renderParcelsEmpty() {
+  $('parcelList').innerHTML = `<div class="card empty">${svgi('box', 'ic-xl')}<b>${esc(t('parcels_empty_t'))}</b><div class="muted">${esc(t('parcels_empty_s'))}</div><button class="primary" type="button" data-go-new>${esc(t('parcels_empty_cta'))}</button></div>`;
 }
 async function openParcels() {
   const list = loadParcels(), box = $('parcelList');
-  if (!list.length) { box.innerHTML = `<div class="card muted" style="text-align:center">${t('parcels_empty')}</div>`; stopTimers(); return; }
+  syncParcelsChrome(list.length);
+  delete $('parcelsUpdated').dataset.failed;
+  for (const k in TICK) delete TICK[k];
+  if (!list.length) { renderParcelsEmpty(); stopTimers(); return; }
   box.innerHTML = list.map(parcelCardHTML).join('');
-  box.querySelectorAll('[data-copy]').forEach((b) => { const num = b.closest('.parcel').getAttribute('data-num'); b.onclick = () => { navigator.clipboard.writeText(num); toast(t('copied')); }; });
-  box.querySelectorAll('[data-del]').forEach((b) => { b.onclick = () => b.closest('.parcel').querySelector('[data-confirm]').classList.toggle('hide'); });
-  box.querySelectorAll('[data-confirm] [data-yes]').forEach((b) => { b.onclick = () => removeParcel(b.closest('.parcel').getAttribute('data-num')); });
-  box.querySelectorAll('[data-confirm] [data-no]').forEach((b) => { b.onclick = () => b.closest('[data-confirm]').classList.add('hide'); });
-  await refreshParcels();
+  for (const p of list) if (p.snap && p.mode === CONFIG.mode) renderTimer(p.number, p.snap);
+  renderUpdated(list);
   startTimers();
+  await refreshParcels();
 }
-async function refreshParcels() {
-  const list = loadParcels();
-  list.filter((p) => p.mode !== CONFIG.mode).forEach((p) => { const c = $q(`.parcel[data-num="${p.number}"] [data-status]`); if (c) { c.className = 'statusb s-gray'; c.textContent = t('other_env'); } });
-  const nums = list.filter((p) => p.mode === CONFIG.mode).map((p) => p.number);
+// One delegated listener for every card action (cards are re-rendered often).
+$('parcelList').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.hasAttribute('data-go-new')) { switchTab('new'); $('msg').focus(); return; }
+  const card = b.closest('.parcel'); if (!card) return;
+  const num = card.getAttribute('data-num');
+  if (b.hasAttribute('data-copy')) copyText(num).then((ok) => (ok ? flashBtn(b) : toast(t('copy_fail'))));
+  else if (b.hasAttribute('data-reply')) sendReply(num, b, loadParcels().find((x) => x.number === num));
+  else if (b.hasAttribute('data-del')) card.querySelector('[data-confirm]').classList.toggle('hide');
+  else if (b.hasAttribute('data-yes')) removeParcel(num);
+  else if (b.hasAttribute('data-no')) b.closest('[data-confirm]').classList.add('hide');
+  else if (b.hasAttribute('data-toggle')) {
+    const det = card.querySelector('[data-details]');
+    const open = !det.classList.toggle('hide');
+    b.textContent = open ? t('hide_details') : t('details');
+    b.setAttribute('aria-expanded', String(open));
+  }
+});
+// Live status for the current environment. Saves a small snapshot per parcel so
+// the next visit paints instantly. onlyNums = refresh just those (a new card).
+async function refreshParcels(onlyNums) {
+  const nums = onlyNums || loadParcels().filter((p) => p.mode === CONFIG.mode).map((p) => p.number);
   if (!nums.length) return;
-  const btn = $('refreshParcelsBtn'); btnBusy(btn, true);
+  const btn = $('refreshParcelsBtn'); if (!onlyNums) btnBusy(btn, true);
+  const upd = $('parcelsUpdated');
   try {
-    const r = await api('/api/track', { creds: creds(), shipmentNumbers: nums });
-    if (!r.ok) { toast(r.error); return; }
-    (r.parcels || []).forEach(updateParcelCard);
-  } finally { btnBusy(btn, false); }
+    const r = await api('/api/track', { creds: creds(), shipmentNumbers: nums }, { retry: true, alive: () => !$('tab-parcels').classList.contains('hide') });
+    if (!r.ok) {
+      if (r.stale) return;
+      upd.dataset.failed = '1';
+      upd.textContent = t('upd_failed') + (r.transient ? '' : ' (' + r.error + ')');
+      markUnknown(nums);
+      return;
+    }
+    delete upd.dataset.failed;
+    const list = loadParcels(), map = new Map(list.map((x) => [x.number, x])), got = new Set();
+    for (const p of (r.parcels || [])) {
+      if (!p.number) continue;
+      got.add(p.number);
+      const lp = map.get(p.number);
+      if (!p.error && lp && lp.mode === CONFIG.mode) {
+        lp.snap = { status: p.status, statusEn: p.statusEn, sendTime: p.sendTime, deliveryTime: p.deliveryTime, expectedDeliveryDate: p.expectedDeliveryDate, cdCollected: p.cdCollected, cdCurrency: p.cdCurrency };
+        lp.snapAt = Date.now();
+      }
+      updateParcelCard(p, lp);
+    }
+    saveParcels(list);
+    markUnknown(nums.filter((n) => !got.has(n)));
+    renderUpdated(list);
+  } finally { if (!onlyNums) btnBusy(btn, false); }
 }
+// Remove in place: the card folds away, focus moves to the next card.
 function removeParcel(num) {
   saveParcels(loadParcels().filter((x) => x.number !== num));
   delete TICK[num];
-  openParcels();
   toast(t('removed'));
+  const left = loadParcels().length;
+  const card = $q(`.parcel[data-num="${num}"]`);
+  if (!card) { openParcels(); return; }
+  const next = card.nextElementSibling || card.previousElementSibling;
+  card.style.height = card.offsetHeight + 'px';
+  void card.offsetHeight; // commit the start height so the collapse animates
+  card.classList.add('leaving');
+  let done = false;
+  const finish = () => { if (done) return; done = true; card.remove(); if (!left) { renderParcelsEmpty(); syncParcelsChrome(0); } };
+  card.addEventListener('transitionend', finish, { once: true });
+  setTimeout(finish, 350);
+  const f = left && next && next.classList.contains('parcel') ? next.querySelector('[data-del]') : $('trackNumInput');
+  if (f) f.focus({ preventScroll: true });
 }
-$('refreshParcelsBtn').onclick = refreshParcels;
+$('refreshParcelsBtn').onclick = () => refreshParcels();
 $('clearParcelsBtn').onclick = () => $('clearAllConfirm').classList.toggle('hide');
 $('clearAllNo').onclick = () => $('clearAllConfirm').classList.add('hide');
 $('clearAllYes').onclick = () => {
   saveParcels([]);
   for (const k in TICK) delete TICK[k];
-  $('clearAllConfirm').classList.add('hide');
-  openParcels();
+  stopTimers();
+  renderParcelsEmpty(); syncParcelsChrome(0);
   toast(t('removed'));
 };
 $('trackNumBtn').onclick = () => {
   const v = ($('trackNumInput').value || '').replace(/\D/g, '');
   if (v.length < 8) { toast(t('invalid_number')); return; }
   if (loadParcels().some((p) => p.number === v)) { toast(t('already_added')); $('trackNumInput').value = ''; return; }
-  addParcel({ number: v, recipient: '', office: '', createdAt: Date.now(), mode: CONFIG.mode, manual: true });
+  const p = { number: v, recipient: '', office: '', createdAt: Date.now(), mode: CONFIG.mode, manual: true };
+  addParcel(p);
   $('trackNumInput').value = '';
-  openParcels();
+  const box = $('parcelList');
+  if (!box.querySelector('.parcel')) box.innerHTML = '';
+  box.insertAdjacentHTML('afterbegin', parcelCardHTML(p));
+  box.firstElementChild.classList.add('fresh');
+  syncParcelsChrome(loadParcels().length);
+  if (!TIMER_INT) startTimers();
+  refreshParcels([v]);
 };
 
 // ---------- about / credits page ----------
@@ -1418,6 +1918,9 @@ document.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter') return;
   const el = e.target;
   if (el && el.id === 'msg') { if (e.ctrlKey || e.metaKey) { e.preventDefault(); $('parseBtn').click(); } return; }
+  if ((e.ctrlKey || e.metaKey) && !$('view-app').classList.contains('hide') && !$('preview').classList.contains('hide') && $('batch').classList.contains('hide')) {
+    e.preventDefault(); const b = $('createBtn'); if (!b.disabled) b.click(); return;
+  }
   if (el && el.tagName === 'INPUT' && el.dataset.enter) { e.preventDefault(); const b = $(el.dataset.enter); if (b && !b.disabled) b.click(); }
 });
 

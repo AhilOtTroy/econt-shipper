@@ -122,6 +122,15 @@ async function handleApi(req, res, url) {
   if (req.method !== 'POST') return sendJson(res, 405, { ok: false, error: 'POST only' });
   const body = await readBody(req);
 
+  // Wake-up calls. Render spins the server down when idle; the client pings while
+  // the PIN is typed so the cold start overlaps something the user does anyway.
+  if (url.pathname === '/api/ping') return sendJson(res, 200, { ok: true });
+  // Warm also fills the office cache in the background (not awaited: instant reply).
+  if (url.pathname === '/api/warm') {
+    try { const c = getCreds(body); loadOffices(c).catch(() => {}); } catch {}
+    return sendJson(res, 200, { ok: true });
+  }
+
   // Validate Econt credentials (setup wizard + settings). Uses the client-profile
   // call because it always requires a valid login; the office list is public on
   // some Econt hosts and was also served from cache, so it could say "OK" for a
