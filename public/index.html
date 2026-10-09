@@ -47,7 +47,8 @@ try {
     --g-gray-100: #f2f2f2; --g-gray-200: #ebebeb; --g-gray-900: #666666; --g-gray-1000: #171717;
     --g-border: rgba(0,0,0,.08); --g-btn-hover: #383838;
     --g-blue-100: hsl(212 100% 97%); --g-blue-200: hsl(210 100% 96%); --g-blue-300: hsl(210 100% 94%);
-    --g-blue-700: hsl(212 100% 48%); --g-blue-900: hsl(211 100% 42%); --g-green-700: hsl(131 41% 46%);
+    --g-blue-400: hsl(209 100% 90%); --g-blue-700: hsl(212 100% 48%); --g-blue-800: hsl(212 100% 41%); --g-blue-900: hsl(211 100% 42%);
+    --g-green-700: hsl(131 41% 46%); --ld-pin-ink: var(--g-blue-800);
     --g-shadow-border: 0 0 0 1px rgba(0,0,0,.08);
     --g-shadow-medium: 0 0 0 1px rgba(0,0,0,.08), 0 2px 2px rgba(0,0,0,.04), 0 8px 16px -4px rgba(0,0,0,.04);
     --g-focus: 0 0 0 2px var(--g-bg-100), 0 0 0 4px var(--g-blue-700);
@@ -67,7 +68,8 @@ try {
     --g-gray-100: #1a1a1a; --g-gray-200: #1f1f1f; --g-gray-900: #a1a1a1; --g-gray-1000: #ededed;
     --g-border: rgba(255,255,255,.145); --g-btn-hover: #cccccc;
     --g-blue-100: hsl(216 50% 12%); --g-blue-200: hsl(214 59% 15%); --g-blue-300: hsl(213 71% 20%);
-    --g-blue-700: hsl(212 100% 48%); --g-blue-900: hsl(210 100% 66%); --g-green-700: hsl(131 41% 46%);
+    --g-blue-400: hsl(212 78% 23%); --g-blue-700: hsl(212 100% 48%); --g-blue-800: hsl(212 100% 41%); --g-blue-900: hsl(210 100% 66%);
+    --g-green-700: hsl(131 41% 46%); --ld-pin-ink: var(--g-blue-900);
     --g-shadow-border: 0 0 0 1px rgba(255,255,255,.145);
     --g-shadow-medium: 0 0 0 1px rgba(255,255,255,.145), 0 2px 2px rgba(0,0,0,.32), 0 8px 16px -4px rgba(0,0,0,.4);
   }
@@ -110,7 +112,7 @@ try {
     background: color-mix(in srgb, var(--bg) 70%, transparent);
     box-shadow: 0 1px 0 var(--line);
     -webkit-backdrop-filter: saturate(1.6) blur(16px); backdrop-filter: saturate(1.6) blur(16px); }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--brand); letter-spacing: -.02em; text-decoration: none; cursor: pointer; transition: transform .35s var(--spring); }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--brand); letter-spacing: -.02em; text-decoration: none; cursor: pointer; transition: transform .35s var(--spring); }
   .brand > span { white-space: nowrap; }
   .brand svg { border-radius: 8px; filter: drop-shadow(0 4px 8px rgba(10,78,168,.4)); }
   .brand:hover { transform: translateY(-1px); }
@@ -119,7 +121,7 @@ try {
   .langtoggle { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; box-shadow: var(--shadow); }
   .lang { border: 0; background: transparent; color: var(--muted); padding: 7px 13px; font-weight: 700; font-size: 13px; transition: color .25s, background .35s var(--ease); }
   .lang.active { background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; }
-  .icon { display: inline-flex; align-items: center; justify-content: center; flex: none; padding: 0; border: 1px solid var(--line); background: var(--card); color: var(--brand); width: 40px; height: 40px; border-radius: 13px; font-weight: 800; font-size: 18px; line-height: 1; box-shadow: var(--shadow); transition: transform .3s var(--spring), border-color .2s, color .2s, box-shadow .3s; }
+  .icon { display: inline-flex; align-items: center; justify-content: center; flex: none; padding: 0; border: 1px solid var(--line); background: var(--card); color: var(--brand); width: 40px; height: 40px; border-radius: 13px; font-weight: 700; font-size: 18px; line-height: 1; box-shadow: var(--shadow); transition: transform .3s var(--spring), border-color .2s, color .2s, box-shadow .3s; }
   .icon:hover { border-color: var(--brand-2); color: var(--brand-2); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
   .icon:active { transform: scale(.9); }
 
@@ -130,7 +132,7 @@ try {
   /* Lit-from-above key highlight + one-shot hover sheen on the two CTA styles. */
   .primary { background: linear-gradient(135deg, var(--brand-2), var(--brand)); border-color: transparent; color: #fff; font-weight: 700; box-shadow: inset 0 1px 0 rgba(255,255,255,.25), var(--shadow-brand); position: relative; overflow: hidden; }
   @media (hover: hover) { .primary:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 14px 32px rgba(10,115,214,.45); } }
-  .go { background: linear-gradient(135deg, #24b568, var(--go-d)); border-color: transparent; color: #fff; font-weight: 800; box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 10px 26px rgba(30,158,87,.4); position: relative; overflow: hidden; }
+  .go { background: linear-gradient(135deg, #24b568, var(--go-d)); border-color: transparent; color: #fff; font-weight: 700; box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 10px 26px rgba(30,158,87,.4); position: relative; overflow: hidden; }
   @media (hover: hover) { .go:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 14px 32px rgba(30,158,87,.5); } }
   .primary::after, .go::after { content: ""; position: absolute; inset: 0; pointer-events: none; transform: translateX(-130%) skewX(-18deg);
     background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.35) 50%, transparent 65%); }
@@ -165,22 +167,22 @@ try {
   .muted { color: var(--muted); font-size: 13.5px; }
   .err { color: var(--warn); white-space: pre-wrap; font-size: 13.5px; margin-top: 8px; }
   .good { color: var(--go-d); font-size: 13.5px; margin-top: 8px; font-weight: 600; }
-  .ok-num { font-size: 32px; font-weight: 900; letter-spacing: .5px; word-break: break-all; color: var(--brand);
+  .ok-num { font-size: 32px; font-weight: 700; letter-spacing: .5px; word-break: break-all; color: var(--brand);
     background: linear-gradient(135deg, var(--brand-2), var(--brand-3)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  .price { font-size: 24px; font-weight: 800; color: var(--brand); }
+  .price { font-size: 24px; font-weight: 700; color: var(--brand); }
   a { color: var(--brand-2); }
   .toolbar { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
   h2 { font-size: 21px; margin: 0 0 6px; letter-spacing: -.01em; }
-  h3 { margin: 2px 0 4px; font-size: 12px; color: var(--brand); text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
+  h3 { margin: 2px 0 4px; font-size: 15px; line-height: 20px; color: var(--brand); letter-spacing: -.01em; font-weight: 600; }
   h1, h2 { text-wrap: balance; }
   .hero p, .muted, .parcel-sub { text-wrap: pretty; }
   .ok-num, .price, .parcel-num, .pin, .drow .v { font-variant-numeric: tabular-nums; }
   hr { border: none; border-top: 1px solid var(--line); margin: 16px 0; }
   .pin { letter-spacing: 10px; text-align: center; font-size: 26px; font-weight: 700; }
-  .badge { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 800; }
+  .badge { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 700; }
   .badge.demo { background: #fff4d6; color: #7a5200; }
   .badge.production { background: #def5e6; color: var(--go-d); }
-  .step-no { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-weight: 800; font-size: 12px; margin-right: 6px; }
+  .step-no { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-weight: 700; font-size: 12px; margin-right: 6px; }
 
   .spin { display: inline-block; width: 15px; height: 15px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sp .6s linear infinite; vertical-align: -2px; margin-right: 8px; }
   @keyframes sp { to { transform: rotate(360deg); } }
@@ -201,19 +203,19 @@ try {
     animation: float 5.5s var(--ease) infinite; }
   .appicon svg { width: 44px; height: 44px; filter: drop-shadow(0 3px 5px rgba(0,0,0,.25)); }
   @keyframes float { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-12px) rotate(3deg); } }
-  .hero h1 { font-size: 32px; line-height: 1.12; margin: 8px 0 12px; letter-spacing: -.03em; font-weight: 800; color: var(--brand);
+  .hero h1 { font-size: 32px; line-height: 1.12; margin: 8px 0 12px; letter-spacing: -.03em; font-weight: 700; color: var(--brand);
     background: linear-gradient(135deg, var(--ink) 30%, var(--brand)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   .hero p { color: var(--muted); margin: 0 auto 22px; max-width: 440px; font-size: 16px; }
   .feat { display: flex; gap: 12px; align-items: center; margin: 14px 0; text-align: left; }
-  .feat .tick { flex: none; width: 30px; height: 30px; border-radius: 10px; background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: var(--shadow-brand); }
+  .feat .tick { flex: none; width: 30px; height: 30px; border-radius: 10px; background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: var(--shadow-brand); }
 
   .parcel { border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 12px; background: var(--card); -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3); box-shadow: inset 0 1px 0 var(--ring-hi), var(--shadow); transition: transform .35s var(--ease), box-shadow .35s var(--ease);
     content-visibility: auto; contain-intrinsic-size: auto 150px; }
   @media (hover: hover) { .parcel:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); } }
   .parcel-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .parcel-num { min-width: 0; }
-  .parcel-num { font-weight: 800; color: var(--brand); letter-spacing: .3px; }
-  .statusb { margin-left: auto; font-size: 11.5px; font-weight: 800; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .parcel-num { font-weight: 700; color: var(--brand); letter-spacing: .3px; }
+  .statusb { margin-left: auto; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
   .s-blue { background: var(--brand-soft); color: var(--brand); } .s-green { background: #def5e6; color: var(--go-d); }
   .s-red { background: #fde7e7; color: var(--warn); } .s-gray { background: #eef2f7; color: var(--muted); }
   .parcel-sub { color: var(--ink); font-size: 13.5px; margin-top: 6px; }
@@ -242,7 +244,7 @@ try {
   /* One-glance shipment summary + office-match confidence */
   .summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 14px; color: var(--ink); background: var(--brand-soft); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 13px; margin: 2px 0 8px; }
   .summary .dot-sep { color: var(--muted); margin: 0 3px; }
-  .match { display: inline-block; font-size: 11.5px; font-weight: 800; padding: 2px 9px; border-radius: 999px; margin-left: 4px; }
+  .match { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px; margin-left: 4px; }
   .match-hi { background: #def5e6; color: var(--go-d); }
   .match-mid { background: var(--brand-soft); color: var(--brand); }
   .match-lo { background: #fff4d6; color: #7a5200; }
@@ -283,7 +285,7 @@ try {
   /* Batch rows */
   .brow { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-top: 10px; background: var(--card-solid); }
   .brow-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .brow-top .idx { font-weight: 800; color: var(--brand); font-size: 13px; flex: none; }
+  .brow-top .idx { font-weight: 700; color: var(--brand); font-size: 13px; flex: none; }
   .brow-top input[type=checkbox] { width: auto; transform: scale(1.25); accent-color: var(--brand); }
   .brow-status { margin-left: auto; font-size: 12px; font-weight: 700; text-align: right; max-width: 100%; overflow-wrap: anywhere; }
   .brow-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
@@ -293,7 +295,7 @@ try {
   .brow.done .brow-grid, .brow.done .idx, .brow.done input[type=checkbox] { opacity: .55; }
   .brow-top [data-f="send"] { flex: none; }
   /* Section labels inside the preview — orientation without noise */
-  .sec { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--brand); margin: 18px 0 2px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .sec { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--brand); margin: 18px 0 2px; padding-top: 12px; border-top: 1px solid var(--line); }
   .sec-first { margin-top: 8px; padding-top: 0 !important; border-top: 0 !important; }
   .optline { margin-top: 10px !important; }
   .optline .amt { width: 110px; margin-left: 6px; }
@@ -311,7 +313,7 @@ try {
   .drop-txt strong { font-size: 14.5px; color: var(--brand); }
   .drop-txt .muted { font-size: 12.5px; }
   .ocr { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 13.5px; font-weight: 600; color: var(--brand); }
-  .or-sep { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+  .or-sep { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; color: var(--muted); font-size: 13px; font-weight: 500; }
   .or-sep::before, .or-sep::after { content: ""; flex: 1; height: 1px; background: var(--line); }
   .ok-num { animation: pop .6s var(--spring) both; }
   @keyframes pop { from { opacity: 0; transform: scale(.5) translateY(8px); } to { opacity: 1; transform: none; } }
@@ -330,8 +332,8 @@ try {
 
   /* About / credits page */
   .creator { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
-  .avatar { flex: none; width: 58px; height: 58px; border-radius: 18px; background: linear-gradient(135deg, var(--brand-3), var(--brand)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 21px; letter-spacing: .5px; box-shadow: var(--shadow-brand), inset 0 2px 2px rgba(255,255,255,.35); }
-  .creator-name { font-weight: 800; font-size: 17.5px; letter-spacing: -.01em; }
+  .avatar { flex: none; width: 58px; height: 58px; border-radius: 18px; background: linear-gradient(135deg, var(--brand-3), var(--brand)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 21px; letter-spacing: .5px; box-shadow: var(--shadow-brand), inset 0 2px 2px rgba(255,255,255,.35); }
+  .creator-name { font-weight: 700; font-size: 17.5px; letter-spacing: -.01em; }
   .socials { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
   .social { display: inline-flex; align-items: center; gap: 8px; padding: 10px 15px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); text-decoration: none; color: var(--ink); font-weight: 700; font-size: 13.5px; box-shadow: var(--shadow); transition: transform .3s var(--spring), box-shadow .3s, border-color .2s, color .2s; }
   .social:hover { transform: translateY(-2px); border-color: var(--brand-2); color: var(--brand); box-shadow: var(--shadow-lg); }
@@ -350,7 +352,7 @@ try {
   #result .toolbar, #resultMeta { animation: riseIn .5s .3s var(--ease) both; }
 
   /* Global footer */
-  .footer { text-align: center; color: var(--muted); font-size: 12.5px; padding: 28px 0 0; }
+  .footer { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 0 16px; color: var(--muted); font-size: 12.5px; padding: 28px 0 0; }
   .footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; transition: color .2s; }
   .footer a:hover { color: var(--brand-2); }
 
@@ -458,7 +460,7 @@ try {
   .reply-prev { margin-top: 14px; padding: 10px 13px; border-radius: 10px; background: var(--brand-soft); border-left: 3px solid var(--brand-2); cursor: pointer; transition: background .2s; }
   .reply-prev:hover { background: color-mix(in srgb, var(--brand-2) 18%, transparent); }
   .reply-prev:focus-visible { outline: 2px solid var(--brand-2); outline-offset: 2px; }
-  .reply-prev-h { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--brand); }
+  .reply-prev-h { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--brand); }
   .reply-prev-copy { text-transform: none; letter-spacing: 0; font-weight: 700; font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 5px; }
   .reply-prev.is-done .reply-prev-copy { color: var(--go-d); }
   .reply-prev-t { white-space: pre-wrap; font-size: 13px; color: var(--ink); margin-top: 6px; overflow-wrap: anywhere; }
@@ -478,7 +480,7 @@ try {
   .parcel-timer .ic-s { flex: none; }
   .upd { font-size: 12px; margin-top: 4px; }
   .upd:empty { display: none; }
-  .events-h { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--brand); margin-bottom: 4px; }
+  .events-h { font-size: 13px; font-weight: 600; color: var(--brand); margin-bottom: 4px; }
   .card.empty { text-align: center; padding: 30px 20px 26px; }
   .card.empty b { display: block; font-size: 16px; margin-top: 10px; color: var(--ink); }
   .card.empty .muted { margin: 4px auto 16px; max-width: 340px; }
@@ -493,8 +495,11 @@ try {
      scale, a 4px spacing grid, radii by component (8px button, 12px surfaces, round
      badges), a black primary button. Colour is kept for meaning: blue links each part
      of the message to its waybill row (and marks focus), green is the status dot. */
-  :root:has(#view-landing:not(.hide)) { --bg: var(--g-bg-100); }
+  :root:has(#view-landing:not(.hide)) { --bg: var(--g-bg-100); --line: var(--g-border); }
   body:has(#view-landing:not(.hide))::before { display: none; }
+  body:has(#view-landing:not(.hide)) .footer { justify-content: flex-start; color: var(--g-gray-900); font-size: 13px; line-height: 20px; }
+  body:has(#view-landing:not(.hide)) .footer a { color: var(--g-gray-900); text-decoration-color: var(--g-border); }
+  body:has(#view-landing:not(.hide)) .footer a:hover { color: var(--g-gray-1000); text-decoration-color: currentColor; }
   #view-landing:not(.hide) { animation: none; }
   .ld { color: var(--g-gray-1000); padding: 40px 0 8px; }
   .ld :where(h1, h2, h3) { margin: 0; color: var(--g-gray-1000); font-weight: 600; text-transform: none; text-wrap: balance; }
@@ -503,19 +508,23 @@ try {
   /* Hero: heading-40 / heading-56, copy-18 / copy-20, large button. Geist's heading
      tracking (-0.06em) makes Cyrillic letters touch, so headings run about a third looser. */
   .ld-title { font-size: 40px; line-height: 48px; letter-spacing: -1.6px; }
-  .ld-lead { margin: 16px 0 0; max-width: 36em; font-size: 18px; line-height: 28px; color: var(--g-gray-900); text-wrap: pretty; }
+  .ld-lead { margin: 16px 0 0; max-width: 34em; font-size: 18px; line-height: 28px; color: var(--g-gray-900); text-wrap: pretty; }
   .ld-cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 32px; }
+  /* Longhands, not the font shorthand, so "locl" 0 from body is never reset. */
   .ld .ld-btn { appearance: none; display: inline-flex; align-items: center; justify-content: center; height: 48px; padding: 0 20px;
     border: 0; border-radius: 8px; background: var(--g-gray-1000); color: var(--g-bg-100); box-shadow: none;
-    font: 500 16px/20px var(--font-text); white-space: nowrap; cursor: pointer; transition: background-color .15s; }
+    font-family: var(--font-text); font-size: 16px; line-height: 20px; font-weight: 500; font-feature-settings: "locl" 0;
+    white-space: nowrap; cursor: pointer; transition: background-color .15s; }
   @media (hover: hover) { .ld .ld-btn:hover { background: var(--g-btn-hover); transform: none; box-shadow: none; border: 0; } }
   .ld .ld-btn:active { transform: none; }
-  .ld .ld-btn:focus-visible { outline: none; box-shadow: var(--g-focus); }
-  .ld-note { margin: 0; max-width: 27em; font-size: 14px; line-height: 20px; color: var(--g-gray-900); text-wrap: pretty; }
+  /* The transparent outline is what forced-colors mode paints, since it drops box-shadow. */
+  .ld .ld-btn:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--g-focus); }
+  .ld-note { margin: 0; max-width: 28em; font-size: 14px; line-height: 20px; color: var(--g-gray-900); text-wrap: pretty; }
   @media (max-width: 519px) { .ld .ld-btn { width: 100%; } }
 
-  /* The worked example: message, waybill, reply */
-  .ld-demo { margin-top: 56px; display: grid; grid-template-columns: minmax(0, 1fr); }
+  /* The worked example: message, waybill, reply. One narrow column until there is
+     room for two (840px), so the bubble never squeezes into short lines. */
+  .ld-demo { margin-top: 56px; max-width: 560px; display: grid; grid-template-columns: minmax(0, 1fr); }
   .ld-col + .ld-col { margin-top: 40px; }
   .ld .ld-cap { font-size: 16px; line-height: 24px; letter-spacing: -.16px; margin-bottom: 12px; }
   .ld-chat-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
@@ -523,46 +532,49 @@ try {
     background: var(--g-gray-100); box-shadow: var(--g-shadow-border); color: var(--g-gray-1000); font-size: 12px; font-weight: 500; line-height: 1; }
   .ld-chat-name { font-size: 14px; line-height: 20px; font-weight: 500; }
   .ld-chat-meta { font-size: 13px; line-height: 16px; color: var(--g-gray-900); }
-  .ld-bubble { padding: 12px 16px; border-radius: 4px 16px 16px 16px; font-size: 16px; line-height: 26px; color: var(--g-gray-1000); }
+  /* Both bubbles set at 16px. The message runs 28px lines so stacked marks never touch. */
+  .ld-bubble { padding: 12px 16px; border-radius: 4px 16px 16px 16px; font-size: 16px; line-height: 24px; color: var(--g-gray-1000); }
   .ld-bubble p { margin: 0; }
-  .ld-bubble.in { max-width: min(30em, 96%); background: var(--g-bg-100); box-shadow: var(--g-shadow-border); }
+  .ld-bubble.in { max-width: min(30em, 96%); line-height: 28px; background: var(--g-bg-100); box-shadow: var(--g-shadow-border); }
   .ld-bubble.out { margin-left: auto; max-width: min(30em, 92%); border-radius: 16px 4px 16px 16px; background: var(--g-gray-100);
-    font-size: 15px; line-height: 24px; white-space: pre-line; overflow-wrap: anywhere; }
+    white-space: pre-line; overflow-wrap: anywhere; }
   .ld-bubble.out .url { color: var(--g-blue-900); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--g-blue-900) 40%, transparent); text-underline-offset: 3px; }
   .ld-small { margin: 8px 0 0; max-width: 32em; font-size: 13px; line-height: 18px; color: var(--g-gray-900); text-wrap: pretty; }
   .ld-small:empty { display: none; }
   .ld-out-meta { margin-top: 8px; text-align: right; font-size: 13px; line-height: 16px; color: var(--g-gray-900); }
 
-  /* Numbered links: a part of the message and its waybill row share one number */
-  .ld-bubble mark { color: inherit; background: var(--g-blue-200); border-radius: 4px; padding: 1px 2px 1px 4px; cursor: default;
+  /* Numbered links: a part of the message and its waybill row share one number.
+     Resting: blue-200 tint, blue-300 pin. Active pair: blue-400 tint, blue-800 pin
+     with white digits (5.7:1). The negative margin keeps marked words on the text edge. */
+  .ld-bubble mark { color: inherit; background: var(--g-blue-200); border-radius: 4px; padding: 1px 2px; margin-inline: -2px; cursor: pointer;
     -webkit-box-decoration-break: clone; box-decoration-break: clone; transition: background-color .15s; }
   .ld-bubble mark:not([data-n="3"]) { white-space: nowrap; }
   .ld-bubble mark::after, .ld-pin { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 999px;
-    background: var(--g-blue-300); color: var(--g-blue-900); font-size: 11px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums;
+    background: var(--g-blue-300); color: var(--ld-pin-ink); font-size: 11px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums;
     transition: background-color .15s, color .15s; }
   .ld-bubble mark::after { content: attr(data-n); margin-left: 4px; vertical-align: 1px; }
-  .ld-bubble mark.on { background: var(--g-blue-300); }
-  .ld-bubble mark.on::after, .ld-wb-row.on .ld-pin { background: var(--g-blue-700); color: #fff; }
-  .ld-bubble mark:focus-visible { outline: 2px solid var(--g-blue-700); outline-offset: 1px; }
+  .ld-bubble mark.on, .ld-wb-row.on { background: var(--g-blue-400); }
+  .ld-bubble mark.on::after, .ld-wb-row.on .ld-pin { background: var(--g-blue-800); color: #fff; }
+  .ld-bubble mark:focus-visible { outline: 2px solid var(--g-blue-700); outline-offset: 2px; }
 
-  /* The waybill: one Geist surface (12px radius, border + soft shadow) */
+  /* The waybill: one Geist surface (12px radius, border + soft shadow). Its title is
+     for screen readers only: the caption above already names it. */
   .ld-wb { background: var(--g-bg-100); border-radius: 12px; box-shadow: var(--g-shadow-medium); overflow: hidden;
     animation: ldRise .5s cubic-bezier(.2,.8,.2,1) .1s both; }
   @keyframes ldRise { from { opacity: 0; transform: translateY(8px); } }
-  .ld-wb-head { padding: 16px 16px 14px; border-bottom: 1px solid var(--g-border); }
-  .ld-wb-title { font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
-  .ld-wb-num { margin-top: 2px; font-size: 24px; line-height: 32px; letter-spacing: -.5px; font-weight: 600; }
+  .ld-wb-head { padding: 16px; border-bottom: 1px solid var(--g-border); }
+  .ld-wb-num { font-size: 24px; line-height: 32px; letter-spacing: -.48px; font-weight: 600; }
   .ld-wb-rows { margin: 0; padding: 0; }
   .ld-wb-row { display: grid; grid-template-columns: 18px 116px minmax(0, 1fr); column-gap: 12px; align-items: start;
     padding: 12px 16px; border-bottom: 1px solid var(--g-border); transition: background-color .15s; }
+  .ld-wb-row[data-n] { cursor: pointer; }
   .ld-wb-row dt { display: contents; }
   .ld-wb-row .ld-pin { margin-top: 1px; }
   .ld-wb-l { font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
   .ld-wb-row dd { margin: 0; font-size: 14px; line-height: 20px; font-weight: 500; }
   .ld-wb-row .ld-amt { font-weight: 600; }
-  .ld-wb-row.dim dd { color: var(--g-gray-900); font-weight: 400; }
-  .ld-wb-row.on { background: var(--g-blue-200); }
-  .ld-badge { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; margin-left: 6px; border-radius: 999px; vertical-align: 1px;
+  .ld-wb-row.dim dd { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: var(--g-gray-900); font-weight: 400; }
+  .ld-badge { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px;
     background: var(--g-gray-200); color: var(--g-gray-1000); font-size: 11px; line-height: 1; font-weight: 500; white-space: nowrap; }
   .ld-wb-foot { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--g-bg-200); font-size: 13px; line-height: 16px; color: var(--g-gray-900); }
   .ld-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--g-green-700); flex: none; }
@@ -583,21 +595,24 @@ try {
   @media (min-width: 720px) {
     .ld { padding-top: 72px; }
     .ld-title { font-size: 56px; line-height: 60px; letter-spacing: -2.24px; }
-    .ld-lead { margin-top: 20px; font-size: 20px; line-height: 32px; }
-    .ld-demo { margin-top: 80px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); column-gap: 32px; align-items: start; }
-    .ld-col + .ld-col { margin-top: 0; }
-    .ld-col.c-in { grid-column: 1; grid-row: 1; }
-    .ld-col.c-wb { grid-column: 2; grid-row: 1 / span 2; }
-    .ld-col.c-out { grid-column: 1; grid-row: 2; margin-top: 40px; }
-    .ld-wb-row { grid-template-columns: 18px 128px minmax(0, 1fr); }
+    .ld-lead { margin-top: 20px; max-width: 30em; font-size: 20px; line-height: 32px; }
+    .ld-demo { margin-top: 80px; }
     .ld-more { margin-top: 112px; }
     .ld-more h2 { font-size: 32px; line-height: 40px; letter-spacing: -.96px; }
     .ld-spec-row { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 24px; padding: 16px 20px; }
     .ld-spec-row dd { margin: 0; }
     .ld-end { margin-top: 48px; }
   }
+  @media (min-width: 840px) {
+    .ld-demo { max-width: none; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); column-gap: 32px; align-items: start; }
+    .ld-col + .ld-col { margin-top: 0; }
+    .ld-col.c-in { grid-column: 1; grid-row: 1; }
+    .ld-col.c-wb { grid-column: 2; grid-row: 1 / span 2; }
+    .ld-col.c-out { grid-column: 1; grid-row: 2; margin-top: 40px; }
+    .ld-wb-row { grid-template-columns: 18px 128px minmax(0, 1fr); }
+  }
   @media (max-width: 380px) {
-    .ld-wb-row { grid-template-columns: 18px 120px minmax(0, 1fr); column-gap: 10px; padding-inline: 14px; }
+    .ld-wb-row { grid-template-columns: 18px 120px minmax(0, 1fr); column-gap: 8px; padding-inline: 12px; }
   }
 </style>
 </head>
@@ -628,8 +643,8 @@ try {
         <h1 class="ld-title" data-i18n="land_title">От текст до пратка.</h1>
         <p class="ld-lead" data-i18n="land_sub">Поставяш съобщението на клиента, проверяваш името, офиса и сумата, и товарителницата е готова в твоя Еконт профил.</p>
         <div class="ld-cta-row">
-          <button class="ld-btn" id="getStartedBtn" type="button" data-i18n="land_cta">Започни безплатно</button>
-          <p class="ld-note" data-i18n="land_cta_note">Нужни са ти потребителско име и парола за Еконт.</p>
+          <button class="ld-btn" id="getStartedBtn" type="button" data-i18n="land_cta">Свържи профила си в Еконт</button>
+          <p class="ld-note" data-i18n="land_cta_note">Трябват ти потребителското име и паролата за Еконт.</p>
         </div>
       </header>
 
@@ -645,7 +660,7 @@ try {
             <span class="ld-chat-meta">Viber, 14:32</span>
           </div>
           <div class="ld-bubble in" lang="bg">
-            <p>Здравейте, вземам якето за <mark data-n="4" tabindex="0">45 €</mark>. <mark data-n="1" tabindex="0">Мария Петрова</mark>, <mark data-n="2" tabindex="0">0888 412 657</mark>, <mark data-n="3" tabindex="0">Еконт Пловдив, офис Тракия</mark>. <mark data-n="5" tabindex="0">С преглед</mark> ако може, благодаря!</p>
+            <p>Здравейте, вземам якето за <mark data-n="4" tabindex="0" aria-describedby="ldRow4">45 €</mark>. <mark data-n="1" tabindex="0" aria-describedby="ldRow1">Мария Петрова</mark>, <mark data-n="2" tabindex="0" aria-describedby="ldRow2">0888 412 657</mark>, <mark data-n="3" tabindex="0" aria-describedby="ldRow3">Еконт Пловдив, офис Тракия</mark>. <mark data-n="5" tabindex="0" aria-describedby="ldRow5">С преглед</mark> ако може, благодаря!</p>
           </div>
           <p class="ld-small" data-i18n="demo_gloss"></p>
           <p class="ld-small" data-i18n="demo_map">Всяка номерирана част от съобщението попълва реда със същия номер.</p>
@@ -653,18 +668,18 @@ try {
 
         <!-- The waybill it becomes -->
         <div class="ld-col c-wb">
-          <h3 class="ld-cap" data-i18n="demo_c2">Провери товарителницата</h3>
+          <h3 class="ld-cap" data-i18n="demo_c2">Провери и създай товарителницата</h3>
           <article class="ld-wb" aria-labelledby="wbTitle">
             <div class="ld-wb-head">
-              <div class="ld-wb-title" id="wbTitle" data-i18n="wb_title">Товарителница</div>
+              <h4 class="sr-only" id="wbTitle" data-i18n="wb_title">Товарителница</h4>
               <div class="ld-wb-num" id="wbNum">1051602938472</div>
             </div>
             <dl class="ld-wb-rows">
-              <div class="ld-wb-row" data-n="1"><dt><span class="ld-pin">1</span><span class="ld-wb-l" data-i18n="wb_rcpt">Получател</span></dt><dd lang="bg">Мария Петрова</dd></div>
-              <div class="ld-wb-row" data-n="2"><dt><span class="ld-pin">2</span><span class="ld-wb-l" data-i18n="wb_phone">Телефон</span></dt><dd class="ld-num">0888 412 657</dd></div>
-              <div class="ld-wb-row" data-n="3"><dt><span class="ld-pin">3</span><span class="ld-wb-l" data-i18n="wb_office">До офис</span></dt><dd lang="bg">Пловдив, Тракия</dd></div>
-              <div class="ld-wb-row" data-n="4"><dt><span class="ld-pin">4</span><span class="ld-wb-l" data-i18n="wb_cod">Наложен платеж</span></dt><dd class="ld-amt" data-i18n="wb_cod_v">45,00 €</dd></div>
-              <div class="ld-wb-row" data-n="5"><dt><span class="ld-pin">5</span><span class="ld-wb-l" data-i18n="wb_review">Преглед</span></dt><dd data-i18n="wb_review_v">Да, преди плащане</dd></div>
+              <div class="ld-wb-row" data-n="1" id="ldRow1"><dt><span class="ld-pin">1</span><span class="ld-wb-l" data-i18n="wb_rcpt">Получател</span></dt><dd lang="bg">Мария Петрова</dd></div>
+              <div class="ld-wb-row" data-n="2" id="ldRow2"><dt><span class="ld-pin">2</span><span class="ld-wb-l" data-i18n="wb_phone">Телефон</span></dt><dd class="ld-num">0888 412 657</dd></div>
+              <div class="ld-wb-row" data-n="3" id="ldRow3"><dt><span class="ld-pin">3</span><span class="ld-wb-l" data-i18n="wb_office">До офис</span></dt><dd lang="bg">Пловдив, Тракия</dd></div>
+              <div class="ld-wb-row" data-n="4" id="ldRow4"><dt><span class="ld-pin">4</span><span class="ld-wb-l" data-i18n="wb_cod">Наложен платеж</span></dt><dd class="ld-amt" data-i18n="wb_cod_v">45,00 €</dd></div>
+              <div class="ld-wb-row" data-n="5" id="ldRow5"><dt><span class="ld-pin">5</span><span class="ld-wb-l" data-i18n="wb_review">Преглед</span></dt><dd data-i18n="wb_review_v">Да, преди плащане</dd></div>
               <div class="ld-wb-row dim"><dt><span aria-hidden="true"></span><span class="ld-wb-l" data-i18n="wb_parcel">Пратка</span></dt><dd><span data-i18n="wb_parcel_v">колет, 1 кг, плаща получателят</span><span class="ld-badge" data-i18n="wb_default">от настройките</span></dd></div>
             </dl>
             <div class="ld-wb-foot"><span class="ld-dot" aria-hidden="true"></span><span data-i18n="wb_status">Създадена в твоя Еконт профил</span><span class="ld-time">14:33</span></div>
@@ -693,7 +708,7 @@ try {
         </dl>
         <div class="ld-end">
           <p data-i18n="land_need">Настройката отнема около минута.</p>
-          <button class="ld-btn" id="getStartedBtn2" type="button" data-i18n="land_cta">Започни безплатно</button>
+          <button class="ld-btn" id="getStartedBtn2" type="button" data-i18n="land_cta">Свържи профила си в Еконт</button>
         </div>
       </section>
     </div>
@@ -1078,7 +1093,7 @@ try {
     </div>
   </div>
 
-  <div class="footer"><span id="footerCopy"></span> · <a href="#" id="footerAbout"></a></div>
+  <div class="footer"><span id="footerCopy"></span><a href="#" id="footerAbout"></a></div>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="srLive" class="sr-only" aria-live="polite"></div>

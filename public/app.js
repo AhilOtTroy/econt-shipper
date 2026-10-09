@@ -23,22 +23,22 @@ const I18N = {
     page_title: 'Econt Shipper: от текст до пратка', parse_failed: 'Неуспешно разчитане.',
     land_title: 'От текст до пратка.',
     land_sub: 'Поставяш съобщението на клиента, проверяваш името, офиса и сумата, и товарителницата е готова в твоя Еконт профил. Без преписване и без да отваряш сайта на Еконт.',
-    land_cta: 'Започни безплатно',
-    land_cta_note: 'Нужни са ти потребителско име и парола за Еконт. Остават само на това устройство, заключени с PIN. Нямаш профил? В настройката има демо акаунт.',
+    land_cta: 'Свържи профила си в Еконт', land_cta_open: 'Отвори приложението',
+    land_cta_note: 'Трябват ти потребителското име и паролата за Еконт. Остават само на това устройство, заключени с PIN. Нямаш профил в Еконт? Можеш да пробваш с демо профил.',
     demo_h: 'Пример с едно съобщение', demo_gloss: '',
-    demo_c1: 'Постави съобщението', demo_c2: 'Провери товарителницата', demo_c3: 'Прати отговора',
+    demo_c1: 'Постави съобщението', demo_c2: 'Провери и създай товарителницата', demo_c3: 'Прати отговора',
     demo_map: 'Всяка номерирана част от съобщението попълва реда със същия номер.',
     wb_title: 'Товарителница', wb_rcpt: 'Получател', wb_phone: 'Телефон', wb_office: 'До офис', wb_cod: 'Наложен платеж', wb_cod_v: '45,00 €',
     wb_review: 'Преглед', wb_review_v: 'Да, преди плащане', wb_parcel: 'Пратка', wb_parcel_v: 'колет, 1 кг, плаща получателят',
     wb_default: 'от настройките', wb_status: 'Създадена в твоя Еконт профил', demo_out_meta: 'изпратено 14:34',
     land_more_h: 'Какво още прави',
-    land_spec1_t: 'Откъдето ти пишат', land_spec1_d: 'OLX, Bazar.bg, Instagram, Facebook, Viber. Копираш съобщението, където и да е дошло.',
+    land_spec1_t: 'Всеки чат', land_spec1_d: 'OLX, Bazar.bg, Instagram, Facebook, Viber. Копираш съобщението, където и да е дошло.',
     land_spec2_t: 'Снимки от чата', land_spec2_d: 'Ако клиентът е пратил данните като снимка, пускаш скрийншота и текстът се разчита направо в браузъра.',
     land_spec3_t: 'Много поръчки наведнъж', land_spec3_d: 'Поставяш съобщенията на всички клиенти в едно поле. Всяко става отделна товарителница, а ти ги преглеждаш като списък.',
-    land_spec4_t: 'Наложен платеж', land_spec4_d: 'Сума в евро или лева, обявена стойност, преглед или преглед и тест. Обичайното го задаваш веднъж.',
-    land_spec5_t: 'Предпазители', land_spec5_d: 'Спира те, ако на същия телефон вече има пратка или ако си пропуснал сумата за наложения платеж.',
+    land_spec4_t: 'Наложен платеж', land_spec4_d: 'Сума в евро, обявена стойност, преглед или преглед и тест. Ако сумата е в лева, приложението показва колко е в евро. Обичайното го задаваш веднъж.',
+    land_spec5_t: 'Защита от грешки', land_spec5_d: 'Спира те, ако на същия телефон вече има пратка или ако си пропуснал сумата за наложения платеж.',
     land_spec6_t: 'Статус и отговор', land_spec6_d: 'Виждаш докъде е стигнала всяка пратка. Отговорът с линк за проследяване е готов, само го пращаш.',
-    land_spec7_t: 'Входът ти', land_spec7_d: 'Потребителят и паролата за Еконт стоят само на това устройство, криптирани с PIN. На сървър не пазим нищо.',
+    land_spec7_t: 'Данните ти за вход', land_spec7_d: 'Потребителското име и паролата за Еконт стоят само на това устройство, криптирани с PIN. На сървър не пазим нищо.',
     land_spec8_t: 'Цена', land_spec8_d: 'Приложението е безплатно. Еконт таксува пратките както винаги.',
     land_need: 'Настройката отнема около минута: PIN, вход в Еконт и офисът, от който пращаш.',
     setup_title: 'Бърза настройка', setup_sub: 'Еднократно. Всичко остава на устройството, с PIN.',
@@ -118,7 +118,7 @@ const I18N = {
     about_priv: 'Входът ви за Еконт стои само на това устройство, криптиран с PIN. Нямаме сървър с ваши данни и не следим нищо.',
     about_free: 'Безплатно за всички податели в Еконт.',
     about_creator_h: 'Създател', about_creator_role: 'Идея, дизайн и разработка',
-    about_back: '← Назад', footer_about: 'За приложението · Контакти', rights: 'Всички права запазени.',
+    about_back: '← Назад', footer_about: 'За приложението и контакти', rights: 'Всички права запазени.',
     a11y_theme_dark: 'Превключи към тъмна тема', a11y_theme_light: 'Превключи към светла тема',
     a11y_info: 'За приложението', a11y_settings: 'Настройки', a11y_lock: 'Заключи', a11y_home: 'Начало',
     // wake-up / retry / unsure create
@@ -157,20 +157,20 @@ const I18N = {
     page_title: 'Econt Shipper: from text to parcel', parse_failed: 'Could not parse that.',
     land_title: 'From text to parcel.',
     land_sub: "Paste the customer's message, check the name, the office and the amount, and the waybill is ready in your own Econt account. No retyping, no opening the Econt website.",
-    land_cta: 'Start for free',
-    land_cta_note: "You'll need your Econt username and password. They stay on this device, locked with a PIN. No account yet? Setup has a demo one.",
+    land_cta: 'Connect your Econt account', land_cta_open: 'Open the app',
+    land_cta_note: "You'll need your Econt username and password. They stay on this device, locked with a PIN. No Econt account? You can try a demo one.",
     demo_h: 'Example with one message',
-    demo_c1: 'Paste the message', demo_c2: 'Check the waybill', demo_c3: 'Send the reply',
+    demo_c1: 'Paste the message', demo_c2: 'Check and create the waybill', demo_c3: 'Send the reply',
     demo_map: 'Each numbered part of the message fills the waybill row with the same number.',
     demo_gloss: 'In English: "Hi, I\'ll take the jacket for 45 €. Maria Petrova, 0888 412 657, Econt Plovdiv, Trakia office. With review if possible, thanks!"',
     wb_title: 'Waybill', wb_rcpt: 'Recipient', wb_phone: 'Phone', wb_office: 'To office', wb_cod: 'Cash on delivery', wb_cod_v: '45.00 €',
     wb_review: 'Review', wb_review_v: 'Yes, before paying', wb_parcel: 'Parcel', wb_parcel_v: 'package, 1 kg, recipient pays',
     wb_default: 'from settings', wb_status: 'Created in your Econt account', demo_out_meta: 'sent 14:34',
     land_more_h: 'What else it does',
-    land_spec1_t: 'Wherever they write', land_spec1_d: 'OLX, Bazar.bg, Instagram, Facebook, Viber. Copy the message from wherever it came in.',
+    land_spec1_t: 'Any chat', land_spec1_d: 'OLX, Bazar.bg, Instagram, Facebook, Viber. Copy the message from wherever it came in.',
     land_spec2_t: 'Chat screenshots', land_spec2_d: 'If the customer sent the details as a picture, drop in the screenshot and the text is read right in your browser.',
     land_spec3_t: 'Many orders at once', land_spec3_d: "Paste every customer's message into one box. Each one becomes its own waybill, and you review them as a list.",
-    land_spec4_t: 'Cash on delivery', land_spec4_d: 'Amount in euro or leva, declared value, review, or review and test. Set your usual options once.',
+    land_spec4_t: 'Cash on delivery', land_spec4_d: 'Amount in euro, declared value, review, or review and test. If the amount is in leva, the app shows what it is in euro. Set your usual options once.',
     land_spec5_t: 'Safety checks', land_spec5_d: 'Stops you if the same phone number already has a parcel, or if you left out the COD amount.',
     land_spec6_t: 'Status and reply', land_spec6_d: 'See how far each parcel has got. The reply with the tracking link is ready, you just send it.',
     land_spec7_t: 'Your login', land_spec7_d: 'Your Econt username and password stay on this device, encrypted with your PIN. We keep nothing on a server.',
@@ -253,7 +253,7 @@ const I18N = {
     about_priv: 'Your Econt login lives only on this device, encrypted with your PIN. We keep no database about you and we track nothing.',
     about_free: 'Free for every Econt sender.',
     about_creator_h: 'Creator', about_creator_role: 'Idea, design & development',
-    about_back: '← Back', footer_about: 'About · Contact', rights: 'All rights reserved.',
+    about_back: '← Back', footer_about: 'About and contact', rights: 'All rights reserved.',
     a11y_theme_dark: 'Switch to dark theme', a11y_theme_light: 'Switch to light theme',
     a11y_info: 'About this app', a11y_settings: 'Settings', a11y_lock: 'Lock', a11y_home: 'Home',
     // wake-up / retry / unsure create
@@ -330,11 +330,15 @@ function t(key, params) {
   if (params) for (const k in params) s = s.split('{' + k + '}').join(params[k]);
   return s;
 }
+// Bulgarian typesetting: a one-letter word (и, в, с, а, о, у, к) never ends a line.
+// Two passes, so runs like "и в" both bind.
+const SHORT_WORD = /(^|[\s(])([авиоскуАВИОСКУ]) /g;
+const bindShortWords = (s) => s.replace(SHORT_WORD, '$1$2\u00A0').replace(SHORT_WORD, '$1$2\u00A0');
 function applyLang() {
   const dict = I18N[LANG] || I18N.en;
   document.documentElement.lang = LANG;
   document.title = dict.page_title || I18N.en.page_title;
-  document.querySelectorAll('[data-i18n]').forEach((el) => { const k = el.getAttribute('data-i18n'); if (dict[k] != null && !el.hasAttribute('aria-busy')) el.textContent = dict[k]; });
+  document.querySelectorAll('[data-i18n]').forEach((el) => { const k = el.getAttribute('data-i18n'); if (dict[k] != null && !el.hasAttribute('aria-busy')) el.textContent = LANG === 'bg' && el.closest('#view-landing') ? bindShortWords(dict[k]) : dict[k]; });
   document.querySelectorAll('[data-i18n-ph]').forEach((el) => { const k = el.getAttribute('data-i18n-ph'); if (dict[k] != null) el.placeholder = dict[k]; });
   $('langBg').classList.toggle('active', LANG === 'bg');
   $('langEn').classList.toggle('active', LANG === 'en');
@@ -458,6 +462,13 @@ const addParcel = (p) => { const a = loadParcels(); a.unshift(p); saveParcels(a)
 function show(view) {
   for (const v of ['landing', 'setup', 'lock', 'app', 'about', 'settings']) $('view-' + v).classList.toggle('hide', v !== view);
   document.querySelectorAll('.app-ctl').forEach((el) => el.classList.toggle('hide', view !== 'app'));
+  if (view === 'landing') syncLandingCta();
+  syncThemeColor();
+}
+// Landing CTA: a first visit connects an Econt account; a returning seller just opens the app.
+function syncLandingCta() {
+  const k = SESSION.password || loadStore() ? 'land_cta_open' : 'land_cta';
+  for (const id of ['getStartedBtn', 'getStartedBtn2']) { const b = $(id); b.dataset.i18n = k; b.textContent = t(k); }
 }
 const creds = () => ({ mode: CONFIG.mode, username: CONFIG.username, password: SESSION.password });
 // Official e-Econt account ("profile") URL for the active environment, so the
@@ -2070,7 +2081,14 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   $('themeBtn').innerHTML = svgi(theme === 'dark' ? 'sun' : 'moon');
   syncThemeBtnLabel();
-  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = theme === 'dark' ? '#080c12' : '#0a4ea8';
+  syncThemeColor();
+}
+// Browser toolbar colour: Geist background-100 on the landing, the app's own colours elsewhere.
+function syncThemeColor() {
+  const meta = document.querySelector('meta[name="theme-color"]'); if (!meta) return;
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const landing = !$('view-landing').classList.contains('hide');
+  meta.content = landing ? (dark ? '#0a0a0a' : '#ffffff') : (dark ? '#080c12' : '#0a4ea8');
 }
 function initTheme() {
   let th = localStorage.getItem('econt_theme');
@@ -2095,20 +2113,30 @@ function renderLandingReply() {
     `<span class="url">${rest.replace(/\//g, '/<wbr>')}</span>`)).join('\n');
 }
 (function initLanding() {
-  // Each marked part of the message lights up its waybill row (hover, focus or tap).
+  // Each marked part of the message lights up its waybill row, and the other way round.
+  // Mouse: hover. Touch: a tap toggles the pair, a tap anywhere else clears it.
+  // Keyboard: Tab onto a part lights its pair, Tab away clears it. A tap also focuses
+  // the mark (tabindex), so only keyboard focus (:focus-visible) drives the highlight.
+  const SEL = '.ld-bubble mark[data-n], .ld-wb-row[data-n]';
   const marks = document.querySelectorAll('.ld-bubble mark[data-n]'), rows = document.querySelectorAll('.ld-wb-row[data-n]');
-  let cur = null;
+  let cur = null, byKey = false, ptr = 'mouse';
   const set = (n) => {
     cur = n;
     marks.forEach((m) => m.classList.toggle('on', m.dataset.n === n));
     rows.forEach((r) => r.classList.toggle('on', r.dataset.n === n));
   };
+  document.addEventListener('pointerdown', (e) => { ptr = e.pointerType; }, true);
   [...marks, ...rows].forEach((el) => {
     el.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') set(el.dataset.n); });
     el.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') set(null); });
-    el.addEventListener('click', () => set(cur === el.dataset.n ? null : el.dataset.n));
+    // A mouse click keeps what hover lit; a tap toggles.
+    el.addEventListener('click', () => set(ptr !== 'mouse' && cur === el.dataset.n ? null : el.dataset.n));
   });
-  marks.forEach((m) => { m.addEventListener('focus', () => set(m.dataset.n)); m.addEventListener('blur', () => set(null)); });
+  marks.forEach((m) => {
+    m.addEventListener('focus', () => { let kb = true; try { kb = m.matches(':focus-visible'); } catch (e) {} if (kb) { byKey = true; set(m.dataset.n); } });
+    m.addEventListener('blur', () => { if (byKey) { byKey = false; set(null); } });
+  });
+  document.addEventListener('click', (e) => { if (cur && !(e.target.closest && e.target.closest(SEL))) set(null); });
 })();
 $('infoBtn').onclick = () => show('landing');
 $('brandHome').onclick = (e) => { e.preventDefault(); show('landing'); };
