@@ -324,12 +324,16 @@ function serveStatic(req, res, url) {
       : ext === '.js' ? 'text/javascript; charset=utf-8'
       : ext === '.css' ? 'text/css; charset=utf-8'
       : ext === '.webmanifest' ? 'application/manifest+json'
+      : ext === '.woff2' ? 'font/woff2'
+      : ext === '.txt' ? 'text/plain; charset=utf-8'
       : 'application/octet-stream';
     // Content-hash ETag + no-cache: the browser must revalidate every load, so a
     // new deploy is picked up immediately (no stale app.js), but unchanged files
     // still return a cheap 304 instead of re-downloading.
     const etag = '"' + crypto.createHash('sha1').update(data).digest('base64').slice(0, 22) + '"';
-    if (req.headers['if-none-match'] === etag) { res.writeHead(304, { ETag: etag, 'Cache-Control': 'no-cache' }); return res.end(); }
+    // Fonts never change under the same file name: let the browser keep them.
+    const cache = ext === '.woff2' ? 'public, max-age=31536000, immutable' : 'no-cache';
+    if (req.headers['if-none-match'] === etag) { res.writeHead(304, { ETag: etag, 'Cache-Control': cache }); return res.end(); }
     // Gzip text assets (~70% smaller) when the client accepts it.
     const compressible = /^(text\/|application\/manifest)/.test(type);
     const wantsGzip = compressible && /\bgzip\b/.test(req.headers['accept-encoding'] || '');
@@ -338,7 +342,7 @@ function serveStatic(req, res, url) {
     const headers = {
       'Content-Type': type,
       'Content-Length': body.length,
-      'Cache-Control': 'no-cache',
+      'Cache-Control': cache,
       'ETag': etag,
       'Vary': 'Accept-Encoding',
       'X-Content-Type-Options': 'nosniff',

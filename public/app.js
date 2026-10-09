@@ -21,12 +21,24 @@ const CREATOR = {
 const I18N = {
   bg: {
     page_title: 'Econt Shipper: от текст до пратка', parse_failed: 'Неуспешно разчитане.',
-    land_pill: 'За продавачи в OLX, Bazar, Instagram и Facebook', land_title: 'От текст до пратка.',
-    land_sub: 'Пускаш съобщението от клиента, хвърляш едно око и товарителницата е готова в твоя Еконт.',
-    land_cta: 'Започнете безплатно', land_what_h: 'Накратко',
-    land_what_p: 'Работи с каквото ти пратят: съобщение, списък или снимка от чата. Приложението открива имената, телефона и офиса и създава товарителницата във вашия Еконт акаунт. Входът остава на устройството, заключен с PIN.',
-    land_f1: 'Чете текст и снимки от чата (OCR).', land_f2: 'Разпознава трите имена, телефона и офиса.',
-    land_f3: 'Наложен платеж, обявена стойност, преглед и тест.', land_f4: 'Жив статус и готов отговор с номер за проследяване.',
+    land_title: 'От текст до пратка.',
+    land_sub: 'Поставяш съобщението на клиента, проверяваш името, офиса и сумата, и товарителницата е готова в твоя Еконт профил. Без преписване и без да отваряш сайта на Еконт.',
+    land_cta: 'Започни безплатно',
+    land_cta_note: 'Нужни са ти потребителско име и парола за Еконт. Остават само на това устройство, заключени с PIN. Нямаш профил? В настройката има демо акаунт.',
+    demo_h: 'Пример с едно съобщение', demo_gloss: '', demo_hand: 'Номерата показват кое къде отива',
+    wb_title: 'Товарителница', wb_rcpt: 'Получател', wb_phone: 'Телефон', wb_office: 'До офис', wb_cod: 'Наложен платеж', wb_cod_v: '45,00 €',
+    wb_review: 'Преглед', wb_review_v: 'Да, преди плащане', wb_parcel: 'Пратка', wb_parcel_v: 'колет, 1 кг, плаща получателят',
+    wb_default: 'от настройките', wb_status: 'Създадена в твоя Еконт профил', demo_out_meta: 'изпратено 14:34',
+    land_more_h: 'Какво още прави',
+    land_spec1_t: 'Откъдето ти пишат', land_spec1_d: 'OLX, Bazar.bg, Instagram, Facebook, Viber. Копираш съобщението, където и да е дошло.',
+    land_spec2_t: 'Снимки от чата', land_spec2_d: 'Ако клиентът е пратил данните като снимка, пускаш скрийншота и текстът се разчита направо в браузъра.',
+    land_spec3_t: 'Много поръчки наведнъж', land_spec3_d: 'Поставяш съобщенията на всички клиенти в едно поле. Всяко става отделна товарителница, а ти ги преглеждаш като списък.',
+    land_spec4_t: 'Наложен платеж', land_spec4_d: 'Сума в евро или лева, обявена стойност, преглед или преглед и тест. Обичайното го задаваш веднъж.',
+    land_spec5_t: 'Предпазители', land_spec5_d: 'Спира те, ако на същия телефон вече има пратка или ако си пропуснал сумата за наложения платеж.',
+    land_spec6_t: 'Статус и отговор', land_spec6_d: 'Виждаш докъде е стигнала всяка пратка. Отговорът с линк за проследяване е готов, само го пращаш.',
+    land_spec7_t: 'Входът ти', land_spec7_d: 'Потребителят и паролата за Еконт стоят само на това устройство, криптирани с PIN. На сървър не пазим нищо.',
+    land_spec8_t: 'Цена', land_spec8_d: 'Приложението е безплатно. Еконт таксува пратките както винаги.',
+    land_need: 'Настройката отнема около минута: PIN, вход в Еконт и офисът, от който пращаш.',
     setup_title: 'Бърза настройка', setup_sub: 'Еднократно. Всичко остава на устройството, с PIN.',
     setup_s1: 'Изберете PIN', setup_s1_sub: 'Заключва приложението и криптира паролата ви за Еконт на това устройство.',
     setup_pin: 'PIN (4-6 цифри)', setup_pin2: 'Повторете PIN', setup_s2: 'Вашият Еконт акаунт', setup_mode: 'Режим', mode_prod: 'Реален', mode_demo: 'Демо',
@@ -98,7 +110,6 @@ const I18N = {
     wrong_pin: 'Грешен PIN.', forget_confirm: 'Да премахна ли запазения Еконт вход и настройки от това устройство?',
     refreshing: 'Обновяване…', offices_loaded: 'Заредени {n} офиса ✓', searching: 'търсене…', no_matches: 'няма резултати',
     no_number: '(няма върнат номер)', econt_prefix: 'Еконт: ', error_prefix: 'Грешка: ',
-    land_trust: 'Безплатно · Без сървърна регистрация · Данните остават при вас',
     step1_t: 'Постави', step1_s: 'съобщението или снимка от чата', step2_t: 'Провери', step2_s: 'име, офис и наложен платеж', step3_t: 'Създай', step3_s: 'и прати номера на клиента',
     about_sub: 'От текст до пратка. Малък инструмент, който върши едно нещо и го върши добре.',
     about_app_h: 'Полезно да знаете',
@@ -143,12 +154,25 @@ const I18N = {
   },
   en: {
     page_title: 'Econt Shipper: from text to parcel', parse_failed: 'Could not parse that.',
-    land_pill: 'For sellers on OLX, Bazar, Instagram & Facebook', land_title: 'From text to parcel.',
-    land_sub: 'Drop in the customer message, give it a quick look, and the waybill is ready in your Econt.',
-    land_cta: 'Start for free', land_what_h: 'In short',
-    land_what_p: 'It works with whatever you get: a message, a list, a chat screenshot. The app finds the names, the phone and the office, then creates the waybill in your Econt account. Your login stays on this device, locked with a PIN.',
-    land_f1: 'Reads text and chat screenshots (OCR).', land_f2: 'Recognises all three names, the phone and the office.',
-    land_f3: 'Cash on delivery, declared value, review & test.', land_f4: 'Live status and a ready reply with the tracking number.',
+    land_title: 'From text to parcel.',
+    land_sub: "Paste the customer's message, check the name, the office and the amount, and the waybill is ready in your own Econt account. No retyping, no opening the Econt website.",
+    land_cta: 'Start for free',
+    land_cta_note: "You'll need your Econt username and password. They stay on this device, locked with a PIN. No account yet? Setup has a demo one.",
+    demo_h: 'Example with one message', demo_hand: 'The numbers show what goes where',
+    demo_gloss: 'In English: "Hi, I\'ll take the jacket for 45 €. Maria Petrova, 0888 412 657, Econt Plovdiv, Trakia office. With review if possible, thanks!"',
+    wb_title: 'Waybill', wb_rcpt: 'Recipient', wb_phone: 'Phone', wb_office: 'To office', wb_cod: 'Cash on delivery', wb_cod_v: '45.00 €',
+    wb_review: 'Review', wb_review_v: 'Yes, before paying', wb_parcel: 'Parcel', wb_parcel_v: 'package, 1 kg, recipient pays',
+    wb_default: 'from settings', wb_status: 'Created in your Econt account', demo_out_meta: 'sent 14:34',
+    land_more_h: 'What else it does',
+    land_spec1_t: 'Wherever they write', land_spec1_d: 'OLX, Bazar.bg, Instagram, Facebook, Viber. Copy the message from wherever it came in.',
+    land_spec2_t: 'Chat screenshots', land_spec2_d: 'If the customer sent the details as a picture, drop in the screenshot and the text is read right in your browser.',
+    land_spec3_t: 'Many orders at once', land_spec3_d: "Paste every customer's message into one box. Each one becomes its own waybill, and you review them as a list.",
+    land_spec4_t: 'Cash on delivery', land_spec4_d: 'Amount in euro or leva, declared value, review, or review and test. Set your usual options once.',
+    land_spec5_t: 'Safety checks', land_spec5_d: 'Stops you if the same phone number already has a parcel, or if you left out the COD amount.',
+    land_spec6_t: 'Status and reply', land_spec6_d: 'See how far each parcel has got. The reply with the tracking link is ready, you just send it.',
+    land_spec7_t: 'Your login', land_spec7_d: 'Your Econt username and password stay on this device, encrypted with your PIN. We keep nothing on a server.',
+    land_spec8_t: 'Cost', land_spec8_d: 'The app is free. Econt charges for the parcels as usual.',
+    land_need: 'Setup takes about a minute: a PIN, your Econt login and the office you ship from.',
     setup_title: 'Quick setup', setup_sub: 'One time. Everything stays on this device, behind a PIN.',
     setup_s1: 'Choose a PIN', setup_s1_sub: 'Locks the app and encrypts your Econt password on this device.',
     setup_pin: 'PIN (4-6 digits)', setup_pin2: 'Repeat PIN', setup_s2: 'Your Econt account', setup_mode: 'Mode', mode_prod: 'Production', mode_demo: 'Demo',
@@ -220,7 +244,6 @@ const I18N = {
     wrong_pin: 'Wrong PIN.', forget_confirm: 'Remove your saved Econt login and settings from this device?',
     refreshing: 'Refreshing…', offices_loaded: 'Loaded {n} offices ✓', searching: 'searching…', no_matches: 'no matches',
     no_number: '(no number returned)', econt_prefix: 'Econt: ', error_prefix: 'Error: ',
-    land_trust: 'Free · No server accounts · Your data stays with you',
     step1_t: 'Paste', step1_s: 'the message or a chat screenshot', step2_t: 'Check', step2_s: 'name, office and COD', step3_t: 'Create', step3_s: 'and send the number to the customer',
     about_sub: 'From text to parcel. A small tool that does one thing and does it well.',
     about_app_h: 'Good to know',
@@ -320,6 +343,7 @@ function applyLang() {
     const el = $(id); if (el) { el.setAttribute('aria-label', t(k)); el.title = t(k); }
   }
   $('createHint').textContent = t('create_hint', { k: isMac ? '⌘' : 'Ctrl' });
+  renderLandingReply();
   syncThemeBtnLabel();
 }
 function syncThemeBtnLabel() {
@@ -2056,6 +2080,46 @@ $('themeBtn').onclick = () => { const next = document.documentElement.getAttribu
 $('langBg').onclick = () => setLang('bg');
 $('langEn').onclick = () => setLang('en');
 $('getStartedBtn').onclick = () => { if (SESSION.password) show('app'); else if (loadStore()) showLock(); else show('setup'); };
+$('getStartedBtn2').onclick = () => $('getStartedBtn').onclick();
+
+// ---------- landing: the worked example ----------
+// The reply bubble is the app's real reply text for the sample parcel, so the
+// landing never promises something different from what customers receive.
+const LAND_NUM = '1051602938472';
+function renderLandingReply() {
+  const el = $('ldReply'); if (!el) return;
+  const text = buildReply(LAND_NUM, { cod: 45, currency: 'EUR', reviewMode: 'review' });
+  el.innerHTML = text.split('\n').map((line) => esc(line).replace(/https?:\/\/(\S+)/, (m, rest) =>
+    `<span class="url">${rest.replace(/\//g, '/<wbr>')}</span>`)).join('\n');
+}
+(function initLanding() {
+  // Decorative barcode drawn from the sample number (EAN-style digit patterns).
+  const R = ['1110010', '1100110', '1101100', '1000010', '1011100', '1001110', '1010000', '1000100', '1001000', '1110100'];
+  let bits = '101';
+  for (let i = 0; i < LAND_NUM.length; i++) { bits += R[+LAND_NUM[i]]; if (i === 6) bits += '01010'; }
+  bits += '101';
+  let x = 0, out = '';
+  while (x < bits.length) {
+    if (bits[x] === '1') { let w = 1; while (bits[x + w] === '1') w++; out += `<rect x="${x}" y="0" width="${w}" height="34"/>`; x += w; } else x++;
+  }
+  const svg = $('ldBarcode');
+  svg.setAttribute('viewBox', `0 0 ${bits.length} 34`);
+  svg.innerHTML = `<g fill="currentColor" shape-rendering="crispEdges">${out}</g>`;
+  // Each marked part of the message lights up its waybill row (hover, focus or tap).
+  const marks = document.querySelectorAll('.ld-bubble mark[data-n]'), rows = document.querySelectorAll('.ld-wb-row[data-n]');
+  let cur = null;
+  const set = (n) => {
+    cur = n;
+    marks.forEach((m) => m.classList.toggle('on', m.dataset.n === n));
+    rows.forEach((r) => r.classList.toggle('on', r.dataset.n === n));
+  };
+  [...marks, ...rows].forEach((el) => {
+    el.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') set(el.dataset.n); });
+    el.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') set(null); });
+    el.addEventListener('click', () => set(cur === el.dataset.n ? null : el.dataset.n));
+  });
+  marks.forEach((m) => { m.addEventListener('focus', () => set(m.dataset.n)); m.addEventListener('blur', () => set(null)); });
+})();
 $('infoBtn').onclick = () => show('landing');
 $('brandHome').onclick = (e) => { e.preventDefault(); show('landing'); };
 document.addEventListener('keydown', (e) => {

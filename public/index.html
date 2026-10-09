@@ -13,12 +13,23 @@ try {
 } catch (e) {}
 </script>
 <link rel="manifest" href="/manifest.webmanifest">
+<link rel="preload" href="/fonts/golos-400-800-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/literata-600-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="preconnect" href="https://tessdata.projectnaptha.com" crossorigin>
 <link rel="dns-prefetch" href="https://tessdata.projectnaptha.com">
 <title>Econt Shipper: от текст до пратка</title>
 <style>
+  /* Self-hosted fonts (OFL, see /fonts/LICENSE.txt): no third-party requests. */
+  @font-face { font-family: 'Golos Text'; font-style: normal; font-weight: 400 800; font-display: swap; src: url(/fonts/golos-400-800-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+  @font-face { font-family: 'Golos Text'; font-style: normal; font-weight: 400 800; font-display: swap; src: url(/fonts/golos-400-800-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/plexmono-400-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+  @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/plexmono-400-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 500; font-display: swap; src: url(/fonts/plexmono-500-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+  @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 500; font-display: swap; src: url(/fonts/plexmono-500-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'Literata'; font-style: normal; font-weight: 600; font-display: swap; src: url(/fonts/literata-600-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+  @font-face { font-family: 'Literata'; font-style: normal; font-weight: 600; font-display: swap; src: url(/fonts/literata-600-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
   :root {
     color-scheme: light;
     --bg: #e9eef6; --bg-2: #dce6f3;
@@ -32,6 +43,18 @@ try {
     --shadow-brand: 0 10px 26px rgba(10,115,214,.38);
     --ease: cubic-bezier(.22,.85,.3,1); --spring: cubic-bezier(.34,1.5,.5,1);
     --radius: 20px; --radius-sm: 13px;
+    /* Type: Golos Text everywhere (normal Cyrillic forms, so macOS never swaps in
+       Bulgarian-locale glyphs), Literata for landing headlines, Plex Mono for
+       document data. No system-ui in the stacks for the same reason. */
+    --font-text: "Golos Text", "PT Sans", "Segoe UI", Roboto, Arial, sans-serif;
+    --font-display: "Literata", "PT Serif", Georgia, serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    /* Landing */
+    --ink-2: #33435a; --rule-strong: var(--ink);
+    --paper: #fffdf8; --paper-2: #f6f2e9; --paper-edge: rgba(12,27,48,.18); --paper-rule: rgba(12,27,48,.11);
+    --mark: rgba(10,115,214,.11); --mark-line: rgba(10,78,168,.55);
+    --bubble-in: #ffffff; --bubble-out: #dce9fb;
+    --cta: #0a4ea8; --cta-hover: #083f8a; --cta-ink: #ffffff;
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
@@ -44,6 +67,11 @@ try {
     --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.5);
     --shadow-lg: 0 6px 16px rgba(0,0,0,.5), 0 30px 60px rgba(0,0,0,.6);
     --shadow-brand: 0 10px 26px rgba(10,80,170,.5);
+    --ink-2: #c3cedc; --rule-strong: rgba(232,238,247,.82);
+    --paper: #131b26; --paper-2: #0f1620; --paper-edge: rgba(255,255,255,.12); --paper-rule: rgba(255,255,255,.075);
+    --mark: rgba(90,166,238,.16); --mark-line: rgba(124,192,255,.6);
+    --bubble-in: #18212e; --bubble-out: #15304f;
+    --cta: #2a6fc0; --cta-hover: #3479ca; --cta-ink: #ffffff;
   }
   :root[data-theme="dark"] .badge.demo { background: #3a2d12; color: #f4c463; }
   :root[data-theme="dark"] .badge.production { background: #12301f; color: #57d98a; }
@@ -64,7 +92,7 @@ try {
   /* Transparent so the fixed gradient-mesh (body::before, z-index:-2) shows through;
      html carries --bg as the base colour (also fills the overscroll area). */
   body { margin: 0; background: transparent; color: var(--ink); overflow-x: hidden;
-    font: 16px/1.55 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
+    font: 16px/1.55 var(--font-text); font-feature-settings: "locl" 0; -webkit-text-size-adjust: 100%; }
   /* Static gradient-mesh backdrop for depth. Kept still (no drift animation) so the
      sticky topbar's blur never has to re-sample a moving layer every frame — the
      gradient itself is the premium touch, not the motion. */
@@ -175,7 +203,6 @@ try {
     animation: float 5.5s var(--ease) infinite; }
   .appicon svg { width: 44px; height: 44px; filter: drop-shadow(0 3px 5px rgba(0,0,0,.25)); }
   @keyframes float { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-12px) rotate(3deg); } }
-  .hero .pill { display: inline-block; background: var(--card); color: var(--brand); font-weight: 700; font-size: 12.5px; padding: 6px 14px; border-radius: 999px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--line); }
   .hero h1 { font-size: 32px; line-height: 1.12; margin: 8px 0 12px; letter-spacing: -.03em; font-weight: 800; color: var(--brand);
     background: linear-gradient(135deg, var(--ink) 30%, var(--brand)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   .hero p { color: var(--muted); margin: 0 auto 22px; max-width: 440px; font-size: 16px; }
@@ -247,7 +274,6 @@ try {
   .ic-xl { width: 42px; height: 42px; color: var(--brand); }
   .icon .ic { width: 20px; height: 20px; vertical-align: middle; }
   .icon .spin { margin-right: 0; }
-  .s-ico .ic { width: 26px; height: 26px; color: var(--brand); }
   .summary .ic-s, .track-tag .ic-s { color: var(--brand); }
   .lock-ico { margin-bottom: 4px; }
   /* Menu-like views float in the middle of the screen */
@@ -305,13 +331,6 @@ try {
   .dd-menu .sub { display: block; font-size: 11.5px; color: var(--muted); font-weight: 500; margin-top: 2px; }
 
   /* Landing: 3-step strip */
-  .steps { display: flex; gap: 10px; margin: 0 0 18px; }
-  .step { flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 12px; text-align: center; box-shadow: inset 0 1px 0 var(--ring-hi), var(--shadow); transition: transform .35s var(--spring), box-shadow .35s; }
-  @media (hover: hover) { .step:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); } }
-  .step .s-ico { font-size: 24px; line-height: 1; filter: drop-shadow(0 4px 8px rgba(10,78,168,.25)); }
-  .step b { display: block; font-size: 13.5px; margin-top: 8px; color: var(--ink); }
-  .step span { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
-  @media (max-width: 500px) { .steps { flex-direction: column; } .step { display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 14px; } .step b { margin-top: 0; } }
 
   /* About / credits page */
   .creator { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
@@ -323,18 +342,6 @@ try {
 
   /* Landing entrance choreography — icon, pill, headline, copy, CTA, then steps. */
   @keyframes riseIn { from { opacity: 0; transform: translateY(16px); } }
-  #view-landing .hero > * { animation: riseIn .55s var(--ease) both; }
-  #view-landing .hero > :nth-child(2) { animation-delay: .06s; }
-  #view-landing .hero > :nth-child(3) { animation-delay: .12s; }
-  #view-landing .hero > :nth-child(4) { animation-delay: .18s; }
-  #view-landing .hero > :nth-child(5) { animation-delay: .24s; }
-  #view-landing .hero > :nth-child(6) { animation-delay: .30s; }
-  #view-landing .steps .step { animation: riseIn .5s var(--ease) both; }
-  #view-landing .steps .step:nth-child(1) { animation-delay: .30s; }
-  #view-landing .steps .step:nth-child(2) { animation-delay: .38s; }
-  #view-landing .steps .step:nth-child(3) { animation-delay: .46s; }
-  /* .appicon keeps its float loop AND gets the entrance (the .hero > * rule would otherwise override float). */
-  #view-landing .appicon { animation: riseIn .55s var(--ease) both, float 5.5s .6s var(--ease) infinite; }
 
   /* Success screen: green-tinted glass, one-shot halo bloom, staggered actions. */
   #result { background: linear-gradient(160deg, color-mix(in srgb, var(--go) 9%, transparent), transparent 50%), var(--card); }
@@ -484,6 +491,116 @@ try {
   .parcel.fresh { animation: freshRing 1.8s var(--ease); }
   @keyframes freshRing { from { box-shadow: 0 0 0 3px var(--brand-2), var(--shadow); } }
   @media (prefers-reduced-motion: reduce) { .parcel.leaving, .parcel.fresh { transition: none; animation: none; } }
+
+  /* ===================== LANDING (#view-landing, scoped to .ld) =====================
+     Shows the product instead of describing it: a real customer message, the waybill
+     it becomes, and the reply that goes back. Flat CTA, ruled lists, one motion. */
+  #view-landing:not(.hide) { animation: none; }
+  .ld { color: var(--ink); padding-top: 28px; }
+  .ld :where(h1, h2) { font-family: var(--font-display); font-weight: 600; font-feature-settings: "locl" 0; text-wrap: balance; margin: 0; color: var(--ink); }
+  .ld .mono, .ld .ld-num, .ld .ld-amt { font-family: var(--font-mono); font-feature-settings: "locl" 0, "tnum" 1; }
+  .ld-title { font-size: clamp(36px, 10.4vw, 64px); line-height: 1.04; letter-spacing: -.022em; }
+  .ld-lead { margin: 16px 0 0; font-size: 17px; line-height: 1.55; color: var(--ink-2); max-width: 34em; text-wrap: pretty; }
+  .ld-cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; margin-top: 24px; }
+  .ld .ld-cta { appearance: none; border: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    background: var(--cta); color: var(--cta-ink); font: 600 16px/1 var(--font-text); padding: 16px 22px; border-radius: 12px;
+    box-shadow: inset 0 -2px 0 rgba(0,0,0,.18); transition: background-color .2s, transform .15s; }
+  .ld .ld-cta svg { width: 18px; height: 18px; flex: none; transition: transform .2s var(--ease); }
+  @media (hover: hover) { .ld .ld-cta:hover { background: var(--cta-hover); transform: none; border: 0; box-shadow: inset 0 -2px 0 rgba(0,0,0,.18); } .ld .ld-cta:hover svg { transform: translateX(3px); } }
+  .ld .ld-cta:active { transform: translateY(1px); }
+  .ld .ld-cta:focus-visible { outline: 2px solid var(--brand-2); outline-offset: 3px; }
+  .ld-note { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--muted); max-width: 26em; }
+  @media (max-width: 519px) { .ld .ld-cta { width: 100%; } }
+
+  .ld-demo { margin-top: 40px; display: grid; grid-template-columns: minmax(0, 1fr); }
+  .ld-col + .ld-col { margin-top: 28px; }
+  .ld-cap { border-top: 2px solid var(--rule-strong); padding-top: 9px; margin-bottom: 14px; font-size: 14px; line-height: 1.4; text-wrap: pretty; }
+  .ld-cap-n { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--brand); margin-right: 10px; }
+  .ld-cap b { font-weight: 600; color: var(--ink); margin-right: 8px; }
+  .ld-cap span:last-child { color: var(--muted); }
+
+  .ld-chat-head { display: flex; align-items: center; gap: 9px; margin: 0 0 8px 2px; font-size: 13px; }
+  .ld-avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex: none;
+    background: var(--bg-2); color: var(--ink-2); font: 600 12px/1 var(--font-text); border: 1px solid var(--line); }
+  .ld-chat-name { font-weight: 600; color: var(--ink); }
+  .ld-chat-meta { color: var(--muted); font-family: var(--font-mono); font-size: 11.5px; }
+  .ld-bubble { position: relative; padding: 12px 14px 13px; border-radius: 4px 18px 18px 18px; background: var(--bubble-in);
+    border: 1px solid var(--line); font-size: 15.5px; line-height: 1.6; color: var(--ink); }
+  .ld-bubble p { margin: 0; }
+  .ld-bubble mark { color: inherit; background: var(--mark); border-radius: 3px; padding: 1px 2px; box-shadow: inset 0 -1.5px 0 var(--mark-line);
+    -webkit-box-decoration-break: clone; box-decoration-break: clone; transition: background-color .2s; cursor: default; }
+  .ld-bubble mark:not([data-n="3"]) { white-space: nowrap; }
+  .ld-bubble mark::after { content: attr(data-n); font: 500 10px/0 var(--font-mono); color: var(--brand); position: relative; top: -.55em; margin-left: 2px; }
+  .ld-bubble mark.on, .ld-bubble mark:focus-visible { background: color-mix(in srgb, var(--brand-2) 26%, transparent); outline: none; }
+  .ld-bubble.in { max-width: min(30em, 94%); }
+  .ld-bubble.out { margin-left: auto; max-width: min(30em, 92%); border-radius: 18px 4px 18px 18px; background: var(--bubble-out); border-color: transparent; font-size: 14.5px; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
+  .ld-bubble.out .url { color: var(--brand); text-decoration: underline; text-underline-offset: 2px; }
+  :root[data-theme="dark"] .ld-bubble.out .url { color: var(--brand-3); }
+  .ld-gloss { margin: 8px 2px 0; font-size: 13px; line-height: 1.45; color: var(--muted); max-width: 30em; }
+  .ld-gloss:empty { display: none; }
+  .ld-out-meta { text-align: right; margin: 6px 2px 0; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+  .ld-hand { display: flex; align-items: center; gap: 10px; margin: 18px 0 0 16px; color: var(--muted); font-size: 13px; }
+  .ld-hand svg { width: 16px; height: 16px; color: var(--brand); flex: none; }
+
+  /* The waybill: a document, not a card. */
+  .ld-wb { background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 6px; overflow: hidden; color: var(--ink);
+    box-shadow: 0 1px 0 var(--paper-edge), 0 18px 30px -22px rgba(13,27,46,.45); animation: ldIn .6s var(--ease) .15s both; }
+  :root[data-theme="dark"] .ld-wb { box-shadow: 0 18px 30px -20px rgba(0,0,0,.8); }
+  @keyframes ldIn { from { opacity: 0; transform: translateY(10px); } }
+  .ld-wb-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 14px 16px 13px; border-bottom: 1px dashed var(--paper-edge); }
+  .ld-wb-kicker { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .ld-wb-num { font-family: var(--font-mono); font-weight: 500; font-size: 20px; letter-spacing: .02em; line-height: 1.2; margin-top: 3px; white-space: nowrap; }
+  .ld-wb-num small { font-size: 13px; color: var(--muted); font-weight: 400; margin-right: 4px; }
+  .ld-barcode { width: 104px; height: 34px; flex: none; color: var(--ink); }
+  .ld-wb-rows { margin: 0; padding: 0; }
+  .ld-wb-row { display: grid; grid-template-columns: 26px 108px minmax(0, 1fr); align-items: baseline; border-bottom: 1px solid var(--paper-rule); transition: background-color .2s; }
+  .ld-wb-row dt { display: contents; }
+  .ld-wb-row dd, .ld-wb-l { padding-top: 10px; padding-bottom: 10px; }
+  .ld-wb-i { font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; color: var(--brand); text-align: center; align-self: stretch; border-right: 1px solid var(--paper-rule); padding-top: 13px; }
+  .ld-wb-l { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding-left: 12px; padding-right: 8px; line-height: 1.3; }
+  .ld-wb-row dd { margin: 0; font-size: 15px; font-weight: 500; line-height: 1.35; padding-right: 16px; }
+  .ld-wb-row .ld-num { font-weight: 500; font-size: 14.5px; letter-spacing: .01em; }
+  .ld-wb-row .ld-amt { font-weight: 500; font-size: 17px; }
+  .ld-wb-row.dim dd { color: var(--ink-2); font-weight: 400; font-size: 14px; }
+  .ld-wb-tag { display: inline-block; margin-left: 6px; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .ld-wb-row.on { background: var(--mark); }
+  .ld-wb-foot { display: flex; align-items: center; gap: 8px; padding: 11px 16px; background: var(--paper-2); font-size: 13px; color: var(--ink-2); }
+  .ld-wb-foot .ld-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--go); flex: none; }
+  .ld-wb-foot .mono { margin-left: auto; font-size: 12px; color: var(--muted); }
+
+  .ld-more { margin-top: 48px; }
+  .ld-more h2 { font-size: 24px; line-height: 1.15; letter-spacing: -.012em; border-top: 2px solid var(--rule-strong); padding-top: 12px; }
+  .ld-spec { margin: 10px 0 0; }
+  .ld-spec-row { padding: 13px 0 14px; border-bottom: 1px solid var(--line); }
+  .ld-spec-row dt { font-weight: 600; font-size: 15px; color: var(--ink); }
+  .ld-spec-row dd { margin: 3px 0 0; font-size: 14.5px; line-height: 1.5; color: var(--ink-2); text-wrap: pretty; }
+  .ld-spec-row:last-child { border-bottom: 0; }
+  .ld-end { margin: 30px 0 0; padding-top: 18px; border-top: 2px solid var(--rule-strong); display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+  .ld-end p { margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.5; flex: 1 1 260px; }
+  @media (prefers-reduced-motion: reduce) { .ld-wb { animation: none; } .ld .ld-cta, .ld .ld-cta svg, .ld-bubble mark, .ld-wb-row { transition: none; } }
+
+  @media (min-width: 720px) {
+    .ld { padding-top: 44px; }
+    .ld-lead { font-size: 18.5px; margin-top: 20px; }
+    .ld-cta-row { margin-top: 28px; }
+    .ld-demo { margin-top: 56px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); column-gap: 32px; align-items: start; }
+    .ld-col + .ld-col { margin-top: 0; }
+    .ld-col.c-in { grid-column: 1; grid-row: 1; }
+    .ld-col.c-wb { grid-column: 2; grid-row: 1 / span 2; }
+    .ld-col.c-out { grid-column: 1; grid-row: 2; margin-top: 28px; }
+    .ld-wb-row { grid-template-columns: 26px 140px minmax(0, 1fr); }
+    .ld-hand { display: none; }
+    .ld-more { margin-top: 64px; }
+    .ld-more h2 { font-size: 28px; }
+    .ld-spec-row { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 24px; align-items: baseline; }
+    .ld-spec-row dd { margin: 0; }
+  }
+  @media (max-width: 380px) {
+    .ld-wb-row { grid-template-columns: 22px 100px minmax(0, 1fr); }
+    .ld-wb-l { letter-spacing: .03em; }
+    .ld-wb-num { font-size: 18px; }
+    .ld-barcode { width: 84px; }
+  }
 </style>
 </head>
 <body>
@@ -508,30 +625,82 @@ try {
 
   <!-- ===================== LANDING ===================== -->
   <div id="view-landing" class="view hide">
-    <div class="card tilt" style="padding:0; overflow:hidden">
-      <div class="hero">
-        <div class="appicon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M8 8h8M8 12h8M8 16h5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <div class="ld">
+      <header class="ld-hero">
+        <h1 class="ld-title" data-i18n="land_title">От текст до пратка.</h1>
+        <p class="ld-lead" data-i18n="land_sub">Поставяш съобщението на клиента, проверяваш името, офиса и сумата, и товарителницата е готова в твоя Еконт профил.</p>
+        <div class="ld-cta-row">
+          <button class="ld-cta" id="getStartedBtn" type="button"><span data-i18n="land_cta">Започни безплатно</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <p class="ld-note" data-i18n="land_cta_note">Нужни са ти потребителско име и парола за Еконт.</p>
         </div>
-        <span class="pill" data-i18n="land_pill">За подателите в Еконт</span>
-        <h1 data-i18n="land_title">Поставете съобщение. Получавате товарителница.</h1>
-        <p data-i18n="land_sub">Пускаш съобщението от клиента, хвърляш едно око и товарителницата е готова в твоя Еконт.</p>
-        <button class="primary block" id="getStartedBtn" data-i18n="land_cta">Започнете</button>
-        <div class="muted" style="margin-top:12px; font-size:12.5px" data-i18n="land_trust">Безплатно · Без сървърна регистрация · Данните остават при вас</div>
-      </div>
-      <div style="padding:18px">
-        <div class="steps">
-          <div class="step"><div class="s-ico"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="16" rx="2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></div><div><b data-i18n="step1_t">Постави</b><span data-i18n="step1_s">съобщението от клиента</span></div></div>
-          <div class="step"><div class="s-ico"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div><div><b data-i18n="step2_t">Провери</b><span data-i18n="step2_s">име, офис и цена</span></div></div>
-          <div class="step"><div class="s-ico"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg></div><div><b data-i18n="step3_t">Изпрати</b><span data-i18n="step3_s">готов номер за секунди</span></div></div>
+      </header>
+
+      <section class="ld-demo" aria-labelledby="demoH">
+        <h2 id="demoH" class="sr-only" data-i18n="demo_h">Пример с едно съобщение</h2>
+
+        <!-- 01: what the customer sent (sample data stays Bulgarian in both languages) -->
+        <div class="ld-col c-in">
+          <div class="ld-cap"><span class="ld-cap-n">01</span><b data-i18n="step1_t">Постави</b><span data-i18n="step1_s">съобщението или снимка от чата</span></div>
+          <div class="ld-chat-head">
+            <span class="ld-avatar" aria-hidden="true">МП</span>
+            <span class="ld-chat-name" lang="bg">Мария П.</span>
+            <span class="ld-chat-meta">Viber, 14:32</span>
+          </div>
+          <div class="ld-bubble in" lang="bg">
+            <p>Здравейте, вземам якето за <mark data-n="4" tabindex="0">45 €</mark>. <mark data-n="1" tabindex="0">Мария Петрова</mark>, <mark data-n="2" tabindex="0">0888 412 657</mark>, <mark data-n="3" tabindex="0">Еконт Пловдив, офис Тракия</mark>. <mark data-n="5" tabindex="0">С преглед</mark> ако може, благодаря!</p>
+          </div>
+          <p class="ld-gloss" data-i18n="demo_gloss"></p>
+          <div class="ld-hand" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M6 14l6 6 6-6"/></svg><span data-i18n="demo_hand">Номерата показват кое къде отива</span></div>
         </div>
-        <h3 data-i18n="land_what_h">Какво е това?</h3>
-        <p class="muted" data-i18n="land_what_p">Малък помощник за подателите в Еконт. Поставяте съобщението с офис/адрес, което клиентът ви праща, проверявате данните и приложението създава товарителницата във вашия Еконт профил. Данните ви за вход остават на вашето устройство, защитени с PIN.</p>
-        <div class="feat"><span class="tick">✓</span><span data-i18n="land_f1">Автоматично разпознава офис, име и телефон от текста</span></div>
-        <div class="feat"><span class="tick">✓</span><span data-i18n="land_f2">Разпознава трите имена, телефона и офиса.</span></div>
-        <div class="feat"><span class="tick">✓</span><span data-i18n="land_f3">Жив списък на пратките ви със статус от Еконт</span></div>
-        <div class="feat"><span class="tick">✓</span><span data-i18n="land_f4">Евро или лева, наложен платеж, вашите настройки по подразбиране</span></div>
-      </div>
+
+        <!-- 02: the waybill it becomes -->
+        <div class="ld-col c-wb">
+          <div class="ld-cap"><span class="ld-cap-n">02</span><b data-i18n="step2_t">Провери</b><span data-i18n="step2_s">име, офис и наложен платеж</span></div>
+          <article class="ld-wb" aria-labelledby="wbTitle">
+            <div class="ld-wb-top">
+              <div>
+                <div class="ld-wb-kicker" id="wbTitle" data-i18n="wb_title">Товарителница</div>
+                <div class="ld-wb-num"><small>№</small><span id="wbNum">1051602938472</span></div>
+              </div>
+              <svg class="ld-barcode" id="ldBarcode" viewBox="0 0 95 34" preserveAspectRatio="none" aria-hidden="true"></svg>
+            </div>
+            <dl class="ld-wb-rows">
+              <div class="ld-wb-row" data-n="1"><dt><span class="ld-wb-i">1</span><span class="ld-wb-l" data-i18n="wb_rcpt">Получател</span></dt><dd lang="bg">Мария Петрова</dd></div>
+              <div class="ld-wb-row" data-n="2"><dt><span class="ld-wb-i">2</span><span class="ld-wb-l" data-i18n="wb_phone">Телефон</span></dt><dd class="ld-num">0888 412 657</dd></div>
+              <div class="ld-wb-row" data-n="3"><dt><span class="ld-wb-i">3</span><span class="ld-wb-l" data-i18n="wb_office">До офис</span></dt><dd lang="bg">Пловдив, Тракия</dd></div>
+              <div class="ld-wb-row" data-n="4"><dt><span class="ld-wb-i">4</span><span class="ld-wb-l" data-i18n="wb_cod">Наложен платеж</span></dt><dd class="ld-amt" data-i18n="wb_cod_v">45,00 €</dd></div>
+              <div class="ld-wb-row" data-n="5"><dt><span class="ld-wb-i">5</span><span class="ld-wb-l" data-i18n="wb_review">Преглед</span></dt><dd data-i18n="wb_review_v">Да, преди плащане</dd></div>
+              <div class="ld-wb-row dim"><dt><span class="ld-wb-i"></span><span class="ld-wb-l" data-i18n="wb_parcel">Пратка</span></dt><dd><span data-i18n="wb_parcel_v">колет, 1 кг, плаща получателят</span><span class="ld-wb-tag" data-i18n="wb_default">от настройките</span></dd></div>
+            </dl>
+            <div class="ld-wb-foot"><span class="ld-dot" aria-hidden="true"></span><span data-i18n="wb_status">Създадена в твоя Еконт профил</span><span class="mono">14:33</span></div>
+          </article>
+        </div>
+
+        <!-- 03: what goes back to the customer (built from the app's real reply text) -->
+        <div class="ld-col c-out">
+          <div class="ld-cap"><span class="ld-cap-n">03</span><b data-i18n="step3_t">Създай</b><span data-i18n="step3_s">и прати номера на клиента</span></div>
+          <div class="ld-bubble out" id="ldReply"></div>
+          <div class="ld-out-meta" data-i18n="demo_out_meta">изпратено 14:34</div>
+        </div>
+      </section>
+
+      <section class="ld-more" aria-labelledby="moreH">
+        <h2 id="moreH" data-i18n="land_more_h">Какво още прави</h2>
+        <dl class="ld-spec">
+          <div class="ld-spec-row"><dt data-i18n="land_spec1_t"></dt><dd data-i18n="land_spec1_d"></dd></div>
+          <div class="ld-spec-row"><dt data-i18n="land_spec2_t"></dt><dd data-i18n="land_spec2_d"></dd></div>
+          <div class="ld-spec-row"><dt data-i18n="land_spec3_t"></dt><dd data-i18n="land_spec3_d"></dd></div>
+          <div class="ld-spec-row"><dt data-i18n="land_spec4_t"></dt><dd data-i18n="land_spec4_d"></dd></div>
+          <div class="ld-spec-row"><dt data-i18n="land_spec5_t"></dt><dd data-i18n="land_spec5_d"></dd></div>
+          <div class="ld-spec-row"><dt data-i18n="land_spec6_t"></dt><dd data-i18n="land_spec6_d"></dd></div>
+          <div class="ld-spec-row"><dt data-i18n="land_spec7_t"></dt><dd data-i18n="land_spec7_d"></dd></div>
+          <div class="ld-spec-row"><dt data-i18n="land_spec8_t"></dt><dd data-i18n="land_spec8_d"></dd></div>
+        </dl>
+        <div class="ld-end">
+          <p data-i18n="land_need">Настройката отнема около минута.</p>
+          <button class="ld-cta" id="getStartedBtn2" type="button"><span data-i18n="land_cta">Започни безплатно</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </div>
+      </section>
     </div>
   </div>
 
