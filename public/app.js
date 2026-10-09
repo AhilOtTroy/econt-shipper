@@ -25,7 +25,9 @@ const I18N = {
     land_sub: 'Поставяш съобщението на клиента, проверяваш името, офиса и сумата, и товарителницата е готова в твоя Еконт профил. Без преписване и без да отваряш сайта на Еконт.',
     land_cta: 'Започни безплатно',
     land_cta_note: 'Нужни са ти потребителско име и парола за Еконт. Остават само на това устройство, заключени с PIN. Нямаш профил? В настройката има демо акаунт.',
-    demo_h: 'Пример с едно съобщение', demo_gloss: '', demo_hand: 'Номерата показват кое къде отива',
+    demo_h: 'Пример с едно съобщение', demo_gloss: '',
+    demo_c1: 'Постави съобщението', demo_c2: 'Провери товарителницата', demo_c3: 'Прати отговора',
+    demo_map: 'Всяка номерирана част от съобщението попълва реда със същия номер.',
     wb_title: 'Товарителница', wb_rcpt: 'Получател', wb_phone: 'Телефон', wb_office: 'До офис', wb_cod: 'Наложен платеж', wb_cod_v: '45,00 €',
     wb_review: 'Преглед', wb_review_v: 'Да, преди плащане', wb_parcel: 'Пратка', wb_parcel_v: 'колет, 1 кг, плаща получателят',
     wb_default: 'от настройките', wb_status: 'Създадена в твоя Еконт профил', demo_out_meta: 'изпратено 14:34',
@@ -110,7 +112,6 @@ const I18N = {
     wrong_pin: 'Грешен PIN.', forget_confirm: 'Да премахна ли запазения Еконт вход и настройки от това устройство?',
     refreshing: 'Обновяване…', offices_loaded: 'Заредени {n} офиса ✓', searching: 'търсене…', no_matches: 'няма резултати',
     no_number: '(няма върнат номер)', econt_prefix: 'Еконт: ', error_prefix: 'Грешка: ',
-    step1_t: 'Постави', step1_s: 'съобщението или снимка от чата', step2_t: 'Провери', step2_s: 'име, офис и наложен платеж', step3_t: 'Създай', step3_s: 'и прати номера на клиента',
     about_sub: 'От текст до пратка. Малък инструмент, който върши едно нещо и го върши добре.',
     about_app_h: 'Полезно да знаете',
     about_app_p: 'Приложението чете какво ви е писал клиентът и прави товарителницата във вашия Еконт акаунт. Разбира текст и снимки, наложен платеж и обявена стойност, преглед и тест, и показва жив статус на всяка пратка.',
@@ -158,7 +159,9 @@ const I18N = {
     land_sub: "Paste the customer's message, check the name, the office and the amount, and the waybill is ready in your own Econt account. No retyping, no opening the Econt website.",
     land_cta: 'Start for free',
     land_cta_note: "You'll need your Econt username and password. They stay on this device, locked with a PIN. No account yet? Setup has a demo one.",
-    demo_h: 'Example with one message', demo_hand: 'The numbers show what goes where',
+    demo_h: 'Example with one message',
+    demo_c1: 'Paste the message', demo_c2: 'Check the waybill', demo_c3: 'Send the reply',
+    demo_map: 'Each numbered part of the message fills the waybill row with the same number.',
     demo_gloss: 'In English: "Hi, I\'ll take the jacket for 45 €. Maria Petrova, 0888 412 657, Econt Plovdiv, Trakia office. With review if possible, thanks!"',
     wb_title: 'Waybill', wb_rcpt: 'Recipient', wb_phone: 'Phone', wb_office: 'To office', wb_cod: 'Cash on delivery', wb_cod_v: '45.00 €',
     wb_review: 'Review', wb_review_v: 'Yes, before paying', wb_parcel: 'Parcel', wb_parcel_v: 'package, 1 kg, recipient pays',
@@ -244,7 +247,6 @@ const I18N = {
     wrong_pin: 'Wrong PIN.', forget_confirm: 'Remove your saved Econt login and settings from this device?',
     refreshing: 'Refreshing…', offices_loaded: 'Loaded {n} offices ✓', searching: 'searching…', no_matches: 'no matches',
     no_number: '(no number returned)', econt_prefix: 'Econt: ', error_prefix: 'Error: ',
-    step1_t: 'Paste', step1_s: 'the message or a chat screenshot', step2_t: 'Check', step2_s: 'name, office and COD', step3_t: 'Create', step3_s: 'and send the number to the customer',
     about_sub: 'From text to parcel. A small tool that does one thing and does it well.',
     about_app_h: 'Good to know',
     about_app_p: 'The app reads what your customer wrote and builds the waybill in your Econt account. It understands text and screenshots, cash on delivery and declared value, review and test, and it shows live status for every parcel.',
@@ -2093,18 +2095,6 @@ function renderLandingReply() {
     `<span class="url">${rest.replace(/\//g, '/<wbr>')}</span>`)).join('\n');
 }
 (function initLanding() {
-  // Decorative barcode drawn from the sample number (EAN-style digit patterns).
-  const R = ['1110010', '1100110', '1101100', '1000010', '1011100', '1001110', '1010000', '1000100', '1001000', '1110100'];
-  let bits = '101';
-  for (let i = 0; i < LAND_NUM.length; i++) { bits += R[+LAND_NUM[i]]; if (i === 6) bits += '01010'; }
-  bits += '101';
-  let x = 0, out = '';
-  while (x < bits.length) {
-    if (bits[x] === '1') { let w = 1; while (bits[x + w] === '1') w++; out += `<rect x="${x}" y="0" width="${w}" height="34"/>`; x += w; } else x++;
-  }
-  const svg = $('ldBarcode');
-  svg.setAttribute('viewBox', `0 0 ${bits.length} 34`);
-  svg.innerHTML = `<g fill="currentColor" shape-rendering="crispEdges">${out}</g>`;
   // Each marked part of the message lights up its waybill row (hover, focus or tap).
   const marks = document.querySelectorAll('.ld-bubble mark[data-n]'), rows = document.querySelectorAll('.ld-wb-row[data-n]');
   let cur = null;
