@@ -43,24 +43,269 @@ function officeStatus(key) {
   return { count: c.offices.length, ageMinutes: Math.round((Date.now() - c.at) / 60000), added: c.prevCount ? c.offices.length - c.prevCount : 0 };
 }
 
+// ---------- credentials Econt has accepted ----------
+// The office list is shared and served from cache without asking Econt, so a
+// request carrying made-up credentials would still get the full matching work.
+// Expensive routes (parse-batch) first check that Econt has really accepted
+// these credentials. Only a SHA-256 of mode+username+password is kept in memory,
+// never the password itself. Only calls that always need a real login mark the
+// credentials (the client-profile call behind login test/payouts, and a real
+// create; offices, price and tracking may answer without one), and /api/warm runs
+// the check in the background when the app opens, so a real user normally never
+// waits on it.
+const credSeen = new Map(); // hash -> { ok: boolean, at: ms }
+const CRED_OK_TTL_MS = 12 * 3600 * 1000;
+const CRED_BAD_TTL_MS = 60 * 1000;
+const CRED_MAX = 5000;
+const VERIFY_WAIT_MS = 5000;
+function credKey(c) {
+  return crypto.createHash('sha256').update([c.mode, String(c.username), String(c.password)].join('\0')).digest('hex');
+}
+function rememberCreds(c, ok) {
+  const k = credKey(c);
+  credSeen.delete(k);
+  credSeen.set(k, { ok, at: Date.now() });
+  while (credSeen.size > CRED_MAX) credSeen.delete(credSeen.keys().next().value);
+}
+// true = Econt accepted them, false = Econt rejected them as a wrong login,
+// null = could not tell (Econt unreachable, profile service missing). A real user
+// is never locked out on null; the batch caps below still bound the work.
+async function verifyCreds(c) {
+  const hit = credSeen.get(credKey(c));
+  if (hit && Date.now() - hit.at < (hit.ok ? CRED_OK_TTL_MS : CRED_BAD_TTL_MS)) return hit.ok;
+  try {
+    await econt.getClientProfiles(c);
+    rememberCreds(c, true);
+    return true;
+  } catch (e) {
+    if (isAuthFail(e)) { rememberCreds(c, false); return false; }
+    return null;
+  }
+}
+
+// ---------- office matching for batch input ----------
+// Bounds for /api/parse-batch so one request cannot hold the single event loop
+// for long: a size cap, a row cap, a yield between rows and a wall-clock budget
+// after which the remaining rows simply get no office (the UI shows them as
+// "office missing", never a wrong office).
+const BATCH_MAX_TEXT = 200000;   // characters
+const BATCH_MAX_ROWS = 100;
+const BATCH_BUDGET_MS = 10000;
+const QUERY_MAX = 1000;          // characters of a location phrase handed to the matcher
+const SEARCH_MAX = 200;          // characters of an office-search query
+const yieldLoop = () => new Promise((r) => setImmediate(r));
+// Resolve with `fallback` if `p` has not settled within `ms`.
+function within(p, ms, fallback) {
+  let t;
+  return Promise.race([p, new Promise((r) => { t = setTimeout(r, ms, fallback); })]).finally(() => clearTimeout(t));
+}
+
+// Keep a long location phrase to its two ends (cut on spaces): the office words
+// sit next to the name/phone, and the matcher's cost grows with query length.
+function capQuery(s, max) {
+  s = String(s || '');
+  if (s.length <= max) return s;
+  const half = Math.floor(max / 2);
+  const head = s.slice(0, half), tail = s.slice(-half);
+  return head.slice(0, Math.max(head.lastIndexOf(' '), 0)) + ' ' + tail.slice(tail.indexOf(' ') + 1);
+}
+
+const words = (s) => String(s || '').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+
+// Per office list (the cache entry's array): a 3-letter-prefix index over every
+// word of each office's name and address, and the offices grouped by city and
+// by postcode. Built once per list, on first batch use.
+//
+// matchOffices only scores an office when a query token equals one of its
+// words, or one starts with the other (both 4+ letters), or the postcode
+// matches. All three imply a shared 3-letter prefix, so the offices found
+// through the index are a superset of the ones that can score, and running
+// matchOffices on that subset (in the original order) returns exactly what it
+// returns on the whole list, at a fraction of the cost.
+const OFFICE_INDEX = new WeakMap();
+const CITY_PREFIX = new Set(['гр', 'град', 'с', 'село']);
+function officeWords(o) {
+  const out = [];
+  const add = (v, depth) => {
+    if (v == null || depth > 3) return;
+    if (typeof v === 'string' || typeof v === 'number') { for (const w of words(v)) out.push(w); return; }
+    if (typeof v === 'object' && !Array.isArray(v)) for (const k of Object.keys(v)) add(v[k], depth + 1);
+  };
+  add(o && o.name, 0); add(o && o.nameEn, 0); add(o && o.address, 0);
+  return out;
+}
+function officeIndex(offices) {
+  let ix = OFFICE_INDEX.get(offices);
+  if (ix) return ix;
+  ix = { byPrefix: new Map(), byCity: new Map(), byPost: new Map() };
+  const push = (map, k, i) => { const a = map.get(k); if (a) { if (a[a.length - 1] !== i) a.push(i); } else map.set(k, [i]); };
+  offices.forEach((o, i) => {
+    for (const w of officeWords(o)) if (w.length >= 3) push(ix.byPrefix, w.slice(0, 3), i);
+    const city = (o && o.address && o.address.city) || {};
+    const cw = words(city.name);
+    while (cw.length > 1 && CITY_PREFIX.has(cw[0])) cw.shift();
+    const cname = cw.join(' ');
+    if (cname.length >= 3) push(ix.byCity, cname, i);
+    if (/^\d{4}$/.test(String(city.postCode || ''))) push(ix.byPost, String(city.postCode), i);
+  });
+  OFFICE_INDEX.set(offices, ix);
+  return ix;
+}
+function fastMatchOffices(q, offices) {
+  const ix = officeIndex(offices);
+  const keys = new Set();
+  for (const w of words(q)) if (w.length >= 3) keys.add(w.slice(0, 3));
+  const pc = (String(q).match(/\b\d{4}\b/) || [])[0];
+  if (pc) keys.add(pc.slice(0, 3));
+  const hit = new Set();
+  for (const k of keys) for (const i of (ix.byPrefix.get(k) || [])) hit.add(i);
+  if (!hit.size) return [];
+  if (hit.size > offices.length / 2) return matchOffices(q, offices);
+  return matchOffices(q, [...hit].sort((a, b) => a - b).map((i) => offices[i]));
+}
+
+// Words in the text after a phone that never name an office: money, review,
+// filler. Kept out of the after-phone office guess below.
+const TAIL_NOISE = new Set([
+  'лв', 'лева', 'лев', 'евро', 'eur', 'euro', 'bgn', 'lv', 'leva', 'наложен', 'наложена', 'наложения', 'платеж', 'платёж', 'нп',
+  'сума', 'сумата', 'общо', 'цена', 'преглед', 'тест', 'без', 'със', 'моля', 'благодаря', 'мерси', 'офис', 'офиса', 'еконт',
+  'econt', 'office', 'град', 'гр', 'до', 'за', 'на', 'от', 'във', 'ще', 'да', 'не', 'или',
+]);
+// A row whose parsed location matched nothing. The usual real case is a listing
+// header before the name and phone, with the office written AFTER the phone
+// ("Яке М\nМария Иванова 0899111222\nВарна Чайка"). So look only at the text after
+// the phone, with the recipient's name taken out, and accept a match only when
+// that text names the office's city (or postcode) AND another word that singles
+// out one office there. Never the whole chunk: Econt addresses are full of
+// streets named after people, so a first name alone would pick some office.
+function afterPhoneOfficeGuess(chunk, parsed, offices) {
+  const at = parsed.phoneRaw ? chunk.indexOf(parsed.phoneRaw) : -1;
+  if (at < 0) return [];
+  const nameWords = new Set(words(parsed.recipientName));
+  const toks = words(capQuery(chunk.slice(at + parsed.phoneRaw.length), QUERY_MAX)).filter((w) => !nameWords.has(w));
+  if (!toks.length) return [];
+  const ix = officeIndex(offices);
+  const joined = ' ' + toks.join(' ') + ' ';
+  let city = null;
+  for (const name of ix.byCity.keys()) if (joined.includes(' ' + name + ' ') && (!city || name.length > city.length)) city = name;
+  const post = city ? null : toks.find((w) => /^\d{4}$/.test(w) && ix.byPost.has(w));
+  if (!city && !post) return [];
+  const pool = (city ? ix.byCity.get(city) : ix.byPost.get(post)).map((i) => offices[i]);
+  const cityWords = new Set(city ? city.split(' ') : []);
+  const rest = toks.filter((w) => !cityWords.has(w) && !TAIL_NOISE.has(w) && !/^\d+$/.test(w));
+  if (!rest.length) return [];
+  const cands = matchOffices(rest.join(' '), pool);
+  if (!cands.length) return [];
+  if (cands.length > 1 && cands[1].score === cands[0].score) return []; // ambiguous: let the user pick
+  return cands;
+}
+
+// ---------- Econt response helpers ----------
+// What Econt's ShipmentTrackingEvent.destinationType means, for events that
+// carry no destinationDetails text.
+const EVENT_TYPE_TEXT = {
+  client: ['Доставена на получателя', 'Delivered to the recipient'],
+  courier: ['При куриер', 'With a courier'],
+  courier_direction: ['Пътува към направлението', 'On the way'],
+  office: ['В офис', 'At an office'],
+  first_try: ['Първи опит за доставка', 'First delivery attempt'],
+  second_try: ['Втори опит за доставка', 'Second delivery attempt'],
+  instruction: ['Изпълнено указание', 'Instruction carried out'],
+  redirect: ['Пренасочена', 'Redirected'],
+  return: ['Връща се към подателя', 'Being returned to the sender'],
+  destroy: ['Унищожена', 'Destroyed'],
+  failed_delivery: ['Неуспешна доставка', 'Delivery failed'],
+  in_pickup_courier: ['Взета от куриер', 'Picked up by a courier'],
+  in_pickup_office: ['Приета в офис', 'Accepted at an office'],
+  in_delivery_courier: ['При куриер за доставка', 'Out for delivery'],
+  in_delivery_office: ['Пристигнала в офиса за получаване', 'Ready for pick-up at the office'],
+  arrival_departure_from_hub: ['Преминава през логистичен център', 'Passing through a hub'],
+  is_returning_to_sender: ['Връща се към подателя', 'Being returned to the sender'],
+  returned_to_sender: ['Върната на подателя', 'Returned to the sender'],
+};
+// Econt's tracking event: { isReceipt, destinationType, destinationDetails,
+// destinationDetailsEn, officeName, officeNameEn, cityName, cityNameEn,
+// countryCode, officeCode, time }. Keeps the { time, office, text } shape the
+// client renders, and adds the raw type so returns/failed deliveries can be told apart.
+function mapTrackingEvent(ev, lang) {
+  ev = ev || {};
+  const en = lang === 'en';
+  const pick = (bg, eng) => (en ? (eng || bg) : (bg || eng)) || '';
+  const office = pick(ev.officeName, ev.officeNameEn) || pick(ev.cityName, ev.cityNameEn) || null;
+  const type = ev.destinationType || null;
+  const typeText = type ? (EVENT_TYPE_TEXT[type] ? EVENT_TYPE_TEXT[type][en ? 1 : 0] : String(type).replace(/_/g, ' ')) : '';
+  let text = pick(ev.destinationDetails, ev.destinationDetailsEn)
+    || pick(ev.destinationDescription, ev.destinationDescriptionEn) || ev.description || typeText;
+  if (office && text && String(text).trim() === String(office).trim()) text = typeText !== text ? typeText : '';
+  return {
+    time: ev.time || ev.eventTime || ev.date || null,
+    office,
+    text: text || '',
+    type,
+    isReceipt: !!ev.isReceipt,
+    officeCode: ev.officeCode || null,
+  };
+}
+
+// createLabel/calculate reply → extra top-level fields for the client.
+// - Econt's label is a ShipmentStatus: the price currency is `currency`. The
+//   client reads `totalPriceCurrency`, so fill it in (only when missing).
+// - payAfterAcceptIgnored (Econt's info message, e.g. for parcel lockers/APS,
+//   where преглед/тест is not offered) means the waybill carries NO review/test.
+function decorateLabelReply(resp) {
+  const extra = {};
+  const st = resp && typeof resp === 'object' ? (resp.label && typeof resp.label === 'object' ? resp.label : resp) : null;
+  if (st) {
+    if (st.totalPriceCurrency == null && st.currency) st.totalPriceCurrency = st.currency;
+    if (st.totalPrice != null) extra.totalPrice = st.totalPrice;
+    if (st.totalPriceCurrency) extra.totalPriceCurrency = st.totalPriceCurrency;
+  }
+  const notes = [];
+  for (const src of [resp, st]) {
+    if (!src || typeof src !== 'object') continue;
+    for (const k of ['payAfterAcceptIgnored', 'payAfterTestIgnored']) {
+      const v = src[k];
+      if (v === true || (typeof v === 'string' && v.trim())) notes.push(typeof v === 'string' ? v.trim() : '');
+    }
+  }
+  if (notes.length) {
+    extra.reviewIgnored = true;
+    extra.reviewIgnoredMessage = [...new Set(notes.filter(Boolean))].join(' — ') || null;
+  }
+  return extra;
+}
+
 // ---------- http helpers ----------
-function sendJson(res, status, obj) {
+function sendJson(res, status, obj, headers) {
   const body = Buffer.from(JSON.stringify(obj), 'utf8');
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': body.length });
+  res.writeHead(status, Object.assign({ 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': body.length }, headers || {}));
   res.end(body);
 }
 
-function readBody(req) {
+function readBody(req, limit) {
+  const max = limit || 1e6;
   return new Promise((resolve, reject) => {
     const chunks = [];
-    let size = 0;
-    req.on('data', (c) => { size += c.length; if (size > 1e6) req.destroy(); chunks.push(c); });
+    let size = 0, done = false;
+    const fail = (e) => { if (done) return; done = true; chunks.length = 0; reject(e); };
+    req.on('data', (c) => {
+      if (done) return;
+      size += c.length;
+      if (size > max) { const e = new Error('Request body too large'); e.httpStatus = 413; return fail(e); }
+      chunks.push(c);
+    });
     req.on('end', () => {
+      if (done) return;
+      done = true;
       const raw = Buffer.concat(chunks).toString('utf8');
       if (!raw) return resolve({});
-      try { resolve(JSON.parse(raw)); } catch (e) { reject(e); }
+      let v;
+      try { v = JSON.parse(raw); } catch (e) { e.httpStatus = 400; return reject(e); }
+      resolve(v && typeof v === 'object' && !Array.isArray(v) ? v : {});
     });
-    req.on('error', reject);
+    req.on('error', (e) => fail(Object.assign(e, { httpStatus: 400 }))); // client-side stream failure
+    // 'close' before 'end' = the client hung up mid-body: settle instead of hanging.
+    req.on('close', () => fail(Object.assign(new Error('Request aborted'), { httpStatus: 400 })));
   });
 }
 
@@ -108,8 +353,12 @@ const FRIENDLY = {
   bad_login: { bg: 'Грешен потребител или парола за Еконт. Използвайте същите данни, с които влизате в e-econt.com (главните и малките букви имат значение).', en: 'Wrong Econt username or password. Use the same details you sign in to e-econt.com with (case-sensitive).' },
   econt_down: { bg: 'Няма връзка с Еконт в момента. Опитайте пак след малко.', en: 'Cannot reach Econt right now. Try again in a moment.' },
   office_missing: { bg: 'Не е избран офис за подаване — отворете Настройки и изберете офис.', en: 'Your sender drop-off office is not set — open Settings and choose your office.' },
+  batch_too_long: { bg: 'Текстът е твърде дълъг за едно поставяне. Поставете пратките на части.', en: 'That text is too long for one paste. Paste the parcels in parts.' },
+  batch_too_many: { bg: 'Твърде много пратки в едно поставяне ({n}). Най-много {max} наведнъж — поставете ги на части.', en: 'Too many parcels in one paste ({n}). At most {max} at a time — paste them in parts.' },
+  batch_slow: { bg: 'офисът не е разпознат за част от редовете — изберете го ръчно.', en: 'the office was not recognised for some rows — pick it by hand.' },
 };
-const fr = (body, key) => FRIENDLY[key][body && body.lang === 'en' ? 'en' : 'bg'];
+const fr = (body, key, params) => FRIENDLY[key][body && body.lang === 'en' ? 'en' : 'bg']
+  .replace(/\{(\w+)\}/g, (m, k) => (params && params[k] != null ? String(params[k]) : m));
 
 function getCreds(body) {
   const c = body.creds || {};
@@ -125,9 +374,10 @@ async function handleApi(req, res, url) {
   // Wake-up calls. Render spins the server down when idle; the client pings while
   // the PIN is typed so the cold start overlaps something the user does anyway.
   if (url.pathname === '/api/ping') return sendJson(res, 200, { ok: true });
-  // Warm also fills the office cache in the background (not awaited: instant reply).
+  // Warm also fills the office cache and checks the login with Econt in the
+  // background (not awaited: instant reply), so a later batch paste is not delayed.
   if (url.pathname === '/api/warm') {
-    try { const c = getCreds(body); loadOffices(c).catch(() => {}); } catch {}
+    try { const c = getCreds(body); loadOffices(c).catch(() => {}); verifyCreds(c).catch(() => {}); } catch {}
     return sendJson(res, 200, { ok: true });
   }
 
@@ -138,7 +388,7 @@ async function handleApi(req, res, url) {
   if (url.pathname === '/api/test') {
     try {
       const creds = getCreds(body);
-      try { await econt.getClientProfiles(creds); }
+      try { await econt.getClientProfiles(creds); rememberCreds(creds, true); }
       catch (e) {
         if (isAuthFail(e)) return sendJson(res, 200, { ok: false, code: 'bad_login', error: fr(body, 'bad_login') });
         if (e.kind === 'network') return sendJson(res, 200, { ok: false, code: 'network', error: fr(body, 'econt_down') });
@@ -162,7 +412,7 @@ async function handleApi(req, res, url) {
     if (parsed.deliveryType === 'office' && parsed.locationText) {
       try {
         const creds = getCreds(body);
-        candidates = matchOffices(parsed.locationText, await loadOffices(creds));
+        candidates = matchOffices(capQuery(parsed.locationText, QUERY_MAX), await loadOffices(creds));
       } catch (e) {
         return sendJson(res, 200, { ok: true, parsed, candidates: [], officesError: errorPayload(e).error });
       }
@@ -172,23 +422,49 @@ async function handleApi(req, res, url) {
 
   // Batch input: several parcels in one paste. Splits per phone number, parses
   // each chunk, detects existing waybill numbers (those rows are for tracking,
-  // not creation), and matches offices — falling back to the whole chunk when
-  // the pre-phone text is a listing header rather than a location.
+  // not creation), and matches offices from the parsed location phrase. When
+  // that phrase is a listing header rather than a location, only the text after
+  // the phone is tried, and only with a named city (afterPhoneOfficeGuess). A row
+  // with no confident match gets NO candidates, so the UI shows "office missing"
+  // instead of preselecting a guess that a batch run would ship to.
   if (url.pathname === '/api/parse-batch') {
-    const chunks = splitBatch(body.text || '');
+    const text = typeof body.text === 'string' ? body.text : String(body.text || '');
+    if (text.length > BATCH_MAX_TEXT) return sendJson(res, 200, { ok: false, code: 'batch_too_big', error: fr(body, 'batch_too_long') });
+    const chunks = splitBatch(text);
+    if (chunks.length > BATCH_MAX_ROWS) {
+      return sendJson(res, 200, { ok: false, code: 'batch_too_big', error: fr(body, 'batch_too_many', { n: chunks.length, max: BATCH_MAX_ROWS }) });
+    }
     let offices = null, officesError = null;
-    try { offices = await loadOffices(getCreds(body)); }
-    catch (e) { officesError = errorPayload(e).error; }
-    const rows = chunks.map((chunk) => {
+    try {
+      const creds = getCreds(body);
+      // Match offices only for credentials Econt accepts (or when Econt cannot be
+      // asked right now): the shared cache must not do free work for made-up logins.
+      // Bounded wait: if Econt hangs, carry on as "could not tell" (the check
+      // keeps running in the background and is remembered when it finishes).
+      const verdict = await within(verifyCreds(creds), VERIFY_WAIT_MS, null);
+      if (verdict === false) officesError = fr(body, 'bad_login');
+      else offices = await loadOffices(creds);
+    } catch (e) { officesError = e.friendly ? e.message : errorPayload(e).error; }
+    const started = Date.now();
+    let skipped = false;
+    const rows = [];
+    for (let i = 0; i < chunks.length; i++) {
+      if (i) await yieldLoop();            // let other requests run between rows
+      if (req.socket && req.socket.destroyed) return; // client gave up: stop working
+      const chunk = chunks[i];
       const parsed = parseMessage(chunk);
       const trackNum = findWaybill(chunk);
       let candidates = [];
-      if (offices && parsed.deliveryType === 'office') {
-        if (parsed.locationText) candidates = matchOffices(parsed.locationText, offices);
-        if (!candidates.length) candidates = matchOffices(chunk.replace(/\b\d{6,}\b/g, ' '), offices);
+      if (offices && offices.length && parsed.deliveryType === 'office') {
+        if (Date.now() - started > BATCH_BUDGET_MS) skipped = true;
+        else {
+          if (parsed.locationText) candidates = fastMatchOffices(capQuery(parsed.locationText, QUERY_MAX), offices);
+          if (!candidates.length) candidates = afterPhoneOfficeGuess(chunk, parsed, offices);
+        }
       }
-      return { chunk, parsed, candidates, trackNum };
-    });
+      rows.push({ chunk, parsed, candidates, trackNum });
+    }
+    if (skipped && !officesError) officesError = fr(body, 'batch_slow');
     return sendJson(res, 200, { ok: true, rows, officesError });
   }
 
@@ -196,7 +472,7 @@ async function handleApi(req, res, url) {
     try {
       const creds = getCreds(body);
       const offices = await loadOffices(creds);
-      return sendJson(res, 200, { ok: true, candidates: matchOffices(body.q || '', offices, 12) });
+      return sendJson(res, 200, { ok: true, candidates: matchOffices(capQuery(body.q, SEARCH_MAX), offices, 12) });
     } catch (e) { return sendJson(res, 200, e.friendly ? { ok: false, error: e.message } : errorPayload(e)); }
   }
 
@@ -247,11 +523,7 @@ async function handleApi(req, res, url) {
           cdCollected: s.cdCollectedAmount, cdCurrency: s.cdCollectedCurrency,
           totalPrice: s.totalPrice, currency: s.currency,
           routingCode: s.routingCode || null, returnURL: s.returnShipmentURL || null, pdfURL: s.pdfURL,
-          events: evRaw.map((ev) => ({
-            time: ev.time || ev.eventTime || ev.date || null,
-            office: ev.officeName || ev.officeNameEn || null,
-            text: ev.destinationDescription || ev.destinationDescriptionEn || ev.description || ev.officeName || '',
-          })),
+          events: evRaw.map((ev) => mapTrackingEvent(ev, body.lang)),
         };
       });
       return sendJson(res, 200, { ok: true, parcels });
@@ -264,6 +536,7 @@ async function handleApi(req, res, url) {
     try {
       const creds = getCreds(body);
       const r = await econt.getClientProfiles(creds);
+      rememberCreds(creds, true);
       const seen = new Set(), options = [];
       for (const p of (r.profiles || [])) {
         for (const a of (p.cdPayOptions || [])) {
@@ -295,7 +568,12 @@ async function handleApi(req, res, url) {
       const mode = url.pathname === '/api/create' ? 'create' : 'calculate';
       const label = econt.buildLabel(sender, body.defaults || {}, body.overrides || {});
       const resp = await econt.createLabel(creds, label, mode);
-      return sendJson(res, 200, { ok: true, mode, label, response: resp });
+      // From here on a waybill may exist: nothing below may turn this into an error.
+      let extra = {};
+      try { if (mode === 'create') rememberCreds(creds, true); extra = decorateLabelReply(resp); } catch (e) { console.error(e); }
+      // Extra top-level fields: totalPrice/totalPriceCurrency (the real price
+      // currency) and reviewIgnored/reviewIgnoredMessage when Econt dropped преглед/тест.
+      return sendJson(res, 200, Object.assign({ ok: true, mode, label, response: resp }, extra));
     } catch (e) {
       if (e.friendly) return sendJson(res, 200, { ok: false, error: e.message });
       const out = errorPayload(e);
@@ -317,7 +595,7 @@ function serveStatic(req, res, url) {
   let file = url.pathname === '/' ? '/index.html' : url.pathname;
   const full = path.join(ROOT, 'public', path.normalize(file).replace(/^([/\\])+/, ''));
   if (!full.startsWith(path.join(ROOT, 'public'))) { res.writeHead(403); return res.end(); }
-  fs.readFile(full, (err, data) => {
+  fs.readFile(full, (err, data) => { try {
     if (err) { res.writeHead(404); return res.end('Not found'); }
     const ext = path.extname(full).toLowerCase();
     const type = ext === '.html' ? 'text/html; charset=utf-8'
@@ -352,18 +630,40 @@ function serveStatic(req, res, url) {
     if (wantsGzip) headers['Content-Encoding'] = 'gzip';
     res.writeHead(200, headers);
     res.end(body);
-  });
+  } catch (e) { failRequest(res, e); } });
 }
 
-const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://localhost:${PORT}`);
+// Last-resort error reply. Never throws: the request may already be half-sent
+// or the client gone.
+function failRequest(res, e) {
+  const status = (e && e.httpStatus) || 500;
+  if (status >= 500) console.error(e);
+  try {
+    if (res.headersSent) return res.destroy();
+    sendJson(res, status, { ok: false, error: status === 413 ? 'Request too large' : status === 400 ? 'Bad request' : ((e && e.message) || 'Server error') },
+      status < 500 ? { Connection: 'close' } : null);
+  } catch { try { res.destroy(); } catch {} }
+}
+
+async function handleRequest(req, res) {
+  // A malformed request-target ("//a:b", "http://a:b/") makes new URL() throw:
+  // answer 400 instead of letting it reject the handler and take the process down.
+  let url;
+  try { url = new URL(req.url || '/', 'http://localhost'); }
+  catch { return failRequest(res, Object.assign(new Error('Bad request target'), { httpStatus: 400 })); }
   try {
     if (url.pathname.startsWith('/api/')) return await handleApi(req, res, url);
     return serveStatic(req, res, url);
   } catch (e) {
-    console.error(e);
-    sendJson(res, 500, { ok: false, error: e.message });
+    failRequest(res, e);
   }
+}
+
+// The handler's promise always has a catch: one bad request must never become
+// an unhandled rejection, which would end the whole process (and every other
+// user's in-flight create with it).
+const server = http.createServer((req, res) => {
+  handleRequest(req, res).catch((e) => failRequest(res, e));
 });
 
 server.listen(PORT, () => {
