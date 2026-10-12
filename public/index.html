@@ -85,7 +85,9 @@ try {
   html { background: var(--g-bg-100); scroll-behavior: smooth; overscroll-behavior-y: contain; scrollbar-gutter: stable;
     scroll-padding-top: calc(72px + env(safe-area-inset-top));
     scrollbar-width: thin; scrollbar-color: var(--g-gray-500) transparent; }
-  html:has(#view-app:not(.hide) #preview:not(.hide)), html:has(#view-settings:not(.hide)) { scroll-padding-bottom: 88px; }
+  /* app.js measures the sticky bars (--cb-h, --sb-h), so a focused field is never left under one. */
+  html:has(#view-app:not(.hide) #preview:not(.hide)) { scroll-padding-bottom: calc(var(--cb-h, 88px) + 16px); }
+  html:has(#view-settings:not(.hide)) { scroll-padding-bottom: calc(var(--sb-h, 64px) + 16px); }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--g-gray-500); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
@@ -106,6 +108,8 @@ try {
   /* Keyboard focus: the Geist ring, above any component shadow. The transparent outline
      is what forced-colors mode paints. Tabs, the reply bubble and landing marks draw their own. */
   :is(button, a, [tabindex], select):not(.tab):not(.reply-prev):not(mark):focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--g-focus) !important; }
+  /* Checkboxes ignore border and shadow: a solid ring that reads on both themes. */
+  input[type=checkbox]:focus-visible { outline: 2px solid var(--g-blue-700); outline-offset: 2px; }
   :where(button, a, select, input, textarea, label) { touch-action: manipulation; }
 
   /* ===================== TOP BAR =====================
@@ -351,6 +355,7 @@ try {
   @keyframes resAfter { from { opacity: 0; } }
   .res-sum { margin-top: 8px; max-width: 36em; font-size: 16px; line-height: 24px; color: var(--g-gray-900); text-wrap: pretty; overflow-wrap: break-word; }
   .res-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--g-green-700); vertical-align: 1px; }
+  #resultNote { margin-top: 16px; max-width: 36em; }
   .res-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
   .res-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; margin-top: 16px; }
   /* What the customer receives: the seller's outgoing chat bubble, as on the landing. */
@@ -387,8 +392,14 @@ try {
   .brow-status { min-width: 0; font-size: 13px; line-height: 18px; color: var(--g-gray-900); overflow-wrap: break-word; }
   .brow.done .brow-status { white-space: nowrap; }
   .brow-acts { display: flex; flex: none; align-items: center; gap: 16px; margin-left: auto; }
-  .brow-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.7fr) 88px 96px; gap: 8px; margin-top: 8px; }
+  /* Who and how much on the first line (name, phone, amount, currency), where to and
+     review on the second. The phone gets a full half, so +359 888 123 456 fits. */
+  .brow-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 104px 88px; gap: 8px; margin-top: 8px; }
   .brow-grid input:not([type=checkbox]), .brow-grid select { height: 36px; }
+  .brow-grid [data-f="office"], .brow-grid [data-f="addr"] { grid-column: 1 / 3; }
+  .brow-grid [data-f="review"] { grid-column: 3 / 5; }
+  .brow-grid:not(:has([data-f="review"])) :is([data-f="office"], [data-f="addr"]) { grid-column: 1 / -1; }
+  #batchReviewNote { margin-top: 4px; }
   /* A created row folds to one line: number, who, and the reply. */
   .brow.done { padding-bottom: 12px; }
   .batch-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
@@ -404,7 +415,11 @@ try {
   }
   @media (max-width: 719px) {
     .brow-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-    .brow-grid [data-f="office"], .brow-grid [data-f="addr"] { grid-column: 1 / -1; }
+    .brow-grid [data-f="office"], .brow-grid [data-f="addr"], .brow-grid [data-f="review"] { grid-column: 1 / -1; }
+  }
+  /* Narrow phones: the name and the phone each get the full width. */
+  @media (max-width: 479px) {
+    .brow-grid [data-f="name"], .brow-grid [data-f="phone"] { grid-column: 1 / -1; }
   }
 
   /* ===================== APP: parcels =====================
@@ -1006,7 +1021,7 @@ try {
             <select id="cfgPayout"><option value="" data-i18n="payout_default">Както е зададено в Еконт</option></select>
           </div>
           <div class="tight"><button class="lnk" id="cfgPayoutBtn" type="button" data-i18n="payout_load">Зареди сметките от Еконт</button></div>
-          <div id="cfgPayoutMsg" class="muted tight" role="status" data-i18n="payout_hint">Парите се превеждат по сметката от избраното споразумение с Еконт.</div>
+          <div id="cfgPayoutMsg" class="muted tight" role="status">Парите се превеждат по сметката от избраното споразумение с Еконт.</div>
           <label class="check"><input type="checkbox" id="cfgDeclOn"> <span data-i18n="decl_default">Обявявай стойност, равна на наложения платеж</span></label>
         </div>
       </section>
@@ -1064,6 +1079,7 @@ try {
       <section id="batch" class="hide" aria-labelledby="batchH">
         <h2 id="batchH" class="sec-h" data-i18n="batch_h">Няколко пратки наведнъж</h2>
         <div id="batchInfo" role="status"></div>
+        <p id="batchReviewNote" class="muted hide"></p>
         <div id="batchProg" class="bprog hide" aria-hidden="true"><i id="batchBar"></i></div>
         <div id="batchList"></div>
         <div id="batchNoCodConfirm" class="confirmrow hide" role="alertdialog" aria-labelledby="batchNoCodMsg">
@@ -1148,15 +1164,15 @@ try {
           <div class="fs-b">
             <div class="optline">
               <label class="check"><input type="checkbox" id="pCodOn"> <span id="codLbl" data-i18n="cod">Наложен платеж</span></label>
-              <input id="pCodAmount" class="amt" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" aria-labelledby="codLbl">
-              <select id="pCodCur" class="cur" aria-labelledby="codLbl"><option value="EUR">EUR</option><option value="BGN">BGN</option></select>
+              <input id="pCodAmount" class="amt" type="text" inputmode="decimal" autocomplete="off" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" aria-label="Сума на наложения платеж">
+              <select id="pCodCur" class="cur" aria-label="Валута на наложения платеж"><option value="EUR">EUR</option><option value="BGN">BGN</option></select>
             </div>
             <div id="codCurHint" class="muted cur-hint hide tight" role="status"></div>
             <div id="codWarn" class="note hide tight" role="status" data-i18n="cod_warn">Тази пратка е без наложен платеж.</div>
             <div class="optline">
               <label class="check"><input type="checkbox" id="pDeclOn"> <span id="declLbl" data-i18n="decl">Обявена стойност</span></label>
-              <input id="pDeclAmount" class="amt" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" aria-labelledby="declLbl">
-              <select id="pDeclCur" class="cur" aria-labelledby="declLbl"><option value="EUR">EUR</option><option value="BGN">BGN</option></select>
+              <input id="pDeclAmount" class="amt" type="text" inputmode="decimal" autocomplete="off" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" aria-label="Сума на обявената стойност">
+              <select id="pDeclCur" class="cur" aria-label="Валута на обявената стойност"><option value="EUR">EUR</option><option value="BGN">BGN</option></select>
             </div>
             <div id="reviewRow">
               <label id="pReviewLbl" data-i18n="review_label">Преглед преди плащане</label>
@@ -1168,6 +1184,7 @@ try {
               <input type="hidden" id="pReviewMode" value="none">
             </div>
             <div id="reviewAnchored" class="muted hide"></div>
+            <div id="reviewIgnoredNote" class="note hide tight" role="status"></div>
           </div>
         </div>
 
@@ -1194,6 +1211,7 @@ try {
         <div class="res-card">
           <div class="ok-num" id="shipNum"></div>
           <p class="res-sum res-after"><span class="res-dot" aria-hidden="true"></span><span id="resultSummary"></span> <span id="resultMeta"></span></p>
+          <p id="resultNote" class="note hide res-after" role="status"></p>
           <div class="res-actions res-after">
             <button class="primary" id="replyBtn" type="button" data-i18n="send_customer">Прати на клиента</button>
             <button id="copyBtn" type="button" data-i18n="copy">Копирай номера</button>
