@@ -80,8 +80,12 @@ try {
 
   /* ===================== BASE ===================== */
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html { background: var(--g-bg-100); scroll-behavior: smooth; overscroll-behavior-y: contain; scrollbar-gutter: stable both-edges;
+  /* scroll-padding keeps everything scrolled into view (the new waybill, the preview,
+     a focused field) clear of the 56px sticky top bar and of the sticky bottom bars. */
+  html { background: var(--g-bg-100); scroll-behavior: smooth; overscroll-behavior-y: contain; scrollbar-gutter: stable;
+    scroll-padding-top: calc(72px + env(safe-area-inset-top));
     scrollbar-width: thin; scrollbar-color: var(--g-gray-500) transparent; }
+  html:has(#view-app:not(.hide) #preview:not(.hide)), html:has(#view-settings:not(.hide)) { scroll-padding-bottom: 88px; }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--g-gray-500); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
@@ -176,7 +180,7 @@ try {
   input[type=checkbox] { width: 16px; height: 16px; margin: 0; flex: none; accent-color: var(--g-gray-1000); cursor: pointer; }
   .pin { height: 56px !important; font-size: 24px !important; font-weight: 600; letter-spacing: .5em; text-indent: .5em; text-align: center; }
   .need, .brow-grid .need { border-color: var(--g-red-700) !important; }
-  .row { display: flex; flex-wrap: wrap; gap: 16px 12px; }
+  .row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 12px; }
   .row > .field { flex: 1 1 140px; min-width: 0; }
   .row > .field.narrow { flex: 0 0 104px; }
   .inline { display: flex; align-items: center; gap: 8px; }
@@ -193,8 +197,16 @@ try {
   @media (hover: hover) { .segmini button:hover { background: transparent; color: var(--g-gray-1000); } }
   .segmini button:active { background: var(--g-alpha-100); }
   .segmini button.active { background: var(--g-seg-on); color: var(--g-gray-1000); box-shadow: var(--g-shadow-seg); }
-  .segwide { display: flex; flex-wrap: wrap; width: 100%; }
+  .segwide { display: flex; width: 100%; }
   .segwide button { flex: 1 1 auto; }
+  /* Radio list: a ring that fills in for the chosen option. */
+  .radios { display: grid; justify-items: start; gap: 2px; }
+  .radios button { justify-content: flex-start; gap: 10px; height: auto; min-height: 32px; margin-left: -6px; padding: 4px 8px 4px 6px; background: transparent; box-shadow: none;
+    color: var(--g-gray-1000); font-weight: 400; white-space: normal; text-align: left; }
+  .radios button::before { content: ""; flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--g-bg-100); box-shadow: inset 0 0 0 1px var(--g-border-strong); transition: box-shadow .15s; }
+  @media (hover: hover) { .radios button:hover { background: transparent; } .radios button:hover::before { box-shadow: inset 0 0 0 1px var(--g-border-hover); } }
+  .radios button:active { background: transparent; }
+  .radios button.active::before { box-shadow: inset 0 0 0 5px var(--g-gray-1000); }
 
   /* Notes: tinted, fully bordered, never a coloured side bar. */
   .note, .warn-box { padding: 8px 12px; border: 1px solid color-mix(in srgb, var(--g-amber-900) 28%, transparent); border-radius: 6px;
@@ -255,7 +267,7 @@ try {
   @media (hover: hover) { .tabs .tab:hover { background: transparent; color: var(--g-gray-1000); } }
   .tabs .tab:active { background: var(--g-alpha-100); }
   .tabs .tab.active { color: var(--g-gray-1000); }
-  .tabs .tab:focus-visible { box-shadow: inset 0 0 0 2px var(--g-blue-700); }
+  .tabs .tab:focus-visible { outline: 2px solid transparent; outline-offset: -2px; box-shadow: inset 0 0 0 2px var(--g-blue-700); }
   /* The underline slides to the chosen tab (app.js moves it by its own width + the 5px gap). */
   .seg-ind { position: absolute; left: 0; bottom: -1px; width: 120px; height: 2px; background: var(--g-gray-1000); transition: transform .3s var(--ease); }
 
@@ -270,9 +282,14 @@ try {
   .composer-bar { display: flex; align-items: center; gap: 4px; padding: 8px; border-top: 1px solid var(--g-border); border-radius: 0 0 12px 12px; background: var(--g-bg-200); }
   .composer-bar .chint { min-width: 0; margin-left: 4px; font-size: 13px; line-height: 16px; color: var(--g-gray-900); }
   .composer-bar #parseBtn { margin-left: 4px; }
-  /* One primary per screen: once a preview, batch or result is open, it owns the black button. */
-  #tab-new:has(#preview:not(.hide), #batch:not(.hide), #result:not(.hide)) #parseBtn:not(:disabled) { background: var(--g-bg-100); color: var(--g-gray-1000); box-shadow: var(--g-shadow-border); }
-  @media (hover: hover) { #tab-new:has(#preview:not(.hide), #batch:not(.hide), #result:not(.hide)) #parseBtn:not(:disabled):hover { background: var(--g-gray-100); } }
+  /* One primary per screen: once a preview or batch is open it owns the black button and
+     Разчети becomes secondary; next to a created waybill Разчети is only a quiet text button. */
+  #tab-new:has(#preview:not(.hide), #batch:not(.hide)) #parseBtn:not(:disabled) { background: var(--g-bg-100); color: var(--g-gray-1000); box-shadow: var(--g-shadow-border); }
+  @media (hover: hover) { #tab-new:has(#preview:not(.hide), #batch:not(.hide)) #parseBtn:not(:disabled):hover { background: var(--g-gray-100); } }
+  #tab-new:has(#result:not(.hide)) #parseBtn:not(:disabled) { background: transparent; color: var(--g-gray-900); box-shadow: none; }
+  @media (hover: hover) { #tab-new:has(#result:not(.hide)) #parseBtn:not(:disabled):hover { background: var(--g-alpha-100); color: var(--g-gray-1000); } }
+  .new-today { margin-top: 12px; font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
+  .new-today:empty, #tab-new:has(#preview:not(.hide), #batch:not(.hide), #result:not(.hide)) .new-today { display: none; }
 
   /* ===================== APP: preview editor ===================== */
   #preview, #batch, #result { margin-top: 40px; }
@@ -280,10 +297,16 @@ try {
   #backToBatchBtn { margin-bottom: 12px; }
   .pv-head + .fs, .pv-head ~ .note + .fs { margin-top: 24px; }
   #prevSummary { max-width: 38em; }
-  .optline { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+  .optline { display: flex; align-items: center; gap: 8px 12px; }
   .optline label.check { flex: 0 0 172px; }
   .optline .amt { flex: 0 1 120px; width: 120px; }
   .optline .cur { flex: 0 0 104px; width: 104px; }
+  /* Phones: the checkbox on its own line, the amount and its currency together under it. */
+  @media (max-width: 559px) {
+    .optline { display: grid; grid-template-columns: minmax(0, 1fr) 104px; }
+    .optline label.check { grid-column: 1 / -1; }
+    .optline .amt, .optline .cur { width: 100%; }
+  }
   .cur-hint { font-size: 13px; line-height: 18px; }
   .cur-hint.warn-box { font-size: 14px; }
   #officeHint { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 13px; line-height: 18px; color: var(--g-gray-900); }
@@ -308,38 +331,35 @@ try {
 
   /* ===================== APP: result (the waybill) =====================
      The number is the one bold thing in the app: plain ink, tabular, large. Its digits
-     settle in once when it is created (app.js adds .revealing for that moment only). */
-  #result { container-type: inline-size; padding: 24px; border-radius: 12px; background: var(--g-bg-100); box-shadow: var(--g-shadow-medium); }
+     settle in once when it is created (app.js adds .revealing for that moment only).
+     One surface holds what was created; today's count and the next step sit under it. */
+  .res-card { container-type: inline-size; padding: 24px; border-radius: 12px; background: var(--g-bg-100); box-shadow: var(--g-shadow-medium); }
   .ok-num { font-size: clamp(30px, 10vw, 56px); font-size: min(56px, 12cqi); line-height: 1.15; font-weight: 600; letter-spacing: -.02em; white-space: nowrap; color: var(--g-gray-1000); }
+  .ok-num.is-text { font-size: 20px; line-height: 28px; letter-spacing: -.2px; white-space: normal; overflow-wrap: anywhere; }
   .ok-num .d { display: inline-block; }
   #result.revealing .ok-num { clip-path: inset(0 -.2em); }
   #result.revealing .ok-num .d { animation: digitIn .55s var(--ease) both; animation-delay: calc(var(--i) * 26ms); }
   @keyframes digitIn { from { transform: translateY(.75em); opacity: 0; } 50% { opacity: 1; } }
   #result.revealing .res-after { animation: resAfter .35s ease .45s both; }
   @keyframes resAfter { from { opacity: 0; } }
-  .res-sum { margin-top: 8px; max-width: 36em; font-size: 16px; line-height: 24px; color: var(--g-gray-900); text-wrap: pretty; }
+  .res-sum { margin-top: 8px; max-width: 36em; font-size: 16px; line-height: 24px; color: var(--g-gray-900); text-wrap: pretty; overflow-wrap: break-word; }
   .res-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--g-green-700); vertical-align: 1px; }
   .res-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
-  .res-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-top: 16px; }
+  .res-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; margin-top: 16px; }
   /* What the customer receives: the seller's outgoing chat bubble, as on the landing. */
-  .reply-prev { display: grid; justify-items: end; gap: 8px; margin-top: 32px; border-radius: 16px; cursor: pointer; }
-  .reply-prev:focus-visible { box-shadow: none; }
+  .reply-prev { display: grid; justify-items: end; gap: 8px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--g-border); cursor: pointer; }
+  .nw { white-space: nowrap; }
+  .reply-prev:focus-visible { outline: none; box-shadow: none; }
   .reply-prev-h { justify-self: start; font-size: 14px; line-height: 20px; font-weight: 500; color: var(--g-gray-1000); }
   .reply-prev-t { max-width: min(30em, 92%); padding: 12px 16px; border-radius: 16px 4px 16px 16px; background: var(--g-gray-100); color: var(--g-gray-1000);
-    font-size: 15px; line-height: 22px; white-space: pre-line; overflow-wrap: anywhere; transition: background-color .15s; }
+    font-size: 15px; line-height: 22px; white-space: pre-line; overflow-wrap: break-word; transition: background-color .15s; }
   @media (hover: hover) { .reply-prev:hover .reply-prev-t { background: var(--g-gray-200); } }
   .reply-prev:active .reply-prev-t { background: var(--g-gray-300); }
-  .reply-prev:focus-visible .reply-prev-t { box-shadow: var(--g-focus); }
+  .reply-prev:focus-visible .reply-prev-t { outline: 2px solid transparent; box-shadow: var(--g-focus); }
   .reply-prev-copy { font-size: 13px; line-height: 16px; color: var(--g-gray-900); }
-  @container (min-width: 600px) {
-    .reply-prev { grid-template-columns: 160px minmax(0, 1fr); column-gap: 24px; align-items: start; }
-    .reply-prev-h { grid-column: 1; grid-row: 1; padding-top: 12px; }
-    .reply-prev-t, .reply-prev-copy { grid-column: 2; justify-self: end; }
-  }
   .reply-prev.is-done .reply-prev-copy { color: var(--g-green-900); }
-  .res-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin: 32px -24px -24px; padding: 16px 24px; border-top: 1px solid var(--g-border);
-    border-radius: 0 0 12px 12px; background: var(--g-bg-200); }
-  .res-today { flex: 1 1 220px; font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
+  .res-next { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-top: 20px; }
+  .res-today { flex: 1 1 220px; margin: 0; font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
   .res-today:empty { visibility: hidden; }
 
   /* ===================== APP: batch ===================== */
@@ -349,25 +369,40 @@ try {
   .bprog.ok i { background: var(--g-green-700); }
   .bprog.bad i { background: var(--g-amber-700); }
   #batchList { margin-top: 16px; border-radius: 12px; box-shadow: var(--g-shadow-border); }
-  .brow { padding: 12px 16px 16px; border-top: 1px solid var(--g-border); }
+  .brow { padding: 12px 16px 16px; border-top: 1px solid var(--g-border); scroll-margin-bottom: 96px; }
   .brow:first-child { border-top: 0; }
-  .brow-top { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; min-height: 32px; }
-  .brow-pick { display: inline-flex; align-items: center; gap: 10px; margin: 0; font-size: 14px; color: var(--g-gray-1000); cursor: pointer; }
-  .brow-top .idx { font-size: 14px; line-height: 20px; font-weight: 500; }
+  .brow-top { display: flex; align-items: center; gap: 4px 12px; min-height: 32px; }
+  .brow-pick { display: inline-flex; flex: none; align-items: center; gap: 10px; margin: 0; font-size: 14px; color: var(--g-gray-1000); cursor: pointer; }
+  .brow-top .idx { font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; }
+  .brow-mid { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 12px; flex: 1 1 auto; min-width: 0; }
   .brow-top .track-tag { font-size: 13px; color: var(--g-gray-900); }
-  .brow-status { margin-left: auto; max-width: 100%; font-size: 13px; line-height: 18px; color: var(--g-gray-900); text-align: right; overflow-wrap: anywhere; }
+  .brow-name { font-size: 14px; line-height: 20px; font-weight: 500; overflow-wrap: anywhere; }
+  .brow-status { min-width: 0; font-size: 13px; line-height: 18px; color: var(--g-gray-900); overflow-wrap: break-word; }
+  .brow.done .brow-status { white-space: nowrap; }
+  .brow-acts { display: flex; flex: none; align-items: center; gap: 16px; margin-left: auto; }
   .brow-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.7fr) 88px 96px; gap: 8px; margin-top: 8px; }
   .brow-grid input:not([type=checkbox]), .brow-grid select { height: 36px; }
-  .brow.done .brow-grid, .brow.done input[type=checkbox] { opacity: .5; }
-  .batch-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  /* A created row folds to one line: number, who, and the reply. */
+  .brow.done { padding-bottom: 12px; }
+  .batch-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .batch-actions .res-today { margin-right: 8px; }
+  .batch-actions .res-today:empty { display: none; }
+  .batch-actions .res-today:empty + #batchCancelBtn { margin-left: auto; }
   #batchNoCodConfirm { margin-top: 16px; }
   #batchErr { margin-top: 8px; }
+  /* Phones: a created row puts its reply link under the name and number. */
+  @media (max-width: 559px) {
+    .brow.done .brow-top { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; }
+    .brow.done .brow-acts { grid-column: 2; margin-left: 0; }
+  }
   @media (max-width: 719px) {
     .brow-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
     .brow-grid [data-f="office"], .brow-grid [data-f="addr"] { grid-column: 1 / -1; }
   }
 
-  /* ===================== APP: parcels ===================== */
+  /* ===================== APP: parcels =====================
+     One list surface. A row: the number (tap to copy), who and where, a progress track,
+     one sentence for the state with its duration, then the reply and Детайли. */
   .pl-title { display: flex; align-items: center; gap: 4px; }
   .pl-sub { margin-top: 4px; min-height: 20px; font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
   .add-row { margin-top: 16px; }
@@ -379,18 +414,26 @@ try {
   .parcel:last-child { border-radius: 0 0 12px 12px; }
   .parcel:only-child { border-radius: 12px; }
   .parcel-top { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+  .pnum { height: 28px; gap: 6px; margin: -4px 0 -4px -6px; padding: 0 6px; background: transparent; box-shadow: none; }
+  @media (hover: hover) { .pnum:hover { background: var(--g-alpha-100); } .pnum:hover .ic { color: var(--g-gray-1000); } }
+  .pnum:active { background: var(--g-alpha-200); }
+  .pnum .ic { width: 14px; height: 14px; color: var(--g-gray-700); transition: color .15s; }
   .parcel-num { font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -.1px; }
+  .pnum.is-done { font-size: 14px; }
   .parcel-pills { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-left: auto; }
-  .parcel-sub { margin-top: 2px; font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
+  .parcel-pills:empty { display: none; }
+  .parcel-sub { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
   .parcel-sub:empty { display: none; }
   .ptrack { display: flex; gap: 4px; margin-top: 12px; }
   .ptrack i { flex: 1; height: 4px; border-radius: 99px; background: var(--g-gray-200); transition: background-color .4s var(--ease); }
   .ptrack[data-step="1"] i:nth-child(1), .ptrack[data-step="2"] i:nth-child(-n+2) { background: var(--g-blue-700); }
   .ptrack[data-step="3"] i { background: var(--g-green-700); }
   .ptrack[data-ret] i { background: var(--g-amber-700); }
-  .parcel-line { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 16px; margin-top: 8px; font-size: 13px; line-height: 18px; color: var(--g-gray-900); }
-  .parcel-timer:empty, .parcel-meta:empty { display: none; }
-  .parcel-timer .clk { color: var(--g-gray-1000); font-weight: 500; }
+  .parcel-line { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 16px; margin-top: 8px; }
+  .pstat { font-size: 14px; line-height: 20px; font-weight: 500; color: var(--g-gray-1000); }
+  .pstat.sk { font-weight: 400; }
+  .parcel-meta { font-size: 13px; line-height: 18px; color: var(--g-gray-900); }
+  .parcel-meta:empty { display: none; }
   .parcel-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; margin-top: 12px; }
   .parcel-x { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--g-border); }
   .parcel.open [data-toggle] .ic { transform: rotate(180deg); }
@@ -408,9 +451,10 @@ try {
   @keyframes freshBg { from { background: var(--g-blue-100); } }
   .parcel.leaving { opacity: 0; height: 0 !important; margin: 0; padding-block: 0; border-width: 0; overflow: hidden;
     transition: opacity .25s var(--ease), height .28s var(--ease), padding .28s var(--ease); }
-  .card.empty { padding: 40px 24px; border-radius: 12px; box-shadow: var(--g-shadow-border); text-align: center; }
+  /* Empty list: plain words and one button, left-aligned under the add row. */
+  .card.empty { padding: 8px 0 0; }
   .card.empty b { display: block; font-size: 16px; line-height: 24px; font-weight: 600; }
-  .card.empty .muted { max-width: 30em; margin: 4px auto 20px; font-size: 14px; line-height: 20px; }
+  .card.empty .muted { max-width: 32em; margin: 4px 0 16px; font-size: 14px; line-height: 20px; }
 
   /* ===================== SETUP ===================== */
   .steps { margin: 40px 0 0; padding: 0; list-style: none; }
@@ -440,10 +484,16 @@ try {
   /* ===================== SETTINGS ===================== */
   .set-head { padding-bottom: 24px; }
   .set-head .pg-h { margin-top: 8px; }
-  .save-bar { position: sticky; bottom: 0; z-index: 15; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+  .save-bar { position: sticky; bottom: 0; z-index: 15; display: flex; align-items: center; justify-content: flex-end; gap: 8px 16px;
     margin: 0 calc(-1 * var(--gutter)); padding: 12px var(--gutter) calc(12px + env(safe-area-inset-bottom)); background: var(--g-bg-100); border-top: 1px solid var(--g-border); }
-  .save-bar #cfgMsg { flex: 1 1 100%; }
-  #refreshOfficesBtn { margin-left: -8px; }
+  .save-bar #cfgMsg { flex: 1 1 auto; min-width: 0; }
+  /* Sticky bars bleed to the screen edge on phones; on desktop they line up with the column. */
+  @media (min-width: 720px) { .confirm-bar, .save-bar { margin: 0; padding-left: 0; padding-right: 0; } }
+  .office-now { display: flex; align-items: center; gap: 12px; }
+  .office-now input { flex: 0 0 96px; width: 96px; }
+  .office-name { min-width: 0; font-size: 14px; line-height: 20px; color: var(--g-gray-1000); overflow-wrap: anywhere; }
+  .office-status { font-size: 13px; line-height: 20px; color: var(--g-gray-900); }
+  .office-status .lnk { font-size: 13px; }
 
   /* ===================== ABOUT ===================== */
   .about-hero { padding: 24px 0 40px; }
@@ -461,7 +511,8 @@ try {
     text-decoration: underline; text-decoration-color: var(--g-border-strong); text-underline-offset: 4px; overflow-wrap: anywhere; }
   .social:hover { text-decoration-color: currentColor; }
   .social .ic { color: var(--g-gray-900); }
-  #copyLine { margin-top: 16px; }
+  #copyLine { margin-top: 24px; }
+  body:has(#view-about:not(.hide)) .footer { display: none; }
 
   /* ===================== FOOTER ===================== */
   .footer { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; padding: 40px 0 0; font-size: 13px; line-height: 20px; color: var(--g-gray-900); }
@@ -584,18 +635,19 @@ try {
   }
   @media (max-width: 559px) {
     .composer-bar .chint { display: none; }
-    .segwide { flex-wrap: nowrap; }
-    .segwide button { flex: 1 1 0; min-width: 0; height: auto; min-height: 36px; padding: 6px 8px; line-height: 18px; white-space: normal; }
+    /* A segment never wraps: short labels, the widths follow the words. */
+    .segwide button { flex: 1 1 auto; min-width: 0; padding: 0 8px; }
     .res-actions > button { flex: 1 1 auto; }
     .batch-actions > button { flex: 1 1 auto; }
-    .cb-row { flex-wrap: wrap; }
-    .cb-price { flex-basis: 100%; }
+    .batch-actions .res-today { flex-basis: 100%; margin-right: 0; }
+    /* Price and Create share one line: the label sits small above the amount. */
+    .cb-price { flex: 0 1 auto; font-size: 12px; line-height: 16px; }
+    .cb-price .price { display: block; margin-left: 0; font-size: 18px; line-height: 24px; }
     #createBtn { flex: 1 1 auto; }
     .setup-end { padding-left: 0; }
     .setup-end #suFinishBtn { width: 100%; }
-    #result { padding: 20px 16px; }
-    .res-foot { margin: 28px -16px -20px; padding: 16px; }
-    .res-foot > button { flex: 1 1 auto; }
+    .res-card { padding: 20px 16px; }
+    .res-next > button { flex: 1 1 auto; }
     .drow, .event { grid-template-columns: minmax(0, 120px) minmax(0, 1fr); gap: 12px; }
   }
   @media (pointer: coarse) {
@@ -610,8 +662,10 @@ try {
     input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: 16px; }
     .composer textarea { font-size: 16px; }
   }
+  /* The info button goes first when space runs out (the brand link opens the same page). */
+  @media (max-width: 559px) { body:has(#modeBadge:not(.hide):not([style*="none"])) #infoBtn { display: none; } }
+  @media (max-width: 429px) { #infoBtn { display: none; } }
   @media (max-width: 479px) {
-    #infoBtn { display: none; }
     .topbar-in { gap: 2px; }
     .topbar .icon { width: 36px; height: 36px; }
     .topbar .lang { padding: 0 9px; }
@@ -690,7 +744,7 @@ try {
               <div class="ld-wb-row" data-n="1" id="ldRow1"><dt><span class="ld-pin">1</span><span class="ld-wb-l" data-i18n="wb_rcpt">Получател</span></dt><dd lang="bg">Мария Петрова</dd></div>
               <div class="ld-wb-row" data-n="2" id="ldRow2"><dt><span class="ld-pin">2</span><span class="ld-wb-l" data-i18n="wb_phone">Телефон</span></dt><dd class="ld-num">0888 412 657</dd></div>
               <div class="ld-wb-row" data-n="3" id="ldRow3"><dt><span class="ld-pin">3</span><span class="ld-wb-l" data-i18n="wb_office">До офис</span></dt><dd lang="bg">Пловдив, Тракия</dd></div>
-              <div class="ld-wb-row" data-n="4" id="ldRow4"><dt><span class="ld-pin">4</span><span class="ld-wb-l" data-i18n="wb_cod">Наложен платеж</span></dt><dd class="ld-amt" data-i18n="wb_cod_v">45,00 €</dd></div>
+              <div class="ld-wb-row" data-n="4" id="ldRow4"><dt><span class="ld-pin">4</span><span class="ld-wb-l" data-i18n="wb_cod">Наложен платеж</span></dt><dd class="ld-amt" data-i18n="wb_cod_v">45 €</dd></div>
               <div class="ld-wb-row" data-n="5" id="ldRow5"><dt><span class="ld-pin">5</span><span class="ld-wb-l" data-i18n="wb_review">Преглед</span></dt><dd data-i18n="wb_review_v">Да, преди плащане</dd></div>
               <div class="ld-wb-row dim"><dt><span aria-hidden="true"></span><span class="ld-wb-l" data-i18n="wb_parcel">Пратка</span></dt><dd><span data-i18n="wb_parcel_v">колет, 1 кг, плаща получателят</span><span class="ld-badge" data-i18n="wb_default">от настройките</span></dd></div>
             </dl>
@@ -744,9 +798,10 @@ try {
           <h2 data-i18n="setup_s2">Твоят профил в Еконт</h2>
           <input type="hidden" id="suMode" value="production">
           <div class="row">
-            <div class="field"><label data-i18n="setup_user">Потребителско име в Еконт</label><input id="suUser" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" data-enter="suTestBtn"></div>
-            <div class="field"><label data-i18n="setup_pass">Парола за Еконт</label><input id="suPass" type="password" autocomplete="current-password" data-enter="suTestBtn"></div>
+            <div class="field"><label data-i18n="setup_user">Потребителско име</label><input id="suUser" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" data-enter="suTestBtn"></div>
+            <div class="field"><label data-i18n="setup_pass">Парола</label><input id="suPass" type="password" autocomplete="current-password" data-enter="suTestBtn"></div>
           </div>
+          <p class="muted tight" data-i18n="setup_user_hint">Пиши потребителското име точно, с главните и малките букви.</p>
           <div class="step-act">
             <button id="suTestBtn" type="button" data-i18n="setup_test">Проверка на входа</button>
             <button class="lnk" id="suDemoBtn" type="button" data-i18n="setup_demo_try">Нямаш профил? Пробвай с демо профила</button>
@@ -788,7 +843,7 @@ try {
           <label class="check"><input type="checkbox" id="suCod"> <span data-i18n="setup_cod">Обикновено пращам с наложен платеж</span></label>
           <div class="field">
             <label data-i18n="cod_currency">Валута на наложения платеж</label>
-            <select id="suCur" style="max-width:220px"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
+            <select id="suCur" style="max-width:220px"><option value="EUR">EUR</option><option value="BGN">BGN</option></select>
           </div>
         </div>
       </li>
@@ -853,8 +908,9 @@ try {
           <div id="cfgDemoNote" class="note hide" data-i18n="demo_note">Работиш с демо профила.</div>
           <div class="row">
             <div class="field"><label data-i18n="username">Потребителско име</label><input id="cfgUser" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-enter="saveCfgBtn"></div>
-            <div class="field"><label data-i18n="pass_keep">Парола (остави празно, за да не я сменяш)</label><input id="cfgPass" type="password" data-i18n-ph="pass_saved_ph" placeholder="запазена" autocomplete="off" data-enter="saveCfgBtn"></div>
+            <div class="field"><label data-i18n="pass_keep">Парола</label><input id="cfgPass" type="password" data-i18n-ph="pass_saved_ph" placeholder="запазена" autocomplete="off" data-enter="saveCfgBtn"></div>
           </div>
+          <p class="muted tight" data-i18n="pass_keep_hint">Паролата е запазена. Попълни я само ако искаш да я смениш.</p>
           <div><button id="cfgTestBtn" type="button" data-i18n="setup_test">Проверка на входа</button></div>
           <div id="cfgTestMsg" class="muted tight" role="status" aria-live="polite"></div>
         </div>
@@ -869,13 +925,17 @@ try {
           </div>
           <div class="field">
             <label id="cfgOfficeLbl" data-i18n="set_office_code">Офис, от който пращаш</label>
-            <div class="inline">
-              <input id="cfgSenderOffice" inputmode="numeric" data-i18n-ph="office_code_ph" placeholder="код" style="flex:0 0 96px">
-              <input id="cfgSenderSearch" enterkeyhint="search" data-i18n-ph="search" data-enter="cfgSenderSearchBtn" placeholder="град или име на офис">
-              <button id="cfgSenderSearchBtn" type="button" data-i18n="find">Намери</button>
+            <div class="office-now">
+              <input id="cfgSenderOffice" inputmode="numeric" data-i18n-ph="office_code_ph" placeholder="код">
+              <span id="cfgOfficeName" class="office-name"></span>
             </div>
           </div>
+          <div class="inline tight">
+            <input id="cfgSenderSearch" enterkeyhint="search" data-i18n-ph="search" data-enter="cfgSenderSearchBtn" placeholder="друг офис: град или име">
+            <button id="cfgSenderSearchBtn" type="button" data-i18n="find">Намери</button>
+          </div>
           <select id="cfgSenderOfficeSel" class="hide tight" aria-labelledby="cfgOfficeLbl"></select>
+          <p class="office-status tight"><span id="officeStatus" role="status"></span> <button class="lnk" id="refreshOfficesBtn" type="button" data-i18n="refresh_offices">Обнови списъка с офиси</button></p>
         </div>
       </section>
 
@@ -932,7 +992,7 @@ try {
           <label class="check"><input type="checkbox" id="cfgCodOn"> <span data-i18n="set_cod_default">Включвай наложен платеж във всяка нова пратка</span></label>
           <div class="field">
             <label data-i18n="cod_currency">Валута на наложения платеж</label>
-            <select id="cfgCur" style="max-width:220px"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
+            <select id="cfgCur" style="max-width:220px"><option value="EUR">EUR</option><option value="BGN">BGN</option></select>
           </div>
           <div class="field">
             <label id="cfgPayoutLbl" data-i18n="payout_label">Изплащане на наложения платеж</label>
@@ -949,10 +1009,10 @@ try {
         <div class="fs-b">
           <div>
             <label id="cfgReviewLbl" data-i18n="review_setting">Преглед преди плащане</label>
-            <div class="segmini segwide" id="cfgReviewSeg" role="group" aria-labelledby="cfgReviewLbl">
+            <div class="radios" id="cfgReviewSeg" role="group" aria-labelledby="cfgReviewLbl">
               <button type="button" data-val="" data-i18n="review_unanchored">Избирам за всяка пратка</button>
-              <button type="button" data-val="review" data-i18n="review_only">Преглед</button>
-              <button type="button" data-val="review_test" data-i18n="review_test">Преглед и тест</button>
+              <button type="button" data-val="review" data-i18n="review_always">Винаги с преглед</button>
+              <button type="button" data-val="review_test" data-i18n="review_test_always">Винаги с преглед и тест</button>
             </div>
             <input type="hidden" id="cfgReviewMode" value="">
           </div>
@@ -962,8 +1022,6 @@ try {
 
       <div class="save-bar">
         <div id="cfgMsg" class="muted" role="status"></div>
-        <button class="tertiary btn-sm" id="refreshOfficesBtn" type="button" data-i18n="refresh_offices">Обнови списъка с офиси</button>
-        <span class="spacer"></span>
         <button class="primary" id="saveCfgBtn" type="button" data-i18n="save">Запази</button>
       </div>
     </div>
@@ -993,6 +1051,7 @@ try {
         </div>
         <input type="file" id="imgInput" accept="image/*" multiple hidden>
       </div>
+      <p class="new-today" id="newToday"></p>
 
       <!-- BATCH (several parcels in one paste) -->
       <section id="batch" class="hide" aria-labelledby="batchH">
@@ -1006,15 +1065,17 @@ try {
           <button id="batchNoCodFix" type="button"></button>
         </div>
         <div class="batch-actions">
+          <p class="res-today" id="batchToday"></p>
           <button class="tertiary" id="batchCancelBtn" type="button" data-i18n="batch_cancel">Затвори</button>
           <button class="primary" id="batchCreateBtn" type="button" data-i18n="batch_create">Създай избраните</button>
+          <button class="primary hide" id="batchNewBtn" type="button" data-i18n="new">Нова пратка</button>
         </div>
         <div id="batchErr" class="err" role="alert"></div>
       </section>
 
       <!-- PREVIEW -->
       <section id="preview" class="hide" aria-labelledby="prevH">
-        <button class="tertiary btn-sm back hide" id="backToBatchBtn" type="button">Обратно към партидата</button>
+        <button class="tertiary btn-sm back hide" id="backToBatchBtn" type="button">Обратно към списъка</button>
         <div class="pv-head">
           <h2 id="prevH" class="sec-h" data-i18n="prev_h">Провери пратката</h2>
           <p id="prevSummary" class="sec-sub hide"></p>
@@ -1081,14 +1142,14 @@ try {
             <div class="optline">
               <label class="check"><input type="checkbox" id="pCodOn"> <span id="codLbl" data-i18n="cod">Наложен платеж</span></label>
               <input id="pCodAmount" class="amt" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" aria-labelledby="codLbl">
-              <select id="pCodCur" class="cur" aria-labelledby="codLbl"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
+              <select id="pCodCur" class="cur" aria-labelledby="codLbl"><option value="EUR">EUR</option><option value="BGN">BGN</option></select>
             </div>
             <div id="codCurHint" class="muted cur-hint hide tight" role="status"></div>
             <div id="codWarn" class="note hide tight" role="status" data-i18n="cod_warn">Тази пратка е без наложен платеж.</div>
             <div class="optline">
               <label class="check"><input type="checkbox" id="pDeclOn"> <span id="declLbl" data-i18n="decl">Обявена стойност</span></label>
               <input id="pDeclAmount" class="amt" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" aria-labelledby="declLbl">
-              <select id="pDeclCur" class="cur" aria-labelledby="declLbl"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
+              <select id="pDeclCur" class="cur" aria-labelledby="declLbl"><option value="EUR">EUR</option><option value="BGN">BGN</option></select>
             </div>
             <div id="reviewRow">
               <label id="pReviewLbl" data-i18n="review_label">Преглед преди плащане</label>
@@ -1123,31 +1184,33 @@ try {
       <!-- RESULT: the waybill that was just created -->
       <section id="result" class="hide" aria-labelledby="resH">
         <h2 id="resH" class="sr-only" data-i18n="res_h">Товарителницата е създадена</h2>
-        <div class="ok-num" id="shipNum"></div>
-        <p class="res-sum res-after"><span class="res-dot" aria-hidden="true"></span><span id="resultSummary"></span> <span id="resultMeta"></span></p>
-        <div class="res-actions res-after">
-          <button class="primary" id="replyBtn" type="button" data-i18n="send_customer">Прати на клиента</button>
-          <button id="copyBtn" type="button" data-i18n="copy">Копирай номера</button>
-        </div>
-        <div class="res-links res-after">
-          <a id="trackLink" class="lnk" href="#" target="_blank" rel="noopener noreferrer" data-i18n="track_link">Проследи</a>
-          <a id="pdfLink" class="lnk" href="#" target="_blank" rel="noopener noreferrer" data-i18n="label_pdf">Етикет PDF</a>
-          <div class="dd" id="profileDD">
-            <button class="lnk" id="profileBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="profileMenu"><span data-i18n="view_in_profile">Виж в профила</span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-            <div class="dd-menu" id="profileMenu">
-              <a href="https://www.econt.com/" target="_blank" rel="noopener noreferrer"><span data-i18n="dd_site">econt.com</span><span class="sub" data-i18n="dd_site_sub">Официалният сайт на Еконт</span></a>
-              <a id="profileLink" href="https://ee.econt.com/" target="_blank" rel="noopener noreferrer"><span data-i18n="dd_profile">e-Econt профил</span><span class="sub" data-i18n="dd_profile_sub">Пратките в твоя профил</span></a>
+        <div class="res-card">
+          <div class="ok-num" id="shipNum"></div>
+          <p class="res-sum res-after"><span class="res-dot" aria-hidden="true"></span><span id="resultSummary"></span> <span id="resultMeta"></span></p>
+          <div class="res-actions res-after">
+            <button class="primary" id="replyBtn" type="button" data-i18n="send_customer">Прати на клиента</button>
+            <button id="copyBtn" type="button" data-i18n="copy">Копирай номера</button>
+          </div>
+          <div class="res-links res-after">
+            <a id="trackLink" class="lnk" href="#" target="_blank" rel="noopener noreferrer" data-i18n="track_link">Проследи</a>
+            <a id="pdfLink" class="lnk" href="#" target="_blank" rel="noopener noreferrer" data-i18n="label_pdf">Етикет PDF</a>
+            <div class="dd" id="profileDD">
+              <button class="lnk" id="profileBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="profileMenu"><span data-i18n="view_in_profile">Виж в профила</span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              <div class="dd-menu" id="profileMenu">
+                <a href="https://www.econt.com/" target="_blank" rel="noopener noreferrer"><span data-i18n="dd_site">econt.com</span><span class="sub" data-i18n="dd_site_sub">Официалният сайт на Еконт</span></a>
+                <a id="profileLink" href="https://ee.econt.com/" target="_blank" rel="noopener noreferrer"><span data-i18n="dd_profile">e-Econt профил</span><span class="sub" data-i18n="dd_profile_sub">Пратките в твоя профил</span></a>
+              </div>
             </div>
           </div>
+          <div class="reply-prev res-after" id="replyPreview" tabindex="0" role="button" aria-describedby="replyText">
+            <div class="reply-prev-h" data-i18n="reply_prev_h">Това получава клиентът</div>
+            <div class="reply-prev-t" id="replyText"></div>
+            <div class="reply-prev-copy" data-i18n="reply_copy">Натисни, за да копираш</div>
+          </div>
         </div>
-        <div class="reply-prev res-after" id="replyPreview" tabindex="0" role="button" aria-describedby="replyText">
-          <div class="reply-prev-h" data-i18n="reply_prev_h">Това получава клиентът</div>
-          <div class="reply-prev-t" id="replyText"></div>
-          <div class="reply-prev-copy" data-i18n="reply_copy">Натисни, за да копираш</div>
-        </div>
-        <div class="res-foot res-after">
+        <div class="res-next res-after">
           <p class="res-today" id="resToday" aria-live="polite"></p>
-          <button class="tertiary hide" id="backToBatchBtn2" type="button">Обратно към партидата</button>
+          <button class="tertiary hide" id="backToBatchBtn2" type="button">Обратно към списъка</button>
           <button id="newBtn" type="button" data-i18n="new">Нова пратка</button>
         </div>
       </section>
@@ -1167,7 +1230,7 @@ try {
         <button id="clearAllNo" type="button" data-i18n="no">Не</button>
       </div>
       <div class="inline add-row">
-        <input id="trackNumInput" enterkeyhint="go" data-i18n-ph="track_ph" data-enter="trackNumBtn" placeholder="Добави номер на товарителница" inputmode="numeric">
+        <input id="trackNumInput" enterkeyhint="go" data-i18n-ph="track_ph" data-enter="trackNumBtn" placeholder="Номер на товарителница" inputmode="numeric">
         <button id="trackNumBtn" type="button" data-i18n="track_add">Добави</button>
       </div>
       <div id="parcelList" class="plist"></div>

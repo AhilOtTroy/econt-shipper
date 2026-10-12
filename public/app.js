@@ -28,7 +28,7 @@ const I18N = {
     demo_h: 'Пример с едно съобщение', demo_gloss: '',
     demo_c1: 'Постави съобщението', demo_c2: 'Провери и създай товарителницата', demo_c3: 'Прати отговора',
     demo_map: 'Всяка номерирана част от съобщението попълва реда със същия номер.',
-    wb_title: 'Товарителница', wb_rcpt: 'Получател', wb_phone: 'Телефон', wb_office: 'До офис', wb_cod: 'Наложен платеж', wb_cod_v: '45,00 €',
+    wb_title: 'Товарителница', wb_rcpt: 'Получател', wb_phone: 'Телефон', wb_office: 'До офис', wb_cod: 'Наложен платеж', wb_cod_v: '45 €',
     wb_review: 'Преглед', wb_review_v: 'Да, преди плащане', wb_parcel: 'Пратка', wb_parcel_v: 'колет, 1 кг, плаща получателят',
     wb_default: 'от настройките', wb_status: 'Създадена в твоя Еконт профил', demo_out_meta: 'изпратено 14:34',
     land_more_h: 'Какво още прави',
@@ -41,11 +41,12 @@ const I18N = {
     setup_title: 'Бърза настройка', setup_sub: 'Прави се веднъж. Всичко, което въведеш, остава на това устройство, заключено с PIN.',
     setup_s1: 'Избери PIN', setup_s1_sub: 'Заключва приложението и криптира паролата ти за Еконт на това устройство.',
     setup_pin: 'PIN (4 до 6 цифри)', setup_pin2: 'Повтори PIN', setup_s2: 'Твоят профил в Еконт',
-    setup_user: 'Потребителско име (точно, с главни и малки букви)', setup_pass: 'Парола', setup_test: 'Проверка на входа',
+    setup_user: 'Потребителско име', setup_pass: 'Парола', setup_test: 'Проверка на входа',
+    setup_user_hint: 'Пиши потребителското име точно, с главните и малките букви.',
     setup_demo_try: 'Нямаш профил? Пробвай с демо профила',
     setup_s3: 'Подател', setup_s3_sub: 'Както ще пише на товарителницата.', setup_yourname: 'Име', setup_yourphone: 'Телефон', setup_youroffice: 'Офис, от който пращаш',
     setup_search_office: 'град или име на офис', find: 'Намери',
-    setup_s4: 'Обичайна пратка', setup_s4_sub: 'Попълва се във всяка нова пратка. Можеш да я промениш за всяка.',
+    setup_s4: 'Обичайна пратка', setup_s4_sub: 'Тези стойности влизат във всяка нова пратка. Можеш да ги смениш за отделна пратка.',
     weight: 'Тегло (кг)', contents: 'Съдържание', contents_ph: 'напр. дрехи', who_pays: 'Кой плаща доставката',
     receiver_pays: 'Получателят', i_pay: 'Аз', setup_cod: 'Обикновено пращам с наложен платеж (сумата се пише за всяка пратка)',
     cod_currency: 'Валута на наложения платеж', setup_finish: 'Завърши настройката',
@@ -55,18 +56,20 @@ const I18N = {
     // settings
     settings_h: 'Настройки',
     set_account: 'Профил в Еконт', set_account_d: 'Потребителското име и паролата ти за Еконт. Паролата остава на това устройство, криптирана с PIN.',
-    username: 'Потребителско име', pass_saved_ph: 'запазена', pass_keep: 'Парола (остави празно, за да не я сменяш)',
+    username: 'Потребителско име', pass_saved_ph: 'запазена', pass_keep: 'Парола',
+    pass_keep_hint: 'Паролата е запазена. Попълни я само ако искаш да я смениш.',
     set_sender: 'Подател', set_sender_d: 'Както ще пише на товарителницата и откъде пращаш.',
-    name: 'Име', phone: 'Телефон', set_office_code: 'Офис, от който пращаш', office_code_ph: 'код', search: 'град или име на офис',
+    name: 'Име', phone: 'Телефон', set_office_code: 'Офис, от който пращаш', office_code_ph: 'код', search: 'друг офис: град или име',
     set_return: 'Връщане при отказ',
-    set_defaults: 'Обичайна пратка', set_defaults_d: 'Попълва се във всяка нова пратка. Можеш да я промениш за всяка.',
+    set_defaults: 'Обичайна пратка', set_defaults_d: 'Тези стойности влизат във всяка нова пратка. Можеш да ги смениш за отделна пратка.',
     receiver: 'Получателят', sender: 'Подателят',
     set_cod: 'Наложен платеж', set_cod_d: 'Валута, сметка за изплащане и обявена стойност.',
     set_cod_default: 'Включвай наложен платеж във всяка нова пратка',
     set_shiptype: 'Тип пратка', shiptype_pack: 'Колет', shiptype_doc: 'Документи', set_packcount: 'Брой пакети',
     set_extra: 'Преглед и SMS', set_extra_d: 'Важи за всяка пратка.',
     set_sms: 'SMS до получателя за всяка пратка', cod_warn: 'Тази пратка е без наложен платеж.',
-    offices_status: '{n} активни офиса, списъкът е отпреди {m} мин.', offices_added: 'Нови офиси: {d}.',
+    offices_status: '{n} активни офиса, списъкът е обновен преди {m} мин.', offices_status_now: '{n} активни офиса, списъкът е обновен току-що.',
+    offices_status_h: '{n} активни офиса, списъкът е обновен преди {h} ч.', offices_added: 'Нови офиси: {d}.',
     gaps_prefix: 'Не разчетох: ', gap_name: 'име', gap_phone: 'телефон', gap_office: 'офис', gap_addr: 'адрес', gaps_hint: '. Попълни ги ръчно.',
     decl: 'Обявена стойност', decl_default: 'Обявявай стойност, равна на наложения платеж',
     sec_recipient: 'Получател', sec_delivery: 'Доставка', sec_parcel: 'Пратка', sec_pay: 'Плащане',
@@ -76,9 +79,12 @@ const I18N = {
     batch_create: 'Създай избраните', batch_cancel: 'Затвори', batch_run: 'Създавам {i} от {n}…',
     batch_edit: 'Отвори', batch_no_office: 'избери офис', batch_addr_row: 'до адрес: {a}',
     st_create: 'нова пратка', st_create_conv: 'нова пратка, около {v}', st_track: 'има товарителница, ще се проследява', st_missing: 'липсва офис', st_creating: 'създавам…', st_ok: 'създадена: {num}', st_tracked: 'добавена за проследяване', st_skip: 'пропусната',
-    batch_done: 'Готово: {ok} създадени, {fail} с грешка, {skip} пропуснати.',
-    row_label: 'Ред {n}', ret_incomplete: 'Връщането при отказ не е запазено. Попълни код на офис или адрес.',
-    back_to_batch: 'Обратно към партидата ({n})',
+    batch_done: 'Готово. {parts}.',
+    bd_ok1: 'създадена е 1 товарителница', bd_ok: 'създадени са {n} товарителници', bd_tr1: '1 номер е добавен за проследяване', bd_tr: '{n} номера са добавени за проследяване',
+    bd_fail1: '1 ред е с грешка', bd_fail: '{n} реда са с грешка', bd_skip1: '1 ред е пропуснат', bd_skip: '{n} реда са пропуснати',
+    row_label: 'Ред {n}', row_one: 'ред {n}', row_many: 'редове {list}', list_and: ' и ',
+    ret_incomplete: 'Връщането при отказ не е запазено. Попълни код на офис или адрес.',
+    back_to_batch: 'Обратно към списъка (ред {n})',
     payout_label: 'Изплащане на наложения платеж', payout_default: 'Както е зададено в Еконт', payout_load: 'Зареди сметките от Еконт',
     payout_bank: 'банков превод', payout_office: 'в офис', payout_address: 'на адрес',
     payout_hint: 'Парите се превеждат по сметката от избраното споразумение с Еконт.',
@@ -102,21 +108,22 @@ const I18N = {
     today_one: 'Днес: 1 пратка', today_many: 'Днес: {n} пратки', today_cod: '{amt} наложен платеж', today_and: ' и ',
     dd_site: 'econt.com', dd_site_sub: 'Официалният сайт на Еконт', dd_profile: 'e-Econt профил', dd_profile_sub: 'Пратките в твоя профил',
     reply_copy: 'Натисни, за да копираш', track_link: 'Проследи',
-    reply_template: 'Готово! Пратката е подадена.\nТоварителница: {num}\nПроследяване: {url}',
+    reply_template: 'Готово! Поръчката ви тръгва с Еконт.\nТоварителница: {num}\nПроследяване: {url}',
     match_high: 'сигурно съвпадение', match_mid: 'вероятно съвпадение', match_lo: 'провери офиса',
     // parcels
     parcels_h: 'Твоите пратки', parcels_refresh: 'Обнови статуса',
     clear_all: 'Изчисти всички', clear_confirm: 'Да премахна ли всички пратки от списъка? В Еконт те остават.', del_confirm: 'Да премахна ли пратката от списъка? В Еконт тя остава.', yes: 'Да', no: 'Не', removed: 'Премахната от списъка', del_link: 'Премахни от списъка',
     exp_delivery: 'Очаквана доставка', collected: 'Събрани {amt}',
     track_events: 'Проследяване', reprint: 'Етикет PDF', need_desc: 'Попълни съдържание. Еконт го изисква за колети.',
-    loading: 'Зареждане…', no_status: 'няма статус', other_env: 'друг профил', status_transit: 'В движение', kg: 'кг',
+    loading: 'Зареждане…', no_status: 'Няма статус', other_env: 'От друг Еконт профил', kg: 'кг',
     review_only: 'Преглед', review_test: 'Преглед и тест', review_none: 'Без преглед',
-    review_setting: 'Преглед преди плащане', review_unanchored: 'Избирам за всяка пратка',
-    review_label: 'Преглед преди плащане', review_from_settings: 'Преглед: {mode} (от настройките)',
-    track_ph: 'Добави номер на товарителница', track_add: 'Добави', already_added: 'Тази пратка вече е в списъка', invalid_number: 'Това не прилича на номер на товарителница',
-    details: 'Детайли', delivered_ok: 'Доставена', returned_ok: 'Върната към подателя', in_operation: 'В движение от', delivered_in: 'Доставена за {d}', returned_in: 'Върната към подателя след {d}', awaiting_dispatch: 'Очаква изпращане',
+    review_setting: 'Преглед преди плащане', review_unanchored: 'Избирам за всяка пратка', review_always: 'Винаги с преглед', review_test_always: 'Винаги с преглед и тест',
+    review_label: 'Преглед преди плащане',
+    review_set_review: 'Всяка пратка е с преглед преди плащане. Сменя се в Настройки.', review_set_test: 'Всяка пратка е с преглед и тест преди плащане. Сменя се в Настройки.',
+    track_ph: 'Номер на товарителница', track_add: 'Добави', already_added: 'Тази пратка вече е в списъка', invalid_number: 'Това не прилича на номер на товарителница',
+    details: 'Детайли', delivered_ok: 'Доставена', returned_ok: 'Върната към подателя', in_operation: 'В движение от {d}', delivered_in: 'Доставена за {d}', returned_in: 'Върната към подателя след {d}', awaiting_dispatch: 'Очаква изпращане',
+    dur_min: '{n}\u00A0мин', dur_h: '{n}\u00A0ч', dur_d1: '1\u00A0ден', dur_d: '{n}\u00A0дни', dur_join: ' и ',
     d_status: 'Статус', d_sender: 'Подател', d_recipient: 'Получател', d_phone: 'Телефон', d_office: 'Офис на получателя', d_sender_office: 'Офис на подателя', d_storage: 'Съхранява се в', d_type: 'Тип', d_packs: 'Брой', d_weight: 'Тегло', d_contents: 'Съдържание', d_review: 'Преглед', d_sent: 'Изпратена', d_expected: 'Очаквана доставка', d_delivered: 'Доставена на', d_cod: 'Наложен платеж', d_price: 'Цена', d_attempts: 'Опити за доставка', d_routing: 'Маршрут',
-    dd: 'д',
     testing: 'Проверявам…', login_saved: 'Запазено.', fix_login_hint: 'Отвори Настройки (зъбното колело горе) и натисни „Проверка на входа“ с паролата си за e-econt.com.', server_waking: 'Сървърът се събужда. Изчакай 30 секунди и опитай пак.', net_down: 'Няма връзка с интернет.', login_ok: 'Входът работи. Налични са {n} офиса.', need_creds: 'Първо въведи потребителско име и парола.',
     pin_short: 'PIN трябва да е поне 4 цифри.', pin_mismatch: 'Двата PIN-а не съвпадат.', test_first: 'Първо провери входа за Еконт (стъпка 2).',
     fill_sender: 'Попълни име, телефон и офис, от който пращаш (стъпка 3).',
@@ -147,7 +154,7 @@ const I18N = {
     a11y_paste: 'Постави от клипборда', clip_denied: 'Нямам достъп до клипборда. Постави текста в полето.', clip_empty: 'Клипбордът е празен.',
     create_hint: '{k}+Enter създава товарителницата',
     // telling the customer
-    send_customer: 'Прати на клиента', parcel_reply: 'Отговор', reply_prev_h: 'Това получава клиентът',
+    send_customer: 'Прати на клиента', parcel_reply: 'Прати на клиента', reply_prev_h: 'Това получава клиентът',
     reply_paste_now: 'Отговорът е копиран, постави го в чата.', copied_btn: 'Копирано',
     copy_fail: 'Не успях да копирам. Задръж пръст върху текста и го копирай.', created_sr: 'Товарителницата е създадена. Номер {num}.',
     reply_review: 'На гише отваряш, проверяваш и плащаш само ако всичко е наред.',
@@ -177,7 +184,7 @@ const I18N = {
     demo_c1: 'Paste the message', demo_c2: 'Check and create the waybill', demo_c3: 'Send the reply',
     demo_map: 'Each numbered part of the message fills the waybill row with the same number.',
     demo_gloss: 'In English: "Hi, I\'ll take the jacket for 45 €. Maria Petrova, 0888 412 657, Econt Plovdiv, Trakia office. With review if possible, thanks!"',
-    wb_title: 'Waybill', wb_rcpt: 'Recipient', wb_phone: 'Phone', wb_office: 'To office', wb_cod: 'Cash on delivery', wb_cod_v: '45.00 €',
+    wb_title: 'Waybill', wb_rcpt: 'Recipient', wb_phone: 'Phone', wb_office: 'To office', wb_cod: 'Cash on delivery', wb_cod_v: '45 €',
     wb_review: 'Review', wb_review_v: 'Yes, before paying', wb_parcel: 'Parcel', wb_parcel_v: 'package, 1 kg, recipient pays',
     wb_default: 'from settings', wb_status: 'Created in your Econt account', demo_out_meta: 'sent 14:34',
     land_more_h: 'What else it does',
@@ -190,11 +197,12 @@ const I18N = {
     setup_title: 'Quick setup', setup_sub: 'You do this once. Everything you enter stays on this device, locked with a PIN.',
     setup_s1: 'Choose a PIN', setup_s1_sub: 'Locks the app and encrypts your Econt password on this device.',
     setup_pin: 'PIN (4 to 6 digits)', setup_pin2: 'Repeat the PIN', setup_s2: 'Your Econt account',
-    setup_user: 'Username (exact, upper and lower case)', setup_pass: 'Password', setup_test: 'Test login',
+    setup_user: 'Username', setup_pass: 'Password', setup_test: 'Test login',
+    setup_user_hint: 'Type the username exactly, with its upper and lower case letters.',
     setup_demo_try: 'No Econt account? Try the demo one',
     setup_s3: 'Sender', setup_s3_sub: 'As it will appear on the waybill.', setup_yourname: 'Name', setup_yourphone: 'Phone', setup_youroffice: 'Office you ship from',
     setup_search_office: 'city or office name', find: 'Find',
-    setup_s4: 'Usual parcel', setup_s4_sub: 'Filled into every new parcel. You can change it for each one.',
+    setup_s4: 'Usual parcel', setup_s4_sub: 'These go into every new parcel. You can change them for a single parcel.',
     weight: 'Weight (kg)', contents: 'Contents', contents_ph: 'e.g. clothes', who_pays: 'Who pays for delivery',
     receiver_pays: 'The receiver', i_pay: 'Me', setup_cod: 'I usually ship with cash on delivery (the amount is set per parcel)',
     cod_currency: 'Cash on delivery currency', setup_finish: 'Finish setup',
@@ -204,18 +212,20 @@ const I18N = {
     // settings
     settings_h: 'Settings',
     set_account: 'Econt account', set_account_d: 'Your Econt username and password. The password stays on this device, encrypted with your PIN.',
-    username: 'Username', pass_saved_ph: 'saved', pass_keep: 'Password (leave empty to keep it)',
+    username: 'Username', pass_saved_ph: 'saved', pass_keep: 'Password',
+    pass_keep_hint: 'Your password is saved. Fill this in only to change it.',
     set_sender: 'Sender', set_sender_d: 'As it will appear on the waybill, and where you ship from.',
-    name: 'Name', phone: 'Phone', set_office_code: 'Office you ship from', office_code_ph: 'code', search: 'city or office name',
+    name: 'Name', phone: 'Phone', set_office_code: 'Office you ship from', office_code_ph: 'code', search: 'another office: city or name',
     set_return: 'Return on refusal',
-    set_defaults: 'Usual parcel', set_defaults_d: 'Filled into every new parcel. You can change it for each one.',
+    set_defaults: 'Usual parcel', set_defaults_d: 'These go into every new parcel. You can change them for a single parcel.',
     receiver: 'The receiver', sender: 'The sender',
     set_cod: 'Cash on delivery', set_cod_d: 'Currency, payout account and declared value.',
     set_cod_default: 'Turn on cash on delivery for every new parcel',
     set_shiptype: 'Shipment type', shiptype_pack: 'Parcel', shiptype_doc: 'Documents', set_packcount: 'Number of packs',
-    set_extra: 'Review and SMS', set_extra_d: 'Applies to every parcel.',
+    set_extra: 'Inspection and SMS', set_extra_d: 'Applies to every parcel.',
     set_sms: 'SMS to the recipient for every parcel', cod_warn: 'This parcel has no cash on delivery.',
-    offices_status: '{n} active offices, list from {m} min ago.', offices_added: 'New offices: {d}.',
+    offices_status: '{n} active offices, list updated {m} min ago.', offices_status_now: '{n} active offices, list updated just now.',
+    offices_status_h: '{n} active offices, list updated {h} h ago.', offices_added: 'New offices: {d}.',
     gaps_prefix: 'Could not read: ', gap_name: 'name', gap_phone: 'phone', gap_office: 'office', gap_addr: 'address', gaps_hint: '. Fill them in yourself.',
     decl: 'Declared value', decl_default: 'Declare a value equal to the cash on delivery amount',
     sec_recipient: 'Recipient', sec_delivery: 'Delivery', sec_parcel: 'Parcel', sec_pay: 'Payment',
@@ -225,9 +235,12 @@ const I18N = {
     batch_create: 'Create selected', batch_cancel: 'Close', batch_run: 'Creating {i} of {n}…',
     batch_edit: 'Open', batch_no_office: 'pick an office', batch_addr_row: 'to address: {a}',
     st_create: 'new parcel', st_create_conv: 'new parcel, about {v}', st_track: 'has a waybill, will be tracked', st_missing: 'office missing', st_creating: 'creating…', st_ok: 'created: {num}', st_tracked: 'added to tracking', st_skip: 'skipped',
-    batch_done: 'Done: {ok} created, {fail} with errors, {skip} skipped.',
-    row_label: 'Row {n}', ret_incomplete: 'Return on refusal was not saved. Fill in the office code or the address.',
-    back_to_batch: 'Back to the batch ({n})',
+    batch_done: 'Done. {parts}.',
+    bd_ok1: '1 waybill created', bd_ok: '{n} waybills created', bd_tr1: '1 number added to tracking', bd_tr: '{n} numbers added to tracking',
+    bd_fail1: '1 row failed', bd_fail: '{n} rows failed', bd_skip1: '1 row skipped', bd_skip: '{n} rows skipped',
+    row_label: 'Row {n}', row_one: 'row {n}', row_many: 'rows {list}', list_and: ' and ',
+    ret_incomplete: 'Return on refusal was not saved. Fill in the office code or the address.',
+    back_to_batch: 'Back to the list (row {n})',
     payout_label: 'Cash on delivery payout', payout_default: 'As set up with Econt', payout_load: 'Load accounts from Econt',
     payout_bank: 'bank transfer', payout_office: 'at office', payout_address: 'to address',
     payout_hint: 'The money is paid to the account in the agreement you pick with Econt.',
@@ -247,25 +260,26 @@ const I18N = {
     res_h: 'Waybill created', copy: 'Copy number', label_pdf: 'Label PDF', view_in_profile: 'View in your account', new: 'New parcel',
     res_for: 'Created for {name}', res_created: 'Created',
     sum_for: 'For {name}', sum_office: 'office {o}', sum_addr: 'to {a}', sum_cod: 'cash on delivery\u00A0{amt}', sum_nocod: 'no cash on delivery',
-    sum_decl: 'declared value\u00A0{amt}', sum_review: 'with review', sum_review_test: 'with review and test', sum_price: 'Price\u00A0{v}.',
+    sum_decl: 'declared value\u00A0{amt}', sum_review: 'customer can inspect', sum_review_test: 'customer can inspect and test', sum_price: 'Price\u00A0{v}.',
     today_one: 'Today: 1 parcel', today_many: 'Today: {n} parcels', today_cod: '{amt} cash on delivery', today_and: ' and ',
     dd_site: 'econt.com', dd_site_sub: 'The official Econt website', dd_profile: 'e-Econt account', dd_profile_sub: 'The parcels in your account',
     reply_copy: 'Click or tap to copy', track_link: 'Track',
-    reply_template: 'Done! Your parcel is on its way.\nTracking number: {num}\nTrack it: {url}',
+    reply_template: 'Done! Your order is going out with Econt.\nTracking number: {num}\nTrack it: {url}',
     match_high: 'strong match', match_mid: 'likely match', match_lo: 'check the office',
     // parcels
     parcels_h: 'Your parcels', parcels_refresh: 'Refresh status',
     clear_all: 'Clear all', clear_confirm: 'Remove all parcels from this list? They stay in Econt.', del_confirm: 'Remove this parcel from the list? It stays in Econt.', yes: 'Yes', no: 'No', removed: 'Removed from the list', del_link: 'Remove from list',
     exp_delivery: 'Expected delivery', collected: 'Collected {amt}',
     track_events: 'Tracking', reprint: 'Label PDF', need_desc: 'Fill in the contents. Econt needs it for parcels.',
-    loading: 'Loading…', no_status: 'no status', other_env: 'other account', status_transit: 'In transit', kg: 'kg',
-    review_only: 'Review', review_test: 'Review and test', review_none: 'No review',
-    review_setting: 'Review before paying', review_unanchored: 'I choose per parcel',
-    review_label: 'Review before paying', review_from_settings: 'Review: {mode} (from settings)',
-    track_ph: 'Add a waybill number', track_add: 'Add', already_added: 'This parcel is already on the list', invalid_number: 'That does not look like a waybill number',
-    details: 'Details', delivered_ok: 'Delivered', returned_ok: 'Returned to sender', in_operation: 'In transit for', delivered_in: 'Delivered in {d}', returned_in: 'Returned to sender after {d}', awaiting_dispatch: 'Waiting to be sent',
-    d_status: 'Status', d_sender: 'Sender', d_recipient: 'Recipient', d_phone: 'Phone', d_office: 'Recipient office', d_sender_office: 'Sender office', d_storage: 'Stored at', d_type: 'Type', d_packs: 'Packs', d_weight: 'Weight', d_contents: 'Contents', d_review: 'Review', d_sent: 'Sent', d_expected: 'Expected delivery', d_delivered: 'Delivered at', d_cod: 'Cash on delivery', d_price: 'Price', d_attempts: 'Delivery attempts', d_routing: 'Routing',
-    dd: 'd',
+    loading: 'Loading…', no_status: 'No status', other_env: 'From another Econt account', kg: 'kg',
+    review_only: 'Inspect', review_test: 'Inspect and test', review_none: 'No inspection',
+    review_setting: 'Inspection before paying', review_unanchored: 'I choose for each parcel', review_always: 'Always with inspection', review_test_always: 'Always with inspection and test',
+    review_label: 'Inspection before paying',
+    review_set_review: 'Every parcel goes with inspection before paying. You can change this in Settings.', review_set_test: 'Every parcel goes with inspection and test before paying. You can change this in Settings.',
+    track_ph: 'Waybill number', track_add: 'Add', already_added: 'This parcel is already on the list', invalid_number: 'That does not look like a waybill number',
+    details: 'Details', delivered_ok: 'Delivered', returned_ok: 'Returned to sender', in_operation: 'In transit for {d}', delivered_in: 'Delivered in {d}', returned_in: 'Returned to sender after {d}', awaiting_dispatch: 'Waiting to be sent',
+    dur_min: '{n}\u00A0min', dur_h: '{n}\u00A0h', dur_d1: '1\u00A0day', dur_d: '{n}\u00A0days', dur_join: ' ',
+    d_status: 'Status', d_sender: 'Sender', d_recipient: 'Recipient', d_phone: 'Phone', d_office: 'Recipient office', d_sender_office: 'Sender office', d_storage: 'Stored at', d_type: 'Type', d_packs: 'Packs', d_weight: 'Weight', d_contents: 'Contents', d_review: 'Inspection', d_sent: 'Sent', d_expected: 'Expected delivery', d_delivered: 'Delivered at', d_cod: 'Cash on delivery', d_price: 'Price', d_attempts: 'Delivery attempts', d_routing: 'Routing',
     testing: 'Testing…', login_saved: 'Saved.', fix_login_hint: 'Open Settings (the cog at the top) and press "Test login" with your e-econt.com password.', server_waking: 'The server is waking up. Wait 30 seconds and try again.', net_down: 'No internet connection.', login_ok: 'Login works. {n} offices available.', need_creds: 'Enter your username and password first.',
     pin_short: 'The PIN needs at least 4 digits.', pin_mismatch: 'The two PINs do not match.', test_first: 'Test your Econt login first (step 2).',
     fill_sender: 'Fill in your name, phone and the office you ship from (step 3).',
@@ -296,7 +310,7 @@ const I18N = {
     a11y_paste: 'Paste from clipboard', clip_denied: 'No clipboard access. Paste the text into the box.', clip_empty: 'The clipboard is empty.',
     create_hint: '{k}+Enter creates the waybill',
     // telling the customer
-    send_customer: 'Send to customer', parcel_reply: 'Reply', reply_prev_h: 'What the customer gets',
+    send_customer: 'Send to customer', parcel_reply: 'Send to customer', reply_prev_h: 'What the customer gets',
     reply_paste_now: 'Reply copied, paste it into the chat.', copied_btn: 'Copied',
     copy_fail: 'Could not copy. Press and hold the text to copy it.', created_sr: 'Waybill created. Number {num}.',
     reply_review: 'At the counter you can open and check it, and pay only if everything is fine.',
@@ -324,6 +338,7 @@ const ICONS = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.6 4.6 6 6M18 18l1.4 1.4M19.4 4.6 18 6M6 18l-1.4 1.4"/>',
   mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
   chev: '<path d="m6 9 6 6 6-6"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
   instagram: '<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor" stroke="none"/>',
   facebook: '<path d="M15 3h-3a4 4 0 0 0-4 4v3H6v4h2v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>',
 };
@@ -370,7 +385,7 @@ function syncThemeBtnLabel() {
 function setLang(l) {
   LANG = l; localStorage.setItem('econt_lang', l); applyLang();
   syncCreateLabel();
-  if (!$('result').classList.contains('hide')) renderReplyPreview();
+  if (!$('result').classList.contains('hide')) { if ($('shipNum').classList.contains('is-text')) $('shipNum').textContent = t('no_number'); renderReplyPreview(); }
   if (!$('batchNoCodConfirm').classList.contains('hide')) renderBatchNoCodMsg();
   if (!$('preview').classList.contains('hide')) updateSummary();
   if (!$('tab-parcels').classList.contains('hide')) openParcels();
@@ -395,16 +410,22 @@ function btnBusy(btn, on, label) {
     const k = btn.getAttribute('data-i18n'); if (k) btn.textContent = t(k);
   }
 }
-// Amounts as people write them: 6,40 € in Bulgarian, 6.40 € in English; trim drops ",00".
+// Amounts as people write them: 6,40 € in Bulgarian, 6.40 € in English. One rule on
+// every screen: decimals only when they are not ,00 (99 €, 6,40 €).
 function fmtNum(n, trim) {
   let s = (Number(n) || 0).toFixed(2);
-  if (trim) s = s.replace(/\.00$/, '');
+  if (trim !== false) s = s.replace(/\.00$/, '');
   return LANG === 'bg' ? s.replace('.', ',') : s;
 }
-function fmtMoney(n, cur, trim) {
+function fmtMoney(n, cur) {
   const c = String(cur || 'EUR').toUpperCase();
-  return fmtNum(n, trim) + '\u00A0' + (c === 'BGN' ? 'лв' : c === 'EUR' ? '€' : c);
+  return fmtNum(n) + '\u00A0' + (c === 'BGN' ? 'лв' : c === 'EUR' ? '€' : c);
 }
+// The customer reply as HTML: a long tracking URL may break after a slash, never mid-word.
+// The landing shows the link short and blue (urlCls); the app shows it exactly as sent.
+const urlParts = (rest) => rest.split('/').map((seg) => (seg ? `<span class="nw">${seg}</span>` : '')).join('/<wbr>');
+const replyHTML = (text, urlCls) => text.split('\n').map((line) => esc(line).replace(/(https?:\/\/)(\S+)/, (m, scheme, rest) =>
+  urlCls ? `<span class="${urlCls}">${urlParts(rest)}</span>` : scheme + urlParts(rest))).join('\n');
 // Econt times may come as epoch seconds, epoch ms or date strings.
 function toMs(v) {
   if (v == null || v === '') return null;
@@ -502,7 +523,7 @@ function buildReply(num, info) {
   info = info || {};
   const lines = [t('reply_template', { num, url: econtTrackUrl(num) })];
   // Plain spaces: this text is pasted into other chat apps.
-  if (Number(info.cod) > 0) lines.push(t('reply_cod', { amt: fmtMoney(info.cod, info.currency, true).replace('\u00A0', ' ') }));
+  if (Number(info.cod) > 0) lines.push(t('reply_cod', { amt: fmtMoney(info.cod, info.currency).replace('\u00A0', ' ') }));
   if (info.reviewMode === 'review_test') lines.push(t('reply_review_test'));
   else if (info.reviewMode === 'review') lines.push(t('reply_review'));
   return lines.join('\n');
@@ -640,7 +661,7 @@ $('suFinishBtn').onclick = async () => {
   SESSION.password = c.password; SESSION.pin = pin;
   CONFIG = {
     mode: c.mode, username: c.username,
-    sender: { name: $('suSenderName').value.trim(), phone: $('suSenderPhone').value.trim(), officeCode: office, address: null },
+    sender: { name: $('suSenderName').value.trim(), phone: $('suSenderPhone').value.trim(), officeCode: office, officeName: optName($('suSenderOffice').selectedOptions[0]), address: null },
     defaults: { shipmentType: 'pack', packCount: 1, weight: Number($('suWeight').value) || 1, shipmentDescription: $('suDesc').value.trim(), payer: $('suPayer').value, payAfterAccept: false, payAfterTest: false, smsNotification: false, cod: { enabled: $('suCod').checked, amount: 0, currency: $('suCur').value }, countryCode: 'BGR' },
   };
   await persist(); enterApp();
@@ -695,6 +716,7 @@ function enterApp() {
   $('cfgDemoNote').classList.toggle('hide', CONFIG.mode !== 'demo');
   const s = CONFIG.sender, d = CONFIG.defaults;
   $('cfgSenderName').value = s.name || ''; $('cfgSenderPhone').value = s.phone || ''; $('cfgSenderOffice').value = s.officeCode || '';
+  $('cfgOfficeName').textContent = s.officeName || '';
   $('cfgWeight').value = d.weight ?? 1; $('cfgDesc').value = d.shipmentDescription || '';
   $('cfgPayer').value = d.payer || 'receiver'; $('cfgCodOn').checked = !!(d.cod && d.cod.enabled);
   $('cfgCur').value = (d.cod && d.cod.currency) || 'EUR';
@@ -749,12 +771,17 @@ async function cfgTestLogin(btn) {
 $('cfgTestBtn').onclick = (ev) => cfgTestLogin(ev.currentTarget);
 for (const id of ['cfgUser', 'cfgPass']) $(id).addEventListener('input', () => { $('cfgTestMsg').textContent = ''; });
 $('cfgSenderSearchBtn').onclick = () => fillOfficeSelect($('cfgSenderOfficeSel'), $('cfgSenderSearch').value, cfgCreds());
-$('cfgSenderOfficeSel').onchange = () => { $('cfgSenderOffice').value = $('cfgSenderOfficeSel').value; };
+$('cfgSenderOfficeSel').onchange = () => {
+  const sel = $('cfgSenderOfficeSel');
+  $('cfgSenderOffice').value = sel.value; $('cfgOfficeName').textContent = sel.value ? optName(sel.selectedOptions[0]) : '';
+};
+$('cfgSenderOffice').addEventListener('input', () => { $('cfgOfficeName').textContent = ''; });
 $('refreshOfficesBtn').onclick = async (ev) => {
-  btnBusy(ev.currentTarget, true); $('cfgMsg').textContent = t('refreshing');
+  const st = $('officeStatus');
+  btnBusy(ev.currentTarget, true); st.textContent = t('refreshing');
   const r = await api('/api/offices/refresh', { creds: creds() });
   btnBusy(ev.currentTarget, false);
-  $('cfgMsg').textContent = r.ok
+  st.textContent = r.ok
     ? t('offices_loaded', { n: r.count }) + (r.added > 0 ? ' ' + t('offices_added', { d: r.added }) : '')
     : (t('error_prefix') + r.error);
 };
@@ -767,7 +794,7 @@ $('saveCfgBtn').onclick = async (ev) => {
   }
   CONFIG.mode = cfgCreds().mode; CONFIG.username = $('cfgUser').value.trim();
   if ($('cfgPass').value) SESSION.password = $('cfgPass').value;
-  CONFIG.sender = { name: $('cfgSenderName').value.trim(), phone: $('cfgSenderPhone').value.trim(), officeCode: $('cfgSenderOffice').value.trim(), address: CONFIG.sender.address || null };
+  CONFIG.sender = { name: $('cfgSenderName').value.trim(), phone: $('cfgSenderPhone').value.trim(), officeCode: $('cfgSenderOffice').value.trim(), officeName: $('cfgOfficeName').textContent.trim(), address: CONFIG.sender.address || null };
   const rm = $('cfgReviewMode').value, rf = reviewFlags(rm);
   CONFIG.defaults = Object.assign({}, CONFIG.defaults, {
     weight: Number($('cfgWeight').value) || 1, shipmentDescription: $('cfgDesc').value.trim(), payer: $('cfgPayer').value,
@@ -851,9 +878,10 @@ function gatherReturnTo() {
 async function fetchOfficeStatus() {
   const r = await api('/api/offices/status', { creds: creds() });
   if (!r.ok) return;
-  let msg = t('offices_status', { n: r.count, m: r.ageMinutes });
+  const m = Math.max(0, Math.floor(Number(r.ageMinutes) || 0));
+  let msg = m < 1 ? t('offices_status_now', { n: r.count }) : m < 60 ? t('offices_status', { n: r.count, m }) : t('offices_status_h', { n: r.count, h: Math.floor(m / 60) });
   if (r.added > 0) msg += ' ' + t('offices_added', { d: r.added });
-  $('cfgMsg').textContent = msg;
+  $('officeStatus').textContent = msg;
 }
 
 // ---------- parse / preview / create ----------
@@ -968,7 +996,7 @@ function applyReviewUI() {
   if (anchor) {
     $('reviewRow').classList.add('hide');
     $('reviewAnchored').classList.remove('hide');
-    $('reviewAnchored').textContent = t('review_from_settings', { mode: reviewLabel(anchor) });
+    $('reviewAnchored').textContent = t(anchor === 'review_test' ? 'review_set_test' : 'review_set_review');
   } else {
     $('reviewRow').classList.remove('hide');
     $('reviewAnchored').classList.add('hide');
@@ -1025,11 +1053,13 @@ function summaryText(d, created) {
   if (!d) return '';
   const cap = (x) => (x ? x.charAt(0).toUpperCase() + x.slice(1) : x);
   const who = [];
-  if (d.name) who.push(t(created ? 'res_for' : 'sum_for', { name: d.name }));
+  // A short name never breaks across lines ("Теодор Манолов").
+  const name = d.name && d.name.length <= 24 ? d.name.replace(/ /g, '\u00A0') : d.name;
+  if (name) who.push(t(created ? 'res_for' : 'sum_for', { name }));
   else if (created) who.push(t('res_created'));
   if (d.dest) who.push(d.addr ? t('sum_addr', { a: d.dest }) : t('sum_office', { o: d.dest }));
-  const terms = [d.cod ? t('sum_cod', { amt: fmtMoney(d.cod.a, d.cod.c, true) }) : t('sum_nocod')];
-  if (d.decl) terms.push(t('sum_decl', { amt: fmtMoney(d.decl.a, d.decl.c, true) }));
+  const terms = [d.cod ? t('sum_cod', { amt: fmtMoney(d.cod.a, d.cod.c) }) : t('sum_nocod')];
+  if (d.decl) terms.push(t('sum_decl', { amt: fmtMoney(d.decl.a, d.decl.c) }));
   if (d.review === 'review_test') terms.push(t('sum_review_test'));
   else if (d.review === 'review') terms.push(t('sum_review'));
   const out = (who.length ? cap(who.join(', ')) + '. ' : '') + cap(terms.join(', ')) + '.';
@@ -1048,7 +1078,7 @@ function updateSummary() {
   // BGN vs EUR: show the other currency when it differs from the usual one.
   const defCur = (CONFIG.defaults.cod && CONFIG.defaults.cod.currency) || 'EUR', cur = $('pCodCur').value, ch = $('codCurHint');
   if (codOn && codAmt > 0 && cur !== defCur) {
-    ch.textContent = cur === 'BGN' ? t('cod_conv', { a: fmtNum(codAmt, true), e: fmtMoney(codAmt / BGN_PER_EUR, 'EUR') }) : t('cod_conv_rev', { a: fmtNum(codAmt, true), b: fmtMoney(codAmt * BGN_PER_EUR, 'BGN') });
+    ch.textContent = cur === 'BGN' ? t('cod_conv', { a: fmtNum(codAmt), e: fmtMoney(codAmt / BGN_PER_EUR, 'EUR') }) : t('cod_conv_rev', { a: fmtNum(codAmt), b: fmtMoney(codAmt * BGN_PER_EUR, 'BGN') });
     ch.className = 'cur-hint ' + (PARSED_CUR ? 'warn-box' : 'muted');
   } else ch.className = 'muted cur-hint hide';
   // What the parser could not read — so nothing silently stays empty.
@@ -1111,13 +1141,24 @@ async function doPreview(ev) {
 let _revealT = 0;
 function revealNumber() {
   const el = $('shipNum'), card = $('result'), num = el.textContent;
-  clearTimeout(_revealT); card.classList.remove('revealing');
+  clearTimeout(_revealT); card.classList.remove('revealing'); el.removeAttribute('aria-label');
   if (!/^\d+$/.test(num) || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
-  el.innerHTML = [...num].map((c, i) => `<span class="d" style="--i:${i}">${c}</span>`).join('');
+  // During the reveal the digits are separate boxes; they read as one number, and
+  // the plain text comes back as soon as the moment is over.
+  el.setAttribute('aria-label', num);
+  el.innerHTML = [...num].map((c, i) => `<span class="d" aria-hidden="true" style="--i:${i}">${c}</span>`).join('');
   void card.offsetWidth;
   card.classList.add('revealing');
-  _revealT = setTimeout(() => card.classList.remove('revealing'), 1500);
+  _revealT = setTimeout(() => { card.classList.remove('revealing'); if (el.querySelector('.d')) el.textContent = num; el.removeAttribute('aria-label'); }, 1500);
   try { if (navigator.vibrate && matchMedia('(pointer: coarse)').matches) navigator.vibrate(12); } catch (e) {}
+}
+// Bring the new waybill into view with its number clear of the sticky top bar (html's
+// scroll-padding-top). A card that fits is shown whole with the least movement; a taller
+// one (phones) lines up its top, so the number is the first thing on screen.
+function scrollToResult() {
+  const el = $('result'), pad = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 72;
+  const fits = el.getBoundingClientRect().height <= innerHeight - pad - 16;
+  el.scrollIntoView({ behavior: scrollBehavior(), block: fits ? 'nearest' : 'start' });
 }
 // Today's progress from the parcel list: count and cash on delivery to collect.
 function todayStats() {
@@ -1130,15 +1171,15 @@ function todayStats() {
 function todayText() {
   const s = todayStats(); if (!s.n) return '';
   let txt = s.n === 1 ? t('today_one') : t('today_many', { n: s.n });
-  const money = Object.keys(s.cod).sort().reverse().map((c) => fmtMoney(s.cod[c], c, true));
+  const money = Object.keys(s.cod).sort().reverse().map((c) => fmtMoney(s.cod[c], c));
   if (money.length) txt += ', ' + t('today_cod', { amt: money.join(t('today_and')) });
   return txt + '.';
 }
-function renderToday() { const s = todayText(); for (const id of ['resToday', 'plToday']) { const el = $(id); if (el) el.textContent = s; } }
+function renderToday() { const s = todayText(); for (const id of ['resToday', 'plToday', 'newToday']) { const el = $(id); if (el) el.textContent = s; } }
 // Guards before a create: COD missing although it is the default, a parcel to
 // the same phone in the last 72 h, or an earlier create whose outcome is unclear.
 // Each needs one deliberate extra click (never a double-click or key repeat).
-let NOCOD_ACK = false, DUP_ACK = '', DUP_ACK_AT = 0, PARSED_CUR = false, LAST_RESULT = null;
+let NOCOD_ACK = false, DUP_ACK = '', DUP_ACK_AT = 0, PARSED_CUR = false, LAST_RESULT = null, LAST_SUM = null;
 const BGN_PER_EUR = 1.95583;
 const createBusy = () => $('createBtn').hasAttribute('aria-busy') || $('batchCreateBtn').hasAttribute('aria-busy');
 function syncCreateLabel() {
@@ -1192,10 +1233,12 @@ function renderDupWarn() {
 // language switch) + the exact text the customer will get.
 function renderReplyPreview() {
   renderToday();
+  if (LAST_SUM) {
+    $('resultSummary').textContent = summaryText(LAST_SUM.sum, true);
+    $('resultMeta').textContent = LAST_SUM.price ? t('sum_price', { v: fmtMoney(LAST_SUM.price.v, LAST_SUM.price.c) }) : '';
+  }
   if (!LAST_RESULT) { $('replyPreview').classList.add('hide'); return; }
-  $('resultSummary').textContent = summaryText(LAST_RESULT.sum, true);
-  $('resultMeta').textContent = LAST_RESULT.price ? t('sum_price', { v: fmtMoney(LAST_RESULT.price.v, LAST_RESULT.price.c) }) : '';
-  $('replyText').textContent = buildReply(LAST_RESULT.num, LAST_RESULT.info);
+  $('replyText').innerHTML = replyHTML(buildReply(LAST_RESULT.num, LAST_RESULT.info));
   $('replyPreview').classList.remove('hide');
 }
 // While a create is in flight (wake-up wait included) the editor is frozen, so
@@ -1251,7 +1294,7 @@ async function doCreate() {
     clearUnsure(o.phone);
     const st = r.response.label || r.response;
     const num = st.shipmentNumber || t('no_number');
-    $('shipNum').textContent = num;
+    $('shipNum').textContent = num; $('shipNum').classList.toggle('is-text', !st.shipmentNumber);
     const pdf = st.pdfURL;
     if (pdf) { $('pdfLink').href = pdf; $('pdfLink').style.display = ''; } else { $('pdfLink').style.display = 'none'; }
     $('profileLink').href = econtProfileUrl();
@@ -1267,13 +1310,13 @@ async function doCreate() {
     }
     const price = st.totalPrice != null ? { v: Number(st.totalPrice), c: st.totalPriceCurrency || o.cod.currency || 'EUR' } : null;
     LAST_RESULT = st.shipmentNumber ? { num: st.shipmentNumber, info, sum, price } : null;
+    LAST_SUM = { sum, price };
     renderReplyPreview();
-    if (!LAST_RESULT) { $('resultSummary').textContent = summaryText(sum, true); $('resultMeta').textContent = price ? t('sum_price', { v: fmtMoney(price.v, price.c) }) : ''; }
-    $('replyBtn').classList.toggle('hide', !LAST_RESULT);
+    $('replyBtn').classList.toggle('hide', !LAST_RESULT); $('copyBtn').classList.toggle('hide', !LAST_RESULT);
     showBatchBackBtns();
     $('preview').classList.add('hide'); $('result').classList.remove('hide');
     revealNumber();
-    $('result').scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' });
+    scrollToResult();
     $('srLive').textContent = t('created_sr', { num });
   } finally {
     freezeEditor(false);
@@ -1304,7 +1347,7 @@ let BATCH = [];
 let BATCH_EDIT = -1; // row currently opened in the single-parcel editor
 function showBatchBackBtns() {
   const show = BATCH_EDIT >= 0 && BATCH.length > 0;
-  const label = show ? t('back_to_batch', { n: '#' + (BATCH_EDIT + 1) }) : '';
+  const label = show ? t('back_to_batch', { n: BATCH_EDIT + 1 }) : '';
   for (const id of ['backToBatchBtn', 'backToBatchBtn2']) {
     const b = $(id); b.classList.toggle('hide', !show); if (show) b.textContent = label;
   }
@@ -1353,6 +1396,12 @@ function batchRowStatus(row) {
   return { text, color: '', needCod: false };
 }
 const batchSendBtn = () => `<button class="lnk" data-f="send" type="button">${esc(t('parcel_reply'))}</button>`;
+// "ред 1", "редове 1 и 3": rows named in words, never with a # sign.
+function rowsLabel(idx) {
+  const n = idx.map((i) => i + 1);
+  if (n.length === 1) return t('row_one', { n: n[0] });
+  return t('row_many', { list: n.slice(0, -1).join(', ') + t('list_and') + n[n.length - 1] });
+}
 function syncRowStatus(i) {
   const row = BATCH[i], el = $q(`.brow[data-i="${i}"]`); if (!row || !el) return;
   const st = batchRowStatus(row), se = el.querySelector('[data-status]');
@@ -1361,23 +1410,32 @@ function syncRowStatus(i) {
 }
 function batchRowHTML(row, i) {
   const rs = batchRowStatus(row);
+  const status = `<span class="brow-status" data-status${rs.color ? ` style="color:${rs.color}"` : ''}>${esc(rs.text)}</span>`;
+  // A created row folds to one line: which row, who, the number, and the reply.
+  if (row.done) {
+    return `<div class="brow done" data-i="${i}">
+    <div class="brow-top">
+      <input type="checkbox" data-f="on" checked hidden><span class="idx">${esc(t('row_label', { n: i + 1 }))}</span>
+      <span class="brow-mid">${row.name ? `<span class="brow-name">${esc(row.name)}</span>` : ''}${status}</span>
+      <span class="brow-acts">${row.num ? batchSendBtn() : ''}</span>
+    </div>
+  </div>`;
+  }
   const officeUI = row.parsed.deliveryType === 'door' && row.parsed.address
     ? `<input data-f="addr" value="${esc(t('batch_addr_row', { a: [row.parsed.address.city, row.parsed.address.street, row.parsed.address.num].filter(Boolean).join(' ') }))}" disabled aria-label="${esc(t('to_address'))}">`
     : `<select data-f="office" aria-label="${esc(t('office_lbl'))}">${row.candidates.length ? '' : `<option value="">${esc(t('batch_no_office'))}</option>`}${row.candidates.map((c) => `<option value="${esc(c.code)}" data-name="${esc(c.name || '')}">${esc(officeLabel(c))}</option>`).join('')}</select>`;
-  return `<div class="brow${row.done ? ' done' : ''}" data-i="${i}">
+  return `<div class="brow" data-i="${i}">
     <div class="brow-top">
-      <label class="brow-pick"><input type="checkbox" data-f="on" aria-label="${esc(t('row_label', { n: i + 1 }))}" ${row.on ? 'checked' : ''}><span class="idx">#${i + 1}</span></label>
-      ${row.trackNum ? `<span class="track-tag">${esc(row.trackNum)}</span>` : ''}
-      <span class="brow-status" data-status${rs.color ? ` style="color:${rs.color}"` : ''}>${esc(rs.text)}</span>
-      ${row.num ? batchSendBtn() : ''}
-      <button class="lnk" data-f="edit" type="button">${esc(t('batch_edit'))}</button>
+      <label class="brow-pick"><input type="checkbox" data-f="on" ${row.on ? 'checked' : ''}><span class="idx">${esc(t('row_label', { n: i + 1 }))}</span></label>
+      <span class="brow-mid">${row.trackNum ? `<span class="track-tag">${esc(row.trackNum)}</span>` : ''}${status}</span>
+      <span class="brow-acts"><button class="lnk" data-f="edit" type="button">${esc(t('batch_edit'))}</button></span>
     </div>
     <div class="brow-grid">
       <input data-f="name" value="${esc(row.name)}" placeholder="${esc(t('recipient'))}" aria-label="${esc(t('recipient'))}">
       <input data-f="phone" inputmode="tel" value="${esc(row.phone)}" placeholder="${esc(t('phone'))}" aria-label="${esc(t('phone'))}">
       ${officeUI}
       <input data-f="cod" class="${rs.needCod ? 'need' : ''}" type="number" inputmode="decimal" step="0.01" min="0" value="${esc(row.cod || '')}" placeholder="${esc(t('amount'))}" aria-label="${esc(t('cod'))}">
-      <select data-f="cur" aria-label="${esc(t('cod_currency'))}"><option value="EUR"${row.cur === 'EUR' ? ' selected' : ''}>€ EUR</option><option value="BGN"${row.cur === 'BGN' ? ' selected' : ''}>лв BGN</option></select>
+      <select data-f="cur" aria-label="${esc(t('cod_currency'))}"><option value="EUR"${row.cur === 'EUR' ? ' selected' : ''}>EUR</option><option value="BGN"${row.cur === 'BGN' ? ' selected' : ''}>BGN</option></select>
     </div>
   </div>`;
 }
@@ -1421,18 +1479,39 @@ async function doBatchParse(text, seq) {
 }
 // Run progress for the batch on screen: "Създавам 2 от 5…", a bar, then the tally.
 let BATCH_RUN = null;
+// The tally names only what happened: "Готово. Създадени са 2 товарителници."
+function batchDoneText(res) {
+  const parts = [], add = (n, one, many) => { if (n > 0) parts.push(n === 1 ? t(one) : t(many, { n })); };
+  add(res.ok - (res.tracked || 0), 'bd_ok1', 'bd_ok'); add(res.tracked || 0, 'bd_tr1', 'bd_tr');
+  add(res.fail, 'bd_fail1', 'bd_fail'); add(res.skip, 'bd_skip1', 'bd_skip');
+  const txt = parts.join(', ');
+  return t('batch_done', { parts: txt.charAt(0).toUpperCase() + txt.slice(1) });
+}
 function renderBatchInfo() {
   const creates = BATCH.filter((r) => !r.trackNum).length, tracks = BATCH.length - creates;
   const run = BATCH_RUN && BATCH_RUN.rows === BATCH ? BATCH_RUN : null;
-  $('batchInfo').textContent = run && run.res ? t('batch_done', run.res)
+  $('batchInfo').textContent = run && run.res ? batchDoneText(run.res)
     : run ? t('batch_run', { i: Math.min(run.k + 1, run.n), n: run.n })
     : tracks ? t('batch_found', { n: BATCH.length, c: creates, t: tracks }) : t('batch_found_c', { n: BATCH.length });
+  $('batchToday').textContent = run && run.res ? todayText() : '';
+  syncBatchActions();
   const bar = $('batchProg');
   bar.classList.toggle('hide', !run);
   if (!run) return;
   $('batchBar').style.width = (run.res ? 100 : run.n ? Math.round(run.k / run.n * 100) : 0) + '%';
   bar.classList.toggle('ok', !!run.res && !run.res.fail);
   bar.classList.toggle('bad', !!run.res && run.res.fail > 0);
+}
+// One primary at a time: Създай избраните while a row is still to be created; once
+// every row is through, Нова пратка takes its place. Never a run with nothing in it.
+const batchLive = (rows) => rows.filter((r) => r.on && !r.done).length;
+function syncBatchActions() {
+  const btn = $('batchCreateBtn'); if (btn.hasAttribute('aria-busy')) return;
+  const live = batchLive(BATCH), ran = !!(BATCH_RUN && BATCH_RUN.rows === BATCH && BATCH_RUN.res);
+  const finished = ran && !live;
+  btn.classList.toggle('hide', finished); btn.disabled = !finished && !live;
+  $('batchCancelBtn').classList.toggle('hide', finished);
+  $('batchNewBtn').classList.toggle('hide', !finished);
 }
 function renderBatch() {
   renderBatchInfo();
@@ -1465,6 +1544,7 @@ $('batchList').addEventListener('input', (e) => {
   else if (f === 'cod') row.cod = el.value;
   else if (f === 'cur') row.cur = el.value;
   if (f === 'on' || f === 'office' || f === 'cod' || f === 'cur') syncRowStatus(Number(brow.dataset.i));
+  if (f === 'on') syncBatchActions();
 });
 $('batchList').addEventListener('click', async (e) => {
   const sb = e.target.closest('button[data-f="send"]');
@@ -1535,9 +1615,9 @@ function batchRisk(rows) {
   return { nocod, repeat, key: 'n' + nocod.join(',') + '|r' + repeat.join(',') };
 }
 function renderBatchNoCodMsg() {
-  const list = (a) => a.map((i) => '#' + (i + 1)).join(', '), parts = [];
-  if (BATCH_RISK.nocod.length) parts.push(t('batch_nocod_list', { rows: list(BATCH_RISK.nocod) }));
-  if (BATCH_RISK.repeat.length) parts.push(t('batch_repeat_list', { rows: list(BATCH_RISK.repeat) }));
+  const parts = [];
+  if (BATCH_RISK.nocod.length) parts.push(t('batch_nocod_list', { rows: rowsLabel(BATCH_RISK.nocod) }));
+  if (BATCH_RISK.repeat.length) parts.push(t('batch_repeat_list', { rows: rowsLabel(BATCH_RISK.repeat) }));
   $('batchNoCodMsg').textContent = parts.join(' ') + ' ' + t('batch_confirm_q');
   $('batchNoCodGo').textContent = BATCH_RISK.repeat.length ? t('batch_go') : t('nocod_go');
   $('batchNoCodFix').textContent = BATCH_RISK.repeat.length ? t('batch_check') : t('nocod_fix');
@@ -1559,6 +1639,7 @@ $('batchCreateBtn').onclick = async () => {
   if (createBusy()) return;
   $('batchErr').textContent = '';
   const rows = BATCH; // snapshot BEFORE any wait: a paste meanwhile must never be acted upon
+  if (!batchLive(rows)) { syncBatchActions(); return; }   // nothing ticked or left to create
   // Creating without a contents description fails at Econt for every row — stop early.
   if (!(CONFIG.defaults.shipmentDescription || '').trim() && rows.some((r) => r.on && !r.trackNum && !r.done)) {
     $('batchErr').textContent = t('need_desc'); return;
@@ -1574,7 +1655,7 @@ $('batchCreateBtn').onclick = async () => {
   const btn = $('batchCreateBtn');
   btnBusy(btn, true, t('creating'));
   $('parseBtn').disabled = true; $('clearBtn').disabled = true; $('batchList').inert = true;
-  let ok = 0, fail = 0, skip = 0;
+  let ok = 0, fail = 0, skip = 0, tracked = 0;
   try {
     const awake = await ensureAwake(btn);
     if (!awake.ok) { $('batchErr').textContent = awake.error; return; }
@@ -1598,7 +1679,7 @@ $('batchCreateBtn').onclick = async () => {
         if (!loadParcels().some((x) => x.number === row.trackNum)) {
           addParcel({ number: row.trackNum, recipient: row.name.trim(), office: row.officeCode || '', cod: Number(row.cod) || 0, currency: row.cur, createdAt: Date.now(), mode: CONFIG.mode, manual: true });
         }
-        row.done = true; ok++; set('st_tracked', null, 'var(--go-d)'); step();
+        row.done = true; ok++; tracked++; set('st_tracked', null, 'var(--go-d)'); step();
         continue;
       }
       const o = batchOverrides(row);
@@ -1622,11 +1703,12 @@ $('batchCreateBtn').onclick = async () => {
       }
       step();
     }
-    run.res = { ok, fail, skip };
-    if (BATCH === rows) { renderBatchInfo(); renderToday(); }
+    run.res = { ok, fail, skip, tracked };
+    if (BATCH === rows) renderToday();
   } finally {
     btnBusy(btn, false); $('parseBtn').disabled = false; $('clearBtn').disabled = false; $('batchList').inert = false;
     BATCH_CONSENT = ''; // consent was for this run only
+    if (BATCH === rows) renderBatchInfo(); else syncBatchActions();
   }
 };
 
@@ -1828,7 +1910,9 @@ async function copyReplyPreview() {
 }
 $('replyPreview').onclick = copyReplyPreview;
 $('replyPreview').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copyReplyPreview(); } });
-$('newBtn').onclick = () => { $('msg').value = ''; $('result').classList.add('hide'); $('preview').classList.add('hide'); BATCH_EDIT = -1; showBatchBackBtns(); $('msg').focus(); };
+function startNew() { if (createBusy()) return; PARSE_SEQ++; resetCreateGuards(); $('parseErr').textContent = ''; $('msg').value = ''; $('result').classList.add('hide'); $('preview').classList.add('hide'); $('batch').classList.add('hide'); BATCH_EDIT = -1; showBatchBackBtns(); renderToday(); $('msg').focus(); }
+$('newBtn').onclick = startNew;
+$('batchNewBtn').onclick = startNew;
 // Instant: pasting the message auto-parses (no extra click). Live summary follows edits.
 $('msg').addEventListener('paste', () => setTimeout(() => { if ($('msg').value.trim()) doParse(); }, 60));
 ['pName', 'pPhone', 'pCodOn', 'pCodAmount', 'pCodCur', 'pDeclOn', 'pDeclAmount', 'pDeclCur', 'pAddrCity', 'pAddrStreet', 'pAddrNum'].forEach((id) => $(id).addEventListener('input', scheduleSummary));
@@ -1857,10 +1941,14 @@ $('modeAddressBtn').onclick = () => { if (!$('pAddrCity').value.trim() && PARSED
 
 // ---------- parcels (live status + operation timer) ----------
 function fmtDateTime(v) { const ms = toMs(v); if (!ms) return ''; const d = new Date(ms); if (isNaN(d.getTime())) return ''; return d.toLocaleString(LANG === 'bg' ? 'bg-BG' : 'en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+// Durations in words, coarse on purpose: "45 мин", "19 ч", "1 ден и 4 ч" ("1 day 4 h").
 function fmtDuration(ms) {
-  if (!(ms > 0)) ms = 0;
-  const s = Math.floor(ms / 1000), d = Math.floor(s / 86400), p2 = (x) => String(x).padStart(2, '0');
-  return (d > 0 ? d + t('dd') + ' ' : '') + p2(Math.floor(s % 86400 / 3600)) + ':' + p2(Math.floor(s % 3600 / 60)) + ':' + p2(s % 60);
+  const min = Math.max(1, Math.floor((ms > 0 ? ms : 0) / 60000));
+  if (min < 60) return t('dur_min', { n: min });
+  const h = Math.floor(min / 60);
+  if (h < 24) return t('dur_h', { n: h });
+  const d = Math.floor(h / 24), rh = h % 24, ds = d === 1 ? t('dur_d1') : t('dur_d', { n: d });
+  return rh ? ds + t('dur_join') + t('dur_h', { n: rh }) : ds;
 }
 // Operation state: timer runs in transit, stops on delivered or returned.
 function classify(p) {
@@ -1870,7 +1958,6 @@ function classify(p) {
   if (p.sendTime) return 'transit';
   return 'created';
 }
-function statusClass(p) { const st = classify(p); return st === 'returned' ? 's-amber' : st === 'delivered' ? 's-green' : st === 'transit' ? 's-blue' : 's-gray'; }
 // Econt status text in the UI language when Econt sends an English variant.
 const statusText = (p) => ((LANG === 'en' && p.statusEn) ? p.statusEn : p.status) || '';
 // Three-segment progress: created, on the way, finished (green) / returned (amber).
@@ -1890,27 +1977,26 @@ function collectedPill(snap) {
   return n > 0 ? `<span class="statusb s-green" data-coll>${esc(t('collected', { amt: fmtMoney(n, snap.cdCurrency || 'EUR') }))}</span>` : '';
 }
 
-const TICK = {}; let TIMER_INT = null, TICK_N = 0;
-// Each entry caches its .clk node — one DOM write per tick, no per-second selector scans.
+// Parcels in transit count up once a minute (no seconds ticking on every row).
+const TICK = {}; let TIMER_INT = null;
 function startTimers() {
   stopTimers();
   TIMER_INT = setInterval(() => {
     if (document.hidden) return;
     const now = Date.now();
-    for (const num in TICK) { const tk = TICK[num]; if (tk && tk.el && tk.el.isConnected) tk.el.textContent = fmtDuration(now - tk.start); }
-    if (++TICK_N % 30 === 0) renderUpdated();
-  }, 1000);
+    for (const num in TICK) { const tk = TICK[num]; if (tk && tk.el && tk.el.isConnected) tk.el.textContent = t('in_operation', { d: fmtDuration(now - tk.start) }); }
+    renderUpdated();
+  }, 60000);
 }
 function stopTimers() { if (TIMER_INT) { clearInterval(TIMER_INT); TIMER_INT = null; } }
+// The one status line of a row: the state in words with how long it took or has taken.
 function renderTimer(num, p) {
-  const cell = $q(`.parcel[data-num="${num}"] [data-timer]`); if (!cell) return;
+  const cell = $q(`.parcel[data-num="${num}"] [data-status]`); if (!cell) return;
   const st = classify(p), sent = toMs(p.sendTime); delete TICK[num];
-  // A sentence with the duration set in ink: "Доставена за 19:00:00".
-  const withClk = (k, ms) => esc(t(k, { d: '\u0000' })).replace('\u0000', '<span class="clk">' + fmtDuration(ms) + '</span>');
-  cell.className = 'parcel-timer';
-  if (st === 'delivered') { const dt = toMs(p.deliveryTime); cell.innerHTML = sent && dt ? withClk('delivered_in', dt - sent) : esc(t('delivered_ok')); }
-  else if (st === 'returned') { const dt = toMs(p.deliveryTime) || Date.now(); cell.innerHTML = sent ? withClk('returned_in', dt - sent) : esc(t('returned_ok')); }
-  else if (st === 'transit' && sent) { cell.innerHTML = esc(t('in_operation')) + ' <span class="clk">' + fmtDuration(Date.now() - sent) + '</span>'; TICK[num] = { start: sent, el: cell.querySelector('.clk') }; }
+  cell.className = 'pstat';
+  if (st === 'delivered') { const dt = toMs(p.deliveryTime); cell.textContent = sent && dt ? t('delivered_in', { d: fmtDuration(dt - sent) }) : t('delivered_ok'); }
+  else if (st === 'returned') { const dt = toMs(p.deliveryTime) || Date.now(); cell.textContent = sent ? t('returned_in', { d: fmtDuration(dt - sent) }) : t('returned_ok'); }
+  else if (st === 'transit' && sent) { cell.textContent = t('in_operation', { d: fmtDuration(Date.now() - sent) }); TICK[num] = { start: sent, el: cell }; }
   else { cell.textContent = t('awaiting_dispatch'); }
 }
 
@@ -1938,26 +2024,26 @@ const subText = (recipient, office) => [recipient, office].filter(Boolean).join(
 function parcelCardHTML(p) {
   const other = p.mode !== CONFIG.mode;
   const snap = !other && p.snap ? p.snap : null;
-  const pill = other ? `<span class="statusb s-gray" data-status>${esc(t('other_env'))}</span>`
-    : snap ? `<span class="statusb ${statusClass(snap)}" data-status>${esc(statusText(snap) || t('status_transit'))}</span>`
-    : `<span class="statusb sk" data-status>${esc(t('loading'))}</span>`;
-  // One row of the list: number and status, who and where, progress, then quiet
-  // links. Details, the label and removal open under "Детайли".
+  // The state shows once, as words ("Доставена за 19 ч"); Econt's own status text is
+  // the first line of Детайли. Until a status is known the line says so.
+  const stat = other ? `<span class="pstat" data-status>${esc(t('other_env'))}</span>`
+    : snap ? '<span class="pstat" data-status></span>'
+    : `<span class="pstat sk" data-status>${esc(t('loading'))}</span>`;
+  const copyLbl = t('copy') + ' ' + p.number;
   return `<div class="parcel" data-num="${esc(p.number)}">
-    <div class="parcel-top"><span class="parcel-num">${esc(p.number)}</span><span class="parcel-pills" data-pills>${collectedPill(snap)}${pill}</span></div>
+    <div class="parcel-top"><button class="pnum" type="button" data-copy title="${esc(t('copy'))}" aria-label="${esc(copyLbl)}"><span class="parcel-num">${esc(p.number)}</span>${svgi('copy')}</button><span class="parcel-pills" data-pills>${collectedPill(snap)}</span></div>
     <div class="parcel-sub" data-sub>${esc(subText(p.recipient, p.office))}</div>
     <div class="ptrack" data-track ${trackAttrs(snap)} aria-hidden="true"><i></i><i></i><i></i></div>
-    <div class="parcel-line"><span class="parcel-timer" data-timer></span><span class="parcel-meta" data-meta>${metaText(snap)}</span></div>
+    <div class="parcel-line">${stat}<span class="parcel-meta" data-meta>${metaText(snap)}</span></div>
     <div class="parcel-row">
       <button class="lnk" type="button" data-reply>${esc(t('parcel_reply'))}</button>
-      <button class="lnk" type="button" data-copy>${esc(t('copy'))}</button>
-      <a class="lnk" href="${esc(econtTrackUrl(p.number))}" target="_blank" rel="noopener noreferrer">${esc(t('track_link'))}</a>
       <span class="spacer"></span>
       <button class="lnk" type="button" data-toggle aria-expanded="false"><span>${esc(t('details'))}</span>${svgi('chev')}</button>
     </div>
     <div class="parcel-x hide" data-x>
       <div class="details" data-details><div class="muted"${other ? '' : ' data-loading'}>${esc(other ? t('other_env') : t('loading'))}</div></div>
       <div class="parcel-more">
+        <a class="lnk" href="${esc(econtTrackUrl(p.number))}" target="_blank" rel="noopener noreferrer">${esc(t('track_link'))}</a>
         <a class="lnk" data-pdf ${p.pdfURL ? `href="${esc(p.pdfURL)}"` : 'hidden'} target="_blank" rel="noopener noreferrer">${esc(t('reprint'))}</a>
         <button class="lnk lnk-danger" type="button" data-del>${esc(t('del_link'))}</button>
       </div>
@@ -1972,11 +2058,8 @@ function parcelCardHTML(p) {
 function updateParcelCard(p, local) {
   const c = $q(`.parcel[data-num="${p.number}"]`); if (!c) return;
   local = local || {};
-  const s = c.querySelector('[data-status]');
-  s.className = 'statusb ' + (p.error ? 's-gray' : statusClass(p));
-  s.textContent = p.error ? t('no_status') : (statusText(p) || t('status_transit'));
-  const old = c.querySelector('[data-coll]'); if (old) old.remove();
-  if (!p.error) s.insertAdjacentHTML('beforebegin', collectedPill(p));
+  const pills = c.querySelector('[data-pills]');
+  pills.innerHTML = p.error ? '' : collectedPill(p);
   const tr = c.querySelector('[data-track]');
   tr.removeAttribute('data-ret'); tr.setAttribute('data-step', '0');
   if (!p.error) { const st = classify(p); tr.setAttribute('data-step', st === 'delivered' || st === 'returned' ? '3' : st === 'transit' ? '2' : '1'); if (st === 'returned') tr.setAttribute('data-ret', ''); }
@@ -1984,7 +2067,7 @@ function updateParcelCard(p, local) {
   if (p.recipient || p.office) c.querySelector('[data-sub]').textContent = subText(p.recipient, p.office);
   const pdf = p.pdfURL || local.pdfURL, a = c.querySelector('[data-pdf]');
   if (pdf) { a.href = pdf; a.hidden = false; } else { a.hidden = true; }
-  if (p.error) { const cell = c.querySelector('[data-timer]'); delete TICK[p.number]; cell.className = 'parcel-timer'; cell.textContent = ''; }
+  if (p.error) { const cell = c.querySelector('[data-status]'); delete TICK[p.number]; cell.className = 'pstat'; cell.textContent = t('no_status'); }
   else renderTimer(p.number, p);
   const det = c.querySelector('[data-details]');
   let html = detailRows(p, local).map(([k, v]) => `<div class="drow"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('');
@@ -2001,8 +2084,8 @@ function markUnknown(nums) {
   const list = loadParcels();
   for (const n of nums) {
     const c = $q(`.parcel[data-num="${n}"]`); if (!c) continue;
-    const s = c.querySelector('.statusb.sk');
-    if (s) { s.className = 'statusb s-gray'; s.textContent = t('no_status'); }
+    const s = c.querySelector('[data-status].sk');
+    if (s) { s.className = 'pstat'; s.textContent = t('no_status'); }
     const det = c.querySelector('[data-details]');
     if (!det.querySelector('[data-loading]')) continue;
     const lp = list.find((x) => x.number === n) || {};
@@ -2208,9 +2291,7 @@ $('getStartedBtn2').onclick = () => $('getStartedBtn').onclick();
 const LAND_NUM = '1051602938472';
 function renderLandingReply() {
   const el = $('ldReply'); if (!el) return;
-  const text = buildReply(LAND_NUM, { cod: 45, currency: 'EUR', reviewMode: 'review' });
-  el.innerHTML = text.split('\n').map((line) => esc(line).replace(/https?:\/\/(\S+)/, (m, rest) =>
-    `<span class="url">${rest.replace(/\//g, '/<wbr>')}</span>`)).join('\n');
+  el.innerHTML = replyHTML(buildReply(LAND_NUM, { cod: 45, currency: 'EUR', reviewMode: 'review' }), 'url');
 }
 (function initLanding() {
   // Each marked part of the message lights up its waybill row, and the other way round.
