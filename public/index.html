@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#003c80">
+<meta name="theme-color" content="#ffffff">
 <script>
 /* Stamp the theme before first paint — no light-theme flash for dark users. */
 try {
@@ -21,486 +21,456 @@ try {
 <link rel="dns-prefetch" href="https://tessdata.projectnaptha.com">
 <title>Econt Shipper: от текст до пратка</title>
 <style>
-  /* Self-hosted Geist Sans (OFL, see /fonts/LICENSE.txt): no third-party requests.
-     One variable file per subset; heavier weights in the app clamp to 700. */
+  /* Self-hosted Geist Sans (OFL, see /fonts/LICENSE.txt): no third-party requests. */
   @font-face { font-family: 'Geist'; font-style: normal; font-weight: 400 900; font-display: swap; src: url(/fonts/geist-400-700-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
   @font-face { font-family: 'Geist'; font-style: normal; font-weight: 400 900; font-display: swap; src: url(/fonts/geist-400-700-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+  /* ===================== TOKENS =====================
+     Vercel's Geist language across every view: background-100 page, the neutral gray
+     scale, gray-alpha hairlines, black primary buttons, 6px controls, 8px large
+     buttons, 12px surfaces, round badges. Colour only carries meaning: blue is focus
+     and work in progress, green is done, amber asks you to look, red is an error.
+     "locl" stays off on body so macOS never swaps in Bulgarian-locale glyphs. */
   :root {
     color-scheme: light;
-    --bg: #e9eef6; --bg-2: #dce6f3;
-    --card: rgba(255,255,255,.62); --card-solid: #ffffff;
-    --field: rgba(255,255,255,.94); --ink: #0c1b30; --muted: #52617a;
-    --line: rgba(16,38,75,.10); --brand: #0a4ea8; --brand-2: #0a73d6; --brand-3: #46a6ff; --brand-soft: rgba(10,115,214,.12);
-    --go: #1e9e57; --go-d: #16894a; --warn: #c0392b;
-    --ring-hi: rgba(255,255,255,.85); --ring-lo: rgba(16,38,75,.14);
-    --shadow: 0 1px 2px rgba(13,27,46,.04), 0 14px 40px rgba(13,27,46,.11);
-    --shadow-lg: 0 8px 20px rgba(13,27,46,.10), 0 36px 80px rgba(13,27,46,.18);
-    --shadow-brand: 0 10px 26px rgba(10,115,214,.38);
-    --ease: cubic-bezier(.22,.85,.3,1); --spring: cubic-bezier(.34,1.5,.5,1);
-    --radius: 20px; --radius-sm: 13px;
-    /* Type: Geist Sans everywhere, numbers set with tabular figures instead of a
-       mono face. "locl" stays off on body so macOS never swaps in Bulgarian-locale
-       glyphs; no system-ui in the stack for the same reason. */
     --font-text: "Geist", "Segoe UI", Roboto, Arial, sans-serif;
-    /* Landing: Vercel Geist tokens (background, gray, gray-alpha, blue, green). */
     --g-bg-100: #ffffff; --g-bg-200: #fafafa;
-    --g-gray-100: #f2f2f2; --g-gray-200: #ebebeb; --g-gray-900: #666666; --g-gray-1000: #171717;
-    --g-border: rgba(0,0,0,.08); --g-btn-hover: #383838;
+    --g-gray-100: #f2f2f2; --g-gray-200: #ebebeb; --g-gray-300: #e6e6e6; --g-gray-500: #c9c9c9; --g-gray-700: #8f8f8f; --g-gray-900: #666666; --g-gray-1000: #171717;
+    --g-alpha-100: rgba(0,0,0,.04); --g-alpha-200: rgba(0,0,0,.07);
+    --g-border: rgba(0,0,0,.08); --g-border-strong: rgba(0,0,0,.15); --g-border-hover: rgba(0,0,0,.25); --g-border-focus: rgba(0,0,0,.5);
+    --g-btn-hover: #383838; --g-btn-press: #4d4d4d; --g-seg-on: #ffffff;
     --g-blue-100: hsl(212 100% 97%); --g-blue-200: hsl(210 100% 96%); --g-blue-300: hsl(210 100% 94%);
     --g-blue-400: hsl(209 100% 90%); --g-blue-700: hsl(212 100% 48%); --g-blue-800: hsl(212 100% 41%); --g-blue-900: hsl(211 100% 42%);
-    --g-green-700: hsl(131 41% 46%); --ld-pin-ink: var(--g-blue-800);
+    --g-green-200: hsl(120 60% 95%); --g-green-700: hsl(131 41% 46%); --g-green-900: hsl(133 50% 32%);
+    --g-amber-100: hsl(39 100% 95%); --g-amber-200: hsl(44 100% 92%); --g-amber-700: hsl(39 100% 57%); --g-amber-900: hsl(30 100% 32%);
+    --g-red-200: hsl(0 100% 96%); --g-red-700: hsl(358 75% 59%); --g-red-900: hsl(358 66% 48%);
+    --ld-pin-ink: var(--g-blue-800);
     --g-shadow-border: 0 0 0 1px rgba(0,0,0,.08);
     --g-shadow-medium: 0 0 0 1px rgba(0,0,0,.08), 0 2px 2px rgba(0,0,0,.04), 0 8px 16px -4px rgba(0,0,0,.04);
+    --g-shadow-menu: 0 0 0 1px rgba(0,0,0,.08), 0 1px 1px rgba(0,0,0,.02), 0 4px 8px -4px rgba(0,0,0,.04), 0 16px 24px -8px rgba(0,0,0,.06);
+    --g-shadow-seg: 0 0 0 1px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
     --g-focus: 0 0 0 2px var(--g-bg-100), 0 0 0 4px var(--g-blue-700);
+    --g-ring: 0 0 0 3px rgba(0,0,0,.08);
+    --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    /* Status colours that app.js writes inline (batch rows). */
+    --warn: var(--g-red-900); --go-d: var(--g-green-900);
+    --ease: cubic-bezier(.2,.8,.2,1);
+    --gutter: 16px;
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --bg: #080c12; --bg-2: #0c131d;
-    --card: rgba(22,30,42,.58); --card-solid: #161e2a;
-    --field: rgba(16,24,35,.92); --ink: #e8eef7; --muted: #92a2b8;
-    --line: rgba(255,255,255,.08); --brand: #3f8fe0; --brand-2: #5aa6ee; --brand-3: #7cc0ff; --brand-soft: rgba(90,166,238,.14);
-    --go: #29b365; --go-d: #34c374; --warn: #ef6b6b;
-    --ring-hi: rgba(255,255,255,.22); --ring-lo: rgba(255,255,255,.05);
-    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.5);
-    --shadow-lg: 0 6px 16px rgba(0,0,0,.5), 0 30px 60px rgba(0,0,0,.6);
-    --shadow-brand: 0 10px 26px rgba(10,80,170,.5);
     --g-bg-100: #0a0a0a; --g-bg-200: #000000;
-    --g-gray-100: #1a1a1a; --g-gray-200: #1f1f1f; --g-gray-900: #a1a1a1; --g-gray-1000: #ededed;
-    --g-border: rgba(255,255,255,.145); --g-btn-hover: #cccccc;
+    --g-gray-100: #1a1a1a; --g-gray-200: #1f1f1f; --g-gray-300: #292929; --g-gray-500: #454545; --g-gray-700: #8f8f8f; --g-gray-900: #a1a1a1; --g-gray-1000: #ededed;
+    --g-alpha-100: rgba(255,255,255,.06); --g-alpha-200: rgba(255,255,255,.1);
+    --g-border: rgba(255,255,255,.145); --g-border-strong: rgba(255,255,255,.2); --g-border-hover: rgba(255,255,255,.3); --g-border-focus: rgba(255,255,255,.55);
+    --g-btn-hover: #cccccc; --g-btn-press: #b3b3b3; --g-seg-on: #292929;
     --g-blue-100: hsl(216 50% 12%); --g-blue-200: hsl(214 59% 15%); --g-blue-300: hsl(213 71% 20%);
     --g-blue-400: hsl(212 78% 23%); --g-blue-700: hsl(212 100% 48%); --g-blue-800: hsl(212 100% 41%); --g-blue-900: hsl(210 100% 66%);
-    --g-green-700: hsl(131 41% 46%); --ld-pin-ink: var(--g-blue-900);
+    --g-green-200: hsl(137 50% 12%); --g-green-700: hsl(131 41% 46%); --g-green-900: hsl(131 43% 57%);
+    --g-amber-100: hsl(35 100% 8%); --g-amber-200: hsl(32 100% 10%); --g-amber-700: hsl(39 100% 57%); --g-amber-900: hsl(35 100% 52%);
+    --g-red-200: hsl(357 46% 16%); --g-red-700: hsl(358 75% 59%); --g-red-900: hsl(358 100% 69%);
+    --ld-pin-ink: var(--g-blue-900);
     --g-shadow-border: 0 0 0 1px rgba(255,255,255,.145);
     --g-shadow-medium: 0 0 0 1px rgba(255,255,255,.145), 0 2px 2px rgba(0,0,0,.32), 0 8px 16px -4px rgba(0,0,0,.4);
+    --g-shadow-menu: 0 0 0 1px rgba(255,255,255,.145), 0 1px 1px rgba(0,0,0,.2), 0 4px 8px -4px rgba(0,0,0,.5), 0 16px 24px -8px rgba(0,0,0,.6);
+    --g-shadow-seg: 0 0 0 1px rgba(255,255,255,.12), 0 1px 2px rgba(0,0,0,.4);
+    --g-ring: 0 0 0 3px rgba(255,255,255,.12);
+    --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1a1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   }
-  :root[data-theme="dark"] .badge.demo { background: #3a2d12; color: #f4c463; }
-  :root[data-theme="dark"] .badge.production { background: #12301f; color: #57d98a; }
-  :root[data-theme="dark"] .s-green { background: #16331f; color: #57d98a; }
-  :root[data-theme="dark"] .s-red { background: #3a1c1c; color: #ff9a9a; }
-  :root[data-theme="dark"] .s-gray { background: #222c39; color: var(--muted); }
-  :root[data-theme="dark"] .t-amber { color: #f0b659; }
-  :root[data-theme="dark"] #toast { background: #243244; }
+
+  /* ===================== BASE ===================== */
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html { scroll-behavior: smooth; background: var(--bg); overscroll-behavior-y: contain; scrollbar-gutter: stable both-edges;
-    scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent; }
+  html { background: var(--g-bg-100); scroll-behavior: smooth; overscroll-behavior-y: contain; scrollbar-gutter: stable both-edges;
+    scrollbar-width: thin; scrollbar-color: var(--g-gray-500) transparent; }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--muted) 40%, transparent); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
-  ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--muted) 65%, transparent); border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
-  ::selection { background: color-mix(in srgb, var(--brand-2) 28%, transparent); }
-  :root[data-theme="dark"] ::selection { background: color-mix(in srgb, var(--brand-2) 42%, transparent); }
-  /* Transparent so the fixed gradient-mesh (body::before, z-index:-2) shows through;
-     html carries --bg as the base colour (also fills the overscroll area). */
-  body { margin: 0; background: transparent; color: var(--ink); overflow-x: hidden;
-    font: 16px/1.55 var(--font-text); font-feature-settings: "locl" 0; -webkit-text-size-adjust: 100%; }
-  /* Static gradient-mesh backdrop for depth. Kept still (no drift animation) so the
-     sticky topbar's blur never has to re-sample a moving layer every frame — the
-     gradient itself is the premium touch, not the motion. */
-  body::before { content: ""; position: fixed; inset: -12%; z-index: -2; pointer-events: none;
-    background:
-      radial-gradient(42% 42% at 16% 18%, rgba(10,115,214,.21), transparent 70%),
-      radial-gradient(46% 46% at 86% 12%, rgba(70,166,255,.19), transparent 70%),
-      radial-gradient(50% 50% at 82% 88%, rgba(30,158,87,.13), transparent 70%),
-      radial-gradient(44% 44% at 10% 92%, rgba(10,78,168,.17), transparent 70%); }
-  .wrap { max-width: 680px; margin: 0 auto; padding: 0 14px 90px; }
-  .view.hide, .hide { display: none !important; }
-  .view:not(.hide) { animation: viewIn .55s var(--ease); }
-  @keyframes viewIn { from { opacity: 0; transform: translateY(18px) scale(.985); } to { opacity: 1; transform: none; } }
-
-  .topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; padding: 12px 8px; margin: 0 -8px 4px;
-    background: var(--bg);
-    background: color-mix(in srgb, var(--bg) 70%, transparent);
-    box-shadow: 0 1px 0 var(--line);
-    -webkit-backdrop-filter: saturate(1.6) blur(16px); backdrop-filter: saturate(1.6) blur(16px); }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--brand); letter-spacing: -.02em; text-decoration: none; cursor: pointer; transition: transform .35s var(--spring); }
-  .brand > span { white-space: nowrap; }
-  .brand svg { border-radius: 8px; filter: drop-shadow(0 4px 8px rgba(10,78,168,.4)); }
-  .brand:hover { transform: translateY(-1px); }
-  .brand:active { transform: scale(.95); }
-  .spacer { flex: 1; }
-  .langtoggle { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; box-shadow: var(--shadow); }
-  .lang { border: 0; background: transparent; color: var(--muted); padding: 7px 13px; font-weight: 700; font-size: 13px; transition: color .25s, background .35s var(--ease); }
-  .lang.active { background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; }
-  .icon { display: inline-flex; align-items: center; justify-content: center; flex: none; padding: 0; border: 1px solid var(--line); background: var(--card); color: var(--brand); width: 40px; height: 40px; border-radius: 13px; font-weight: 700; font-size: 18px; line-height: 1; box-shadow: var(--shadow); transition: transform .3s var(--spring), border-color .2s, color .2s, box-shadow .3s; }
-  .icon:hover { border-color: var(--brand-2); color: var(--brand-2); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-  .icon:active { transform: scale(.9); }
-
-  button { font: inherit; font-weight: 600; cursor: pointer; border: 1px solid var(--line); background: var(--card-solid); color: var(--ink); border-radius: 13px; padding: 12px 18px;
-    transition: transform .3s var(--spring), box-shadow .3s var(--ease), background .2s, border-color .2s, color .2s; }
-  @media (hover: hover) { button:hover { border-color: var(--brand-2); transform: translateY(-2px); box-shadow: var(--shadow); } }
-  button:active { transform: translateY(0) scale(.97); }
-  /* Lit-from-above key highlight + one-shot hover sheen on the two CTA styles. */
-  .primary { background: linear-gradient(135deg, var(--brand-2), var(--brand)); border-color: transparent; color: #fff; font-weight: 700; box-shadow: inset 0 1px 0 rgba(255,255,255,.25), var(--shadow-brand); position: relative; overflow: hidden; }
-  @media (hover: hover) { .primary:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 14px 32px rgba(10,115,214,.45); } }
-  .go { background: linear-gradient(135deg, #24b568, var(--go-d)); border-color: transparent; color: #fff; font-weight: 700; box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 10px 26px rgba(30,158,87,.4); position: relative; overflow: hidden; }
-  @media (hover: hover) { .go:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 14px 32px rgba(30,158,87,.5); } }
-  .primary::after, .go::after { content: ""; position: absolute; inset: 0; pointer-events: none; transform: translateX(-130%) skewX(-18deg);
-    background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.35) 50%, transparent 65%); }
-  @media (hover: hover) { .primary:hover::after, .go:hover::after { animation: sheen .65s var(--ease); } }
-  @keyframes sheen { to { transform: translateX(130%) skewX(-18deg); } }
-  .ghost { background: var(--card); }
-  /* Link styled as a button — replaces invalid <a><button> nesting (one tab stop, one announced role). */
-  .btnlink { display: inline-block; font: inherit; font-weight: 600; text-decoration: none; text-align: center; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 13px; padding: 12px 18px;
-    transition: transform .3s var(--spring), box-shadow .3s var(--ease), border-color .2s, color .2s; }
-  @media (hover: hover) { .btnlink:hover { border-color: var(--brand-2); transform: translateY(-2px); box-shadow: var(--shadow); color: var(--ink); } }
-  .btnlink:active { transform: translateY(0) scale(.97); }
-  .btnlink[hidden] { display: none; }
-  .block { width: 100%; }
-  button:disabled { opacity: .5; cursor: default; transform: none !important; box-shadow: none !important; }
+  ::-webkit-scrollbar-thumb { background: var(--g-gray-500); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+  ::selection { background: var(--g-blue-300); }
+  body { margin: 0; background: var(--g-bg-100); color: var(--g-gray-1000); overflow-x: hidden;
+    font: 16px/1.5 var(--font-text); font-feature-settings: "locl" 0; -webkit-text-size-adjust: 100%; }
+  :where(h1, h2, h3, h4) { margin: 0; font-weight: 600; text-wrap: balance; }
+  :where(p) { margin: 0; }
+  a { color: inherit; }
+  .hide, .view.hide, [hidden] { display: none !important; }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-  /* Glass panels: an opaque-enough fill + a lit top edge (cheap inset highlight)
-     reads as frosted glass WITHOUT a per-card backdrop-filter (the main lag source). */
-  .card { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
-    -webkit-backdrop-filter: blur(18px) saturate(1.35); backdrop-filter: blur(18px) saturate(1.35);
-    box-shadow: inset 0 1px 0 var(--ring-hi), inset 0 -1px 0 var(--ring-lo), var(--shadow);
-    transition: transform .4s var(--ease), box-shadow .4s var(--ease); }
-  @media (hover: hover) { .card:hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 var(--ring-hi), inset 0 -1px 0 var(--ring-lo), var(--shadow-lg); } }
-  .tilt { will-change: transform; transition: transform .25s var(--ease), box-shadow .4s var(--ease); }
-  textarea { min-height: 120px; resize: vertical; }
-  textarea, input, select { width: 100%; background: var(--field); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 13px 14px; font: inherit; outline: none; transition: border-color .2s, box-shadow .25s var(--ease); }
-  textarea:focus, input:focus, select:focus { border-color: var(--brand-2); box-shadow: 0 0 0 4px var(--brand-soft); }
-  label { display: block; font-size: 12.5px; color: var(--muted); margin: 13px 0 5px; font-weight: 600; }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; }
-  .row > div { flex: 1; min-width: 130px; }
-  .inline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .inline input[type=checkbox] { width: auto; transform: scale(1.3); accent-color: var(--brand); }
-  .muted { color: var(--muted); font-size: 13.5px; }
-  .err { color: var(--warn); white-space: pre-wrap; font-size: 13.5px; margin-top: 8px; }
-  .good { color: var(--go-d); font-size: 13.5px; margin-top: 8px; font-weight: 600; }
-  .ok-num { font-size: 32px; font-weight: 700; letter-spacing: .5px; word-break: break-all; color: var(--brand);
-    background: linear-gradient(135deg, var(--brand-2), var(--brand-3)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  .price { font-size: 24px; font-weight: 700; color: var(--brand); }
-  a { color: var(--brand-2); }
-  .toolbar { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
-  h2 { font-size: 21px; margin: 0 0 6px; letter-spacing: -.01em; }
-  h3 { margin: 2px 0 4px; font-size: 15px; line-height: 20px; color: var(--brand); letter-spacing: -.01em; font-weight: 600; }
-  h1, h2 { text-wrap: balance; }
-  .hero p, .muted, .parcel-sub { text-wrap: pretty; }
-  .ok-num, .price, .parcel-num, .pin, .drow .v { font-variant-numeric: tabular-nums; }
-  hr { border: none; border-top: 1px solid var(--line); margin: 16px 0; }
-  .pin { letter-spacing: 10px; text-align: center; font-size: 26px; font-weight: 700; }
-  .badge { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 700; }
-  .badge.demo { background: #fff4d6; color: #7a5200; }
-  .badge.production { background: #def5e6; color: var(--go-d); }
-  .step-no { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-weight: 700; font-size: 12px; margin-right: 6px; }
+  .spacer { flex: 1; }
+  .wrap { max-width: 800px; margin: 0 auto; padding: 0 var(--gutter) 96px; }
+  .ic { width: 16px; height: 16px; flex: none; }
+  .ic-s { width: 16px; height: 16px; }
+  :where(.ok-num, .price, .parcel-num, .pin, .drow .v, .clk, .idx, .event time) { font-variant-numeric: tabular-nums; }
 
-  .spin { display: inline-block; width: 15px; height: 15px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sp .6s linear infinite; vertical-align: -2px; margin-right: 8px; }
+  /* Keyboard focus: the Geist ring, above any component shadow. The transparent outline
+     is what forced-colors mode paints. Tabs, the reply bubble and landing marks draw their own. */
+  :is(button, a, [tabindex], select):not(.tab):not(.reply-prev):not(mark):focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--g-focus) !important; }
+  :where(button, a, select, input, textarea, label) { touch-action: manipulation; }
+
+  /* ===================== TOP BAR =====================
+     Full-width header, solid background-100 and one hairline. No blur. */
+  .topbar { position: sticky; top: 0; z-index: 20; background: var(--g-bg-100); box-shadow: 0 1px 0 var(--g-border); padding-top: env(safe-area-inset-top); }
+  .topbar-in { max-width: 800px; height: 56px; margin: 0 auto; padding: 0 max(var(--gutter), env(safe-area-inset-right)) 0 max(var(--gutter), env(safe-area-inset-left));
+    display: flex; align-items: center; gap: 4px; }
+  .brand { display: inline-flex; align-items: center; gap: 8px; margin: 0 8px 0 -4px; padding: 4px; border-radius: 6px; color: var(--g-gray-1000); text-decoration: none;
+    font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -.2px; white-space: nowrap; }
+  .brand-mark rect, .about-mark rect { fill: var(--g-gray-1000); }
+  .brand-mark path, .about-mark path { stroke: var(--g-bg-100); }
+  .badge { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; font-size: 12px; line-height: 1; font-weight: 500; white-space: nowrap; }
+  .badge.demo { background: var(--g-amber-200); color: var(--g-amber-900); }
+  .langtoggle { display: inline-flex; flex: none; gap: 2px; padding: 2px; margin-left: 4px; border-radius: 8px; background: var(--g-gray-100); }
+  .topbar .lang { height: 28px; padding: 0 10px; border-radius: 6px; background: transparent; box-shadow: none; color: var(--g-gray-900); font-size: 13px; }
+  @media (hover: hover) { .topbar .lang:hover { background: transparent; color: var(--g-gray-1000); } }
+  .topbar .lang.active { background: var(--g-seg-on); color: var(--g-gray-1000); box-shadow: var(--g-shadow-seg); }
+
+  /* ===================== CONTROLS ===================== */
+  /* Buttons: secondary by default (background-100, hairline), black primary, quiet tertiary. */
+  button, .btnlink { appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; padding: 0 12px;
+    border: 0; border-radius: 6px; background: var(--g-bg-100); color: var(--g-gray-1000); box-shadow: var(--g-shadow-border);
+    font: inherit; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; text-decoration: none; cursor: pointer;
+    transition: background-color .15s, color .15s, box-shadow .15s; }
+  @media (hover: hover) { button:hover, .btnlink:hover { background: var(--g-gray-100); } }
+  button:active, .btnlink:active { background: var(--g-gray-200); }
+  .btnlink[hidden] { display: none; }
+  .primary, .go { background: var(--g-gray-1000); color: var(--g-bg-100); box-shadow: none; }
+  @media (hover: hover) { .primary:hover, .go:hover { background: var(--g-btn-hover); } }
+  .primary:active, .go:active { background: var(--g-btn-press); }
+  .tertiary { background: transparent; box-shadow: none; color: var(--g-gray-900); }
+  @media (hover: hover) { .tertiary:hover { background: var(--g-alpha-100); color: var(--g-gray-1000); } }
+  .tertiary:active { background: var(--g-alpha-200); }
+  button:disabled, button:disabled:hover { background: var(--g-gray-100); color: var(--g-gray-700); box-shadow: none; cursor: not-allowed; }
+  button[aria-busy="true"] { cursor: progress; }
+  .btn-sm { height: 32px; padding: 0 10px; }
+  .btn-xs { height: 28px; padding: 0 8px; font-size: 13px; }
+  .lg { height: 48px; padding: 0 20px; border-radius: 8px; font-size: 16px; }
+  .block { width: 100%; }
+  /* Icon-only buttons (topbar, composer, refresh). */
+  .icon { width: 36px; height: 36px; padding: 0; flex: none; background: transparent; box-shadow: none; color: var(--g-gray-900); }
+  @media (hover: hover) { .icon:hover { background: var(--g-alpha-100); color: var(--g-gray-1000); } }
+  .icon:active { background: var(--g-alpha-200); }
+  .icon .ic { width: 18px; height: 18px; }
+  .icon .spin { margin: 0; }
+  /* Quiet text links (also on buttons): ink, a faint underline that firms up on hover. */
+  .lnk { display: inline-flex; align-items: center; gap: 4px; height: auto; min-height: 24px; padding: 2px 4px; margin: 0 -4px; border-radius: 4px; background: transparent; box-shadow: none;
+    color: var(--g-gray-1000); font-size: 14px; line-height: 20px; font-weight: 500;
+    text-decoration: underline; text-decoration-color: var(--g-border-strong); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  @media (hover: hover) { .lnk:hover { background: transparent; text-decoration-color: currentColor; } }
+  .lnk:active { background: transparent; color: var(--g-gray-900); }
+  .lnk .ic { width: 16px; height: 16px; color: var(--g-gray-900); transition: transform .2s var(--ease); }
+  .lnk-danger { color: var(--g-red-900); text-decoration-color: color-mix(in srgb, var(--g-red-900) 35%, transparent); }
+  .back { height: 32px; margin-left: -8px; padding: 0 8px 0 4px; gap: 2px; }
+  /* What a button says right after it worked ("Копирано"). */
+  .is-done:not(.primary):not(.reply-prev) { color: var(--g-green-900); }
+
+  /* Fields */
+  label { display: block; margin: 0 0 8px; font-size: 13px; line-height: 16px; color: var(--g-gray-900); }
+  label.check { display: flex; align-items: center; gap: 10px; margin-bottom: 0; font-size: 14px; line-height: 20px; color: var(--g-gray-1000); cursor: pointer; }
+  /* Zero specificity, so component rules (.pin, .brow-grid, .composer) always win. */
+  :where(input:not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea) {
+    width: 100%; height: 40px; margin: 0; padding: 0 12px; border: 1px solid var(--g-border-strong); border-radius: 6px;
+    background: var(--g-bg-100); color: var(--g-gray-1000); font: inherit; font-size: 14px; line-height: 20px; outline: none;
+    transition: border-color .15s, box-shadow .15s; }
+  @media (hover: hover) { :where(input:not([type=checkbox]), select, textarea):hover { border-color: var(--g-border-hover); } }
+  :where(input:not([type=checkbox]), select, textarea):focus { border-color: var(--g-border-focus); box-shadow: var(--g-ring); }
+  input::placeholder, textarea::placeholder { color: var(--g-gray-700); opacity: 1; }
+  :where(input, select):disabled { background: var(--g-bg-200); color: var(--g-gray-900); }
+  select { appearance: none; padding-right: 36px; background-image: var(--chev); background-repeat: no-repeat; background-position: right 10px center; background-size: 16px; text-overflow: ellipsis; }
+  textarea { height: auto; min-height: 120px; padding: 10px 12px; resize: vertical; }
+  input[type=checkbox] { width: 16px; height: 16px; margin: 0; flex: none; accent-color: var(--g-gray-1000); cursor: pointer; }
+  .pin { height: 56px !important; font-size: 24px !important; font-weight: 600; letter-spacing: .5em; text-indent: .5em; text-align: center; }
+  .need, .brow-grid .need { border-color: var(--g-red-700) !important; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px 12px; }
+  .row > .field { flex: 1 1 140px; min-width: 0; }
+  .row > .field.narrow { flex: 0 0 104px; }
+  .inline { display: flex; align-items: center; gap: 8px; }
+  .inline > input { flex: 1 1 140px; width: auto; min-width: 0; }
+  .muted { color: var(--g-gray-900); font-size: 13px; line-height: 18px; }
+  .err { color: var(--g-red-900); font-size: 13px; line-height: 18px; white-space: pre-wrap; }
+  .err a { color: inherit; font-weight: 500; }
+  .good { color: var(--g-green-900); font-size: 13px; line-height: 18px; }
+  .err:empty, #suTestMsg:empty, #cfgTestMsg:empty, #cfgMsg:empty, #officeHint:empty, #reviewAnchored:empty { display: none; }
+
+  /* Segmented control: gray track, the chosen option lifts onto a white key. */
+  .segmini { display: inline-flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--g-gray-100); max-width: 100%; }
+  .segmini button { height: 32px; padding: 0 12px; border-radius: 6px; background: transparent; box-shadow: none; color: var(--g-gray-900); }
+  @media (hover: hover) { .segmini button:hover { background: transparent; color: var(--g-gray-1000); } }
+  .segmini button:active { background: var(--g-alpha-100); }
+  .segmini button.active { background: var(--g-seg-on); color: var(--g-gray-1000); box-shadow: var(--g-shadow-seg); }
+  .segwide { display: flex; flex-wrap: wrap; width: 100%; }
+  .segwide button { flex: 1 1 auto; }
+
+  /* Notes: tinted, fully bordered, never a coloured side bar. */
+  .note, .warn-box { padding: 8px 12px; border: 1px solid color-mix(in srgb, var(--g-amber-900) 28%, transparent); border-radius: 6px;
+    background: var(--g-amber-100); color: var(--g-amber-900); font-size: 14px; line-height: 20px; }
+  .confirmrow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .confirmrow > span:first-child { flex: 1 1 220px; }
+  .confirmrow button { height: 28px; padding: 0 10px; font-size: 13px; }
+
+  /* Badges */
+  .statusb, .match { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; font-size: 12px; line-height: 1; font-weight: 500; white-space: nowrap; }
+  .s-gray { background: var(--g-gray-200); color: var(--g-gray-1000); }
+  .s-blue, .match-mid { background: var(--g-blue-200); color: var(--g-blue-900); }
+  .s-green, .match-hi { background: var(--g-green-200); color: var(--g-green-900); }
+  .s-amber, .s-red, .match-lo { background: var(--g-amber-200); color: var(--g-amber-900); }
+  .sk { background: var(--g-gray-100) !important; color: transparent !important; border-radius: 6px; }
+
+  .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sp .7s linear infinite; flex: none; }
   @keyframes sp { to { transform: rotate(360deg); } }
 
-  #toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(24px) scale(.96); background: var(--ink); color: #fff; padding: 13px 20px; border-radius: 14px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none; transition: .4s var(--spring); z-index: 60; max-width: 90%; }
-  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  #toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 60; max-width: calc(100% - 32px); padding: 12px 16px; border-radius: 12px;
+    background: var(--g-bg-100); color: var(--g-gray-1000); box-shadow: var(--g-shadow-menu); font-size: 14px; line-height: 20px; font-weight: 500;
+    opacity: 0; transform: translate(-50%, 8px); pointer-events: none; transition: opacity .2s, transform .25s var(--ease); }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  body:has(#preview:not(.hide)) #toast, body:has(#view-settings:not(.hide)) #toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
 
-  .segnav { position: relative; display: flex; background: var(--card); border: 1px solid var(--line); border-radius: 15px; padding: 5px; gap: 5px; margin-bottom: 16px; box-shadow: inset 0 1px 0 var(--ring-hi), var(--shadow); -webkit-backdrop-filter: blur(12px) saturate(1.3); backdrop-filter: blur(12px) saturate(1.3); }
-  .seg-ind { position: absolute; top: 5px; bottom: 5px; left: 5px; width: calc(50% - 7.5px); border-radius: 11px; background: linear-gradient(135deg, var(--brand-2), var(--brand)); box-shadow: var(--shadow-brand); transition: transform .5s var(--spring); z-index: 0; }
-  .segnav button { position: relative; z-index: 1; flex: 1; border: 0; background: transparent; border-radius: 11px; padding: 12px; font-weight: 700; color: var(--muted); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; transition: color .3s var(--ease); }
-  .segnav button:hover { transform: none; box-shadow: none; border-color: transparent; }
-  .segnav button.active { color: #fff; }
-
-  .hero { text-align: center; padding: 30px 22px 30px; background: radial-gradient(120% 90% at 50% -10%, var(--brand-soft), transparent 60%); }
-  .appicon { width: 84px; height: 84px; margin: 0 auto 20px; border-radius: 24px; display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(150deg, var(--brand-3), var(--brand)); color: #fff;
-    box-shadow: 0 16px 36px rgba(10,78,168,.5), inset 0 2px 2px rgba(255,255,255,.4), inset 0 -3px 6px rgba(0,0,0,.18);
-    animation: float 5.5s var(--ease) infinite; }
-  .appicon svg { width: 44px; height: 44px; filter: drop-shadow(0 3px 5px rgba(0,0,0,.25)); }
-  @keyframes float { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-12px) rotate(3deg); } }
-  .hero h1 { font-size: 32px; line-height: 1.12; margin: 8px 0 12px; letter-spacing: -.03em; font-weight: 700; color: var(--brand);
-    background: linear-gradient(135deg, var(--ink) 30%, var(--brand)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  .hero p { color: var(--muted); margin: 0 auto 22px; max-width: 440px; font-size: 16px; }
-  .feat { display: flex; gap: 12px; align-items: center; margin: 14px 0; text-align: left; }
-  .feat .tick { flex: none; width: 30px; height: 30px; border-radius: 10px; background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: var(--shadow-brand); }
-
-  .parcel { border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 12px; background: var(--card); -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3); box-shadow: inset 0 1px 0 var(--ring-hi), var(--shadow); transition: transform .35s var(--ease), box-shadow .35s var(--ease);
-    content-visibility: auto; contain-intrinsic-size: auto 150px; }
-  @media (hover: hover) { .parcel:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); } }
-  .parcel-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .parcel-num { min-width: 0; }
-  .parcel-num { font-weight: 700; color: var(--brand); letter-spacing: .3px; }
-  .statusb { margin-left: auto; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
-  .s-blue { background: var(--brand-soft); color: var(--brand); } .s-green { background: #def5e6; color: var(--go-d); }
-  .s-red { background: #fde7e7; color: var(--warn); } .s-gray { background: #eef2f7; color: var(--muted); }
-  .parcel-sub { color: var(--ink); font-size: 13.5px; margin-top: 6px; }
-  .parcel-meta { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
-  .parcel-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-  .parcel-row button, .parcel-row .btnlink { padding: 7px 12px; font-size: 13px; }
-  .parcel-timer { margin-top: 8px; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
-  .parcel-timer .clk { font-variant-numeric: tabular-nums; letter-spacing: .3px; }
-  .t-blue { color: var(--brand); } .t-green { color: var(--go-d); } .t-amber { color: #7a5200; } .t-muted { color: var(--muted); font-weight: 600; }
-  .details { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
-  .drow { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; padding: 3px 0; }
-  .drow .k { color: var(--muted); flex: none; } .drow .v { color: var(--ink); text-align: right; font-weight: 600; word-break: break-word; }
-  .events { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
-  .event { display: flex; gap: 9px; font-size: 12.5px; color: var(--muted); padding: 3px 0; }
-  .event .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-2); margin-top: 5px; flex: none; }
-  .sk { background: linear-gradient(90deg, var(--line), color-mix(in srgb, var(--muted) 22%, transparent), var(--line)); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 6px; color: transparent !important; }
-  @keyframes shimmer { to { background-position: -200% 0; } }
-
-  .check-c { width: 50px; height: 50px; flex: none; }
-  .check-c circle { stroke: var(--go); stroke-width: 3; fill: none; stroke-dasharray: 157; stroke-dashoffset: 157; animation: draw .5s ease forwards; }
-  .check-c path { stroke: var(--go); stroke-width: 4; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 50; stroke-dashoffset: 50; animation: draw .35s .45s ease forwards; }
-  @keyframes draw { to { stroke-dashoffset: 0; } }
-
-  .appbar { display: flex; align-items: center; gap: 10px; padding: 12px 18px; }
-
-  /* One-glance shipment summary + office-match confidence */
-  .summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 14px; color: var(--ink); background: var(--brand-soft); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 13px; margin: 2px 0 8px; }
-  .summary .dot-sep { color: var(--muted); margin: 0 3px; }
-  .match { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px; margin-left: 4px; }
-  .match-hi { background: #def5e6; color: var(--go-d); }
-  .match-mid { background: var(--brand-soft); color: var(--brand); }
-  .match-lo { background: #fff4d6; color: #7a5200; }
-  :root[data-theme="dark"] .match-hi { background: #16331f; color: #57d98a; }
-  :root[data-theme="dark"] .match-lo { background: #3a2d12; color: #f4c463; }
-  /* Small segmented toggle (office ↔ address delivery) */
-  .segmini { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; margin: 0 0 10px; }
-  .segmini button { border: 0; background: transparent; color: var(--muted); font-weight: 700; font-size: 13px; padding: 8px 16px; border-radius: 9px; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; transition: color .25s var(--ease); }
-  @media (hover: hover) { .segmini button:hover { transform: none; box-shadow: none; border-color: transparent; color: var(--ink); } }
-  .segmini button.active { background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; box-shadow: var(--shadow-brand); }
-  /* Full-width variant for 3-option groups (review / review & test) */
-  .segwide { display: flex; width: 100%; flex-wrap: wrap; }
-  .segwide button { flex: 1 1 auto; min-width: 96px; white-space: nowrap; }
-  /* Chat-style composer — the whole card is one input surface (and the dropzone) */
-  .composer-card { padding: 8px 12px 12px; }
-  .composer-card textarea { border: 0; background: transparent; min-height: 118px; padding: 12px 8px 8px; border-radius: 0; }
-  .composer-card textarea:focus { border: 0; box-shadow: none; }
-  .composer-bar { display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; }
-  .composer-bar .chint { font-size: 12px; }
-  .icon-sm { width: 40px; height: 40px; font-size: 18px; }
-  .btn-sm { padding: 9px 14px; font-size: 14px; }
-  .composer-card.drag { border-color: var(--brand-2); box-shadow: 0 0 0 3px var(--brand-soft), var(--shadow); }
-  .confirmrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  /* One-theme line icons */
-  .ic { width: 18px; height: 18px; vertical-align: -3.5px; }
-  .ic-s { width: 15px; height: 15px; vertical-align: -2.5px; }
-  .ic-xl { width: 42px; height: 42px; color: var(--brand); }
-  .icon .ic { width: 20px; height: 20px; vertical-align: middle; }
-  .icon .spin { margin-right: 0; }
-  .summary .ic-s, .track-tag .ic-s { color: var(--brand); }
-  .lock-ico { margin-bottom: 4px; }
-  /* Menu-like views float in the middle of the screen */
-  #view-lock:not(.hide) { display: flex; flex-direction: column; justify-content: center; min-height: calc(100vh - 240px); }
-  #view-lock .card { width: 100%; }
-  .btn-xs { padding: 6px 14px; font-size: 13px; }
-  @media (max-width: 560px) { .composer-bar .chint { display: none; } }
-
-  /* Batch rows */
-  .brow { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-top: 10px; background: var(--card-solid); }
-  .brow-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .brow-top .idx { font-weight: 700; color: var(--brand); font-size: 13px; flex: none; }
-  .brow-top input[type=checkbox] { width: auto; transform: scale(1.25); accent-color: var(--brand); }
-  .brow-status { margin-left: auto; font-size: 12px; font-weight: 700; text-align: right; max-width: 100%; overflow-wrap: anywhere; }
-  .brow-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-  .brow-grid input, .brow-grid select { flex: 1 1 150px; min-width: 0; padding: 9px 11px; font-size: 14px; }
-  .brow-grid .bamt { flex: 0 1 100px; }
-  .brow .track-tag { font-size: 12px; color: var(--muted); }
-  .brow.done .brow-grid, .brow.done .idx, .brow.done input[type=checkbox] { opacity: .55; }
-  .brow-top [data-f="send"] { flex: none; }
-  /* Section labels inside the preview — orientation without noise */
-  .sec { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--brand); margin: 18px 0 2px; padding-top: 12px; border-top: 1px solid var(--line); }
-  .sec-first { margin-top: 8px; padding-top: 0 !important; border-top: 0 !important; }
-  .optline { margin-top: 10px !important; }
-  .optline .amt { width: 110px; margin-left: 6px; }
-  /* Inline caution note (e.g. no cash-on-delivery on this parcel) */
-  .warn-box { margin-top: 10px; padding: 9px 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: #7a5200; background: #fff4d6; border: 1px solid rgba(154,103,0,.25); animation: warnIn .3s var(--spring); }
-  :root[data-theme="dark"] .warn-box { color: #f4c463; background: #3a2d12; border-color: rgba(244,196,99,.22); }
-  @keyframes warnIn { from { opacity: 0; transform: translateY(-4px); } }
-
-  /* Screenshot → parcel dropzone */
-  .drop { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 16px; border: 1.5px dashed var(--line); border-radius: var(--radius-sm); background: var(--brand-soft); color: var(--ink); box-shadow: none; transition: transform .3s var(--spring), border-color .2s, background .2s; }
-  @media (hover: hover) { .drop:hover { border-color: var(--brand-2); transform: translateY(-2px); box-shadow: var(--shadow); } }
-  .drop.drag { border-color: var(--brand-2); border-style: solid; background: color-mix(in srgb, var(--brand-2) 14%, transparent); transform: scale(1.01); }
-  .drop-ico { font-size: 26px; line-height: 1; flex: none; filter: drop-shadow(0 4px 8px rgba(10,78,168,.3)); }
-  .drop-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .drop-txt strong { font-size: 14.5px; color: var(--brand); }
-  .drop-txt .muted { font-size: 12.5px; }
-  .ocr { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 13.5px; font-weight: 600; color: var(--brand); }
-  .or-sep { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; color: var(--muted); font-size: 13px; font-weight: 500; }
-  .or-sep::before, .or-sep::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-  .ok-num { animation: pop .6s var(--spring) both; }
-  @keyframes pop { from { opacity: 0; transform: scale(.5) translateY(8px); } to { opacity: 1; transform: none; } }
-  .check-c circle, .check-c path { filter: drop-shadow(0 2px 4px rgba(30,158,87,.4)); }
-
-  /* Dropdown menu (profile → econt.com / e-Econt) */
+  /* Menu (profile: econt.com / e-Econt) */
   .dd { position: relative; display: inline-block; }
-  .dd .caret { font-size: 10px; opacity: .65; margin-left: 2px; }
-  .dd-menu { position: absolute; bottom: calc(100% + 8px); left: 0; min-width: 240px; background: var(--card-solid); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-lg); padding: 6px; z-index: 40; opacity: 0; transform: translateY(6px) scale(.97); transform-origin: bottom left; pointer-events: none; visibility: hidden;
-    transition: opacity .25s var(--ease), transform .3s var(--spring), visibility 0s linear .3s; }
-  .dd.open .dd-menu { opacity: 1; transform: none; pointer-events: auto; visibility: visible; transition-delay: 0s; }
-  .dd.flip .dd-menu { left: auto; right: 0; transform-origin: bottom right; }
-  .dd-menu a { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 10px; color: var(--ink); text-decoration: none; font-weight: 700; font-size: 14px; line-height: 1.3; transition: background .15s, color .15s; }
-  .dd-menu a:hover { background: var(--brand-soft); color: var(--brand); }
-  .dd-menu .sub { display: block; font-size: 11.5px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+  /* Closed menus are display:none so they never widen the page on phones. */
+  .dd-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; display: none; min-width: 240px; max-width: calc(100vw - 32px); padding: 4px; border-radius: 12px;
+    background: var(--g-bg-100); box-shadow: var(--g-shadow-menu); }
+  .dd.open .dd-menu { display: block; animation: menuIn .15s var(--ease); }
+  @keyframes menuIn { from { opacity: 0; transform: translateY(-4px); } }
+  .dd.flip .dd-menu { left: auto; right: 0; }
+  .dd.open #profileBtn .ic { transform: rotate(180deg); }
+  .dd-menu a { display: block; padding: 8px 12px; border-radius: 6px; color: var(--g-gray-1000); text-decoration: none; font-size: 14px; line-height: 20px; font-weight: 500; }
+  .dd-menu a:hover { background: var(--g-gray-100); }
+  .dd-menu .sub { display: block; font-size: 13px; line-height: 18px; font-weight: 400; color: var(--g-gray-900); }
 
-  /* About / credits page */
-  .creator { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
-  .avatar { flex: none; width: 58px; height: 58px; border-radius: 18px; background: linear-gradient(135deg, var(--brand-3), var(--brand)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 21px; letter-spacing: .5px; box-shadow: var(--shadow-brand), inset 0 2px 2px rgba(255,255,255,.35); }
-  .creator-name { font-weight: 700; font-size: 17.5px; letter-spacing: -.01em; }
-  .socials { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
-  .social { display: inline-flex; align-items: center; gap: 8px; padding: 10px 15px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); text-decoration: none; color: var(--ink); font-weight: 700; font-size: 13.5px; box-shadow: var(--shadow); transition: transform .3s var(--spring), box-shadow .3s, border-color .2s, color .2s; }
-  .social:hover { transform: translateY(-2px); border-color: var(--brand-2); color: var(--brand); box-shadow: var(--shadow-lg); }
+  /* ===================== PAGE TYPE ===================== */
+  .page { padding-top: 32px; }
+  .pg-h { font-size: 24px; line-height: 32px; letter-spacing: -.72px; }
+  .pg-sub { margin-top: 8px; max-width: 34em; font-size: 16px; line-height: 24px; color: var(--g-gray-900); text-wrap: pretty; }
+  .sec-h { font-size: 20px; line-height: 28px; letter-spacing: -.3px; }
+  .sec-sub { margin-top: 4px; font-size: 16px; line-height: 24px; color: var(--g-gray-900); text-wrap: pretty; }
 
-  /* Rise-in used by the success screen's actions. */
-  @keyframes riseIn { from { opacity: 0; transform: translateY(16px); } }
+  /* Form sections: a title column and a field column, divided by one hairline. */
+  .fs { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 24px 0; border-top: 1px solid var(--g-border); }
+  .fs-h { font-size: 14px; line-height: 20px; font-weight: 500; color: var(--g-gray-1000); }
+  .fs-h h2 { font-size: 14px; line-height: 20px; font-weight: 500; }
+  .fs-h p { margin-top: 4px; font-size: 13px; line-height: 18px; color: var(--g-gray-900); text-wrap: pretty; }
+  .fs-b { min-width: 0; }
+  .fs-b > * + * { margin-top: 16px; }
+  .fs-b > .tight, .step-b > .tight { margin-top: 8px; }
 
-  /* Success screen: green-tinted glass, one-shot halo bloom, staggered actions. */
-  #result { background: linear-gradient(160deg, color-mix(in srgb, var(--go) 9%, transparent), transparent 50%), var(--card); }
-  #result:not(.hide) { animation: resultIn .6s var(--spring); }
-  @keyframes resultIn { from { opacity: 0; transform: translateY(14px) scale(.97); } }
-  #result::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
-    background: radial-gradient(190px 190px at 26px 26px, color-mix(in srgb, var(--go) 30%, transparent), transparent 70%); }
-  #result:not(.hide)::after { animation: halo 1.2s .25s var(--ease) forwards; }
-  @keyframes halo { 0% { opacity: 0; } 35% { opacity: 1; } 100% { opacity: 0; } }
-  #result .toolbar, #resultMeta { animation: riseIn .5s .3s var(--ease) both; }
+  /* ===================== APP: tabs ===================== */
+  .tabs { position: relative; display: flex; gap: 5px; margin: 16px 0 24px; border-bottom: 1px solid var(--g-border); }
+  .tabs .tab { width: 120px; height: 44px; padding: 0 8px; border-radius: 6px 6px 0 0; background: transparent; box-shadow: none; color: var(--g-gray-900); }
+  @media (hover: hover) { .tabs .tab:hover { background: transparent; color: var(--g-gray-1000); } }
+  .tabs .tab:active { background: var(--g-alpha-100); }
+  .tabs .tab.active { color: var(--g-gray-1000); }
+  .tabs .tab:focus-visible { box-shadow: inset 0 0 0 2px var(--g-blue-700); }
+  /* The underline slides to the chosen tab (app.js moves it by its own width + the 5px gap). */
+  .seg-ind { position: absolute; left: 0; bottom: -1px; width: 120px; height: 2px; background: var(--g-gray-1000); transition: transform .3s var(--ease); }
 
-  /* Global footer */
-  .footer { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 0 16px; color: var(--muted); font-size: 12.5px; padding: 28px 0 0; }
-  .footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; transition: color .2s; }
-  .footer a:hover { color: var(--brand-2); }
+  /* ===================== APP: composer ===================== */
+  .composer { border: 1px solid var(--g-border-strong); border-radius: 12px; background: var(--g-bg-100); transition: border-color .15s, box-shadow .15s; }
+  @media (hover: hover) { .composer:hover { border-color: var(--g-border-hover); } }
+  .composer:focus-within { border-color: var(--g-border-focus); box-shadow: var(--g-ring); }
+  .composer.drag { border-color: var(--g-blue-700); box-shadow: none; background: var(--g-blue-100); }
+  .composer textarea { display: block; min-height: 136px; padding: 16px; border: 0; border-radius: 12px 12px 0 0; background: transparent; font-size: 16px; line-height: 24px; box-shadow: none !important; }
+  .composer .ocr, .composer > .err, .composer > .muted { padding: 0 16px 12px; }
+  .ocr { display: flex; align-items: center; gap: 8px; font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
+  .composer-bar { display: flex; align-items: center; gap: 4px; padding: 8px; border-top: 1px solid var(--g-border); border-radius: 0 0 12px 12px; background: var(--g-bg-200); }
+  .composer-bar .chint { min-width: 0; margin-left: 4px; font-size: 13px; line-height: 16px; color: var(--g-gray-900); }
+  .composer-bar #parseBtn { margin-left: 4px; }
+  /* One primary per screen: once a preview, batch or result is open, it owns the black button. */
+  #tab-new:has(#preview:not(.hide), #batch:not(.hide), #result:not(.hide)) #parseBtn:not(:disabled) { background: var(--g-bg-100); color: var(--g-gray-1000); box-shadow: var(--g-shadow-border); }
+  @media (hover: hover) { #tab-new:has(#preview:not(.hide), #batch:not(.hide), #result:not(.hide)) #parseBtn:not(:disabled):hover { background: var(--g-gray-100); } }
 
-  /* Keyboard a11y: clear focus ring on interactive elements */
-  :where(button, a, .lang):focus-visible { outline: 2px solid var(--brand-2); outline-offset: 2px; }
+  /* ===================== APP: preview editor ===================== */
+  #preview, #batch, #result { margin-top: 40px; }
+  #preview > .note { margin-top: 16px; }
+  #backToBatchBtn { margin-bottom: 12px; }
+  .pv-head + .fs, .pv-head ~ .note + .fs { margin-top: 24px; }
+  #prevSummary { max-width: 38em; }
+  .optline { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+  .optline label.check { flex: 0 0 172px; }
+  .optline .amt { flex: 0 1 120px; width: 120px; }
+  .optline .cur { flex: 0 0 104px; width: 104px; }
+  .cur-hint { font-size: 13px; line-height: 18px; }
+  .cur-hint.warn-box { font-size: 14px; }
+  #officeHint { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 13px; line-height: 18px; color: var(--g-gray-900); }
+  #reviewRow label { margin-bottom: 8px; }
 
-  /* Touch ergonomics: no 300ms double-tap delay; ≥44px targets on touch screens. */
-  :where(button, a, select, input, textarea, label) { touch-action: manipulation; }
-  @media (pointer: coarse) {
-    .icon { width: 44px; height: 44px; }
-    .brand { padding: 8px; margin: -8px; }
-    .lang { padding: 12px 16px; }
-    .parcel-row button, .parcel-row .btnlink { padding: 12px 14px; }
-    .dd-menu a { padding: 13px 12px; }
-    .social { padding: 12px 16px; }
-    .footer a { display: inline-block; padding: 10px 2px; }
-    [data-i18n="paste_hint"] { display: none; }
-  }
-  /* Search fields share a row with their button instead of orphaning it below. */
-  #suSenderOfficeSearch, #cfgSenderSearch, #officeSearch, #trackNumInput { flex: 1 1 140px; width: auto; min-width: 0; }
-  /* Phones: full-width action rows instead of ragged wraps; compact topbar. */
-  @media (max-width: 480px) {
-    .toolbar > button, .toolbar > a, .toolbar > .dd, .toolbar > .dd > button { flex: 1 1 auto; }
-    .toolbar > .dd > button { width: 100%; }
-  }
-  @media (max-width: 429px) {
-    #infoBtn { display: none; }
-    .confirm-bar { margin-inline: -8px; }
-    .confirm-bar .toolbar > #createBtn { padding: 12px 12px; font-size: 15px; }
-    /* Phones (390px class): brand + 3 icons + language toggle must fit one row. */
-    .topbar { gap: 6px; }
-    .topbar .icon { width: 36px; height: 36px; }
-    .brand { font-size: 15px; gap: 8px; }
-    .lang { padding: 7px 10px; }
-    /* DEMO badge visible: drop the brand words so the row still fits. */
-    body:has(#modeBadge:not(.hide):not([style*="none"])) .brand > span { display: none; }
-  }
-  @media (max-width: 379px) { .brand > span { display: none; } }
-  .langtoggle { flex: none; }
-  .composer-bar > button { white-space: nowrap; }
-  @media (max-width: 429px) { .composer-bar { gap: 6px; } .composer-bar .btn-sm { padding: 9px 11px; } #parseBtn { padding: 12px 14px; } }
-
-  /* Larger screens (laptop / desktop): more room, bigger hero, comfy spacing. */
-  @media (min-width: 820px) {
-    .wrap { max-width: 800px; padding: 0 24px 110px; }
-    .topbar { padding: 16px 12px; gap: 12px; }
-    .brand { font-size: 19px; }
-    .card { padding: 26px 28px; }
-    .hero { padding: 52px 40px 52px; }
-    .appicon { width: 96px; height: 96px; }
-    .appicon svg { width: 50px; height: 50px; }
-    .hero h1 { font-size: 42px; }
-    .hero p { font-size: 18px; max-width: 540px; }
-    .hero .feat { font-size: 16px; }
-    h2 { font-size: 26px; }
-    .ok-num { font-size: 42px; }
-    .segnav button { padding: 14px; }
-  }
-  @media (min-width: 1180px) {
-    .wrap { max-width: 840px; }
-  }
-  /* Notched phones / installed PWA: keep content out of the unsafe areas. */
-  .wrap { padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
-  .topbar { padding-top: max(12px, env(safe-area-inset-top)); }
-  #toast { bottom: calc(26px + env(safe-area-inset-bottom)); }
-  @media (min-width: 820px) {
-    .wrap { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    *, body::before, .primary::after, .go::after, #result::after { animation: none !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
-    .tilt { transform: none !important; }
-    html { scroll-behavior: auto; }
-  }
-
-  /* Sticky confirm bar: price + create stay in reach on a tall preview. Solid fill,
-     no backdrop-filter (it scrolls with content and would re-blur every frame). */
-  .confirm-bar { position: sticky; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 15; margin-top: 18px; padding: 10px 12px;
-    background: var(--card-solid); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: var(--shadow); }
-  .confirm-bar #priceBox:empty, .confirm-bar #previewErr:empty { display: none; }
-  .confirm-bar #priceBox { font-size: 13.5px; margin-bottom: 2px; }
-  .confirm-bar #priceBox .price { font-size: 19px; }
-  .confirm-bar #previewErr { margin: 2px 0 4px; }
-  .confirm-bar .toolbar { margin-top: 6px; flex-wrap: nowrap; align-items: center; }
-  .confirm-bar .toolbar > #createBtn { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .confirm-bar .toolbar > #recalcBtn { flex: 0 0 auto; }
-  .confirm-bar .warn-box { margin: 4px 0 6px; }
-  .confirm-bar .chint { font-size: 11.5px; text-align: center; margin-top: 6px; }
+  /* Sticky confirm bar: the price and the one primary action stay in reach. Solid, no blur. */
+  .confirm-bar { position: sticky; bottom: 0; z-index: 15; margin: 0 calc(-1 * var(--gutter)); padding: 12px var(--gutter) calc(12px + env(safe-area-inset-bottom));
+    background: var(--g-bg-100); border-top: 1px solid var(--g-border); }
+  .confirm-bar > * + * { margin-top: 8px; }
+  .cb-row { display: flex; align-items: center; gap: 8px; }
+  .cb-price { flex: 1 1 auto; min-width: 0; font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
+  .cb-price .price { margin-left: 4px; font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -.3px; color: var(--g-gray-1000); }
+  #createBtn { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .confirm-bar .chint { font-size: 12px; line-height: 16px; text-align: right; color: var(--g-gray-900); }
   .confirm-bar .chint:empty { display: none; }
+  #preview.frozen > :not(.confirm-bar) { opacity: .5; transition: opacity .2s; }
   @media (pointer: coarse) {
     #createHint { display: none; }
-    /* Keyboard open (a text field is focused): let the bar fall back into the flow so it
-       never covers the field being typed. Buttons are excluded: focusing the create button
-       on tap must not move the bar under the finger. */
-    #preview:has(input:not([type=checkbox]):focus) .confirm-bar { position: static; box-shadow: none; }
+    /* Keyboard open: let the bar fall back into the flow so it never covers the field. */
+    #preview:has(input:not([type=checkbox]):focus) .confirm-bar, #settings:has(input:not([type=checkbox]):focus) .save-bar { position: static; }
   }
-  body:has(#preview:not(.hide)) #toast { bottom: calc(132px + env(safe-area-inset-bottom)); }
-  /* Fields the parser could not fill */
-  .need, .brow-grid .need { border-color: color-mix(in srgb, var(--warn) 65%, var(--line)) !important; }
-  /* Honest copy feedback on the button itself */
-  .is-done { color: var(--go-d) !important; border-color: var(--go) !important; }
-  .cur-hint { margin-top: 6px; font-size: 12.5px; }
-  /* Editor frozen while a create is in flight (what is sent = what is shown) */
-  #preview.frozen > :not(.confirm-bar) { opacity: .55; transition: opacity .2s; }
-  /* What the customer receives */
-  .reply-prev { margin-top: 14px; padding: 10px 13px; border-radius: 10px; background: var(--brand-soft); border-left: 3px solid var(--brand-2); cursor: pointer; transition: background .2s; }
-  .reply-prev:hover { background: color-mix(in srgb, var(--brand-2) 18%, transparent); }
-  .reply-prev:focus-visible { outline: 2px solid var(--brand-2); outline-offset: 2px; }
-  .reply-prev-h { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--brand); }
-  .reply-prev-copy { text-transform: none; letter-spacing: 0; font-weight: 700; font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 5px; }
-  .reply-prev.is-done .reply-prev-copy { color: var(--go-d); }
-  .reply-prev-t { white-space: pre-wrap; font-size: 13px; color: var(--ink); margin-top: 6px; overflow-wrap: anywhere; }
-  #resultSummary { margin-top: 12px; }
 
-  /* Parcels: progress track, pills, freshness, empty state, in-place changes */
-  .parcel-pills { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
-  .parcel-pills .statusb { margin-left: 0; }
-  .statusb .ic-s { width: 13px; height: 13px; vertical-align: -2px; }
-  .ptrack { display: flex; gap: 4px; margin-top: 10px; }
-  .ptrack i { flex: 1; height: 4px; border-radius: 99px; background: var(--line); transition: background .4s var(--ease); }
-  .ptrack[data-step="1"] i:nth-child(1), .ptrack[data-step="2"] i:nth-child(-n+2) { background: var(--brand-2); }
-  .ptrack[data-step="3"] i { background: var(--go); }
-  .ptrack[data-ret] i { background: #c98a00; }
-  :root[data-theme="dark"] .ptrack[data-ret] i { background: #f0b659; }
-  .parcel-meta:empty { display: none; }
-  .parcel-timer .ic-s { flex: none; }
-  .upd { font-size: 12px; margin-top: 4px; }
-  .upd:empty { display: none; }
-  .events-h { font-size: 13px; font-weight: 600; color: var(--brand); margin-bottom: 4px; }
-  .card.empty { text-align: center; padding: 30px 20px 26px; }
-  .card.empty b { display: block; font-size: 16px; margin-top: 10px; color: var(--ink); }
-  .card.empty .muted { margin: 4px auto 16px; max-width: 340px; }
-  .parcel.leaving { opacity: 0; transform: scale(.98); height: 0 !important; margin: 0; padding-block: 0; border-width: 0; overflow: hidden;
-    transition: opacity .28s var(--ease), transform .28s var(--ease), height .28s var(--ease), margin .28s var(--ease), padding .28s var(--ease); }
-  .parcel.fresh { animation: freshRing 1.8s var(--ease); }
-  @keyframes freshRing { from { box-shadow: 0 0 0 3px var(--brand-2), var(--shadow); } }
-  @media (prefers-reduced-motion: reduce) { .parcel.leaving, .parcel.fresh { transition: none; animation: none; } }
+  /* ===================== APP: result (the waybill) =====================
+     The number is the one bold thing in the app: plain ink, tabular, large. Its digits
+     settle in once when it is created (app.js adds .revealing for that moment only). */
+  #result { container-type: inline-size; padding: 24px; border-radius: 12px; background: var(--g-bg-100); box-shadow: var(--g-shadow-medium); }
+  .ok-num { font-size: clamp(30px, 10vw, 56px); font-size: min(56px, 12cqi); line-height: 1.15; font-weight: 600; letter-spacing: -.02em; white-space: nowrap; color: var(--g-gray-1000); }
+  .ok-num .d { display: inline-block; }
+  #result.revealing .ok-num { clip-path: inset(0 -.2em); }
+  #result.revealing .ok-num .d { animation: digitIn .55s var(--ease) both; animation-delay: calc(var(--i) * 26ms); }
+  @keyframes digitIn { from { transform: translateY(.75em); opacity: 0; } 50% { opacity: 1; } }
+  #result.revealing .res-after { animation: resAfter .35s ease .45s both; }
+  @keyframes resAfter { from { opacity: 0; } }
+  .res-sum { margin-top: 8px; max-width: 36em; font-size: 16px; line-height: 24px; color: var(--g-gray-900); text-wrap: pretty; }
+  .res-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--g-green-700); vertical-align: 1px; }
+  .res-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+  .res-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-top: 16px; }
+  /* What the customer receives: the seller's outgoing chat bubble, as on the landing. */
+  .reply-prev { display: grid; justify-items: end; gap: 8px; margin-top: 32px; border-radius: 16px; cursor: pointer; }
+  .reply-prev:focus-visible { box-shadow: none; }
+  .reply-prev-h { justify-self: start; font-size: 14px; line-height: 20px; font-weight: 500; color: var(--g-gray-1000); }
+  .reply-prev-t { max-width: min(30em, 92%); padding: 12px 16px; border-radius: 16px 4px 16px 16px; background: var(--g-gray-100); color: var(--g-gray-1000);
+    font-size: 15px; line-height: 22px; white-space: pre-line; overflow-wrap: anywhere; transition: background-color .15s; }
+  @media (hover: hover) { .reply-prev:hover .reply-prev-t { background: var(--g-gray-200); } }
+  .reply-prev:active .reply-prev-t { background: var(--g-gray-300); }
+  .reply-prev:focus-visible .reply-prev-t { box-shadow: var(--g-focus); }
+  .reply-prev-copy { font-size: 13px; line-height: 16px; color: var(--g-gray-900); }
+  @container (min-width: 600px) {
+    .reply-prev { grid-template-columns: 160px minmax(0, 1fr); column-gap: 24px; align-items: start; }
+    .reply-prev-h { grid-column: 1; grid-row: 1; padding-top: 12px; }
+    .reply-prev-t, .reply-prev-copy { grid-column: 2; justify-self: end; }
+  }
+  .reply-prev.is-done .reply-prev-copy { color: var(--g-green-900); }
+  .res-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin: 32px -24px -24px; padding: 16px 24px; border-top: 1px solid var(--g-border);
+    border-radius: 0 0 12px 12px; background: var(--g-bg-200); }
+  .res-today { flex: 1 1 220px; font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
+  .res-today:empty { visibility: hidden; }
+
+  /* ===================== APP: batch ===================== */
+  #batchInfo { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
+  .bprog { height: 4px; margin-top: 12px; border-radius: 99px; background: var(--g-gray-200); overflow: hidden; }
+  .bprog i { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--g-blue-700); transition: width .35s var(--ease), background-color .3s; }
+  .bprog.ok i { background: var(--g-green-700); }
+  .bprog.bad i { background: var(--g-amber-700); }
+  #batchList { margin-top: 16px; border-radius: 12px; box-shadow: var(--g-shadow-border); }
+  .brow { padding: 12px 16px 16px; border-top: 1px solid var(--g-border); }
+  .brow:first-child { border-top: 0; }
+  .brow-top { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; min-height: 32px; }
+  .brow-pick { display: inline-flex; align-items: center; gap: 10px; margin: 0; font-size: 14px; color: var(--g-gray-1000); cursor: pointer; }
+  .brow-top .idx { font-size: 14px; line-height: 20px; font-weight: 500; }
+  .brow-top .track-tag { font-size: 13px; color: var(--g-gray-900); }
+  .brow-status { margin-left: auto; max-width: 100%; font-size: 13px; line-height: 18px; color: var(--g-gray-900); text-align: right; overflow-wrap: anywhere; }
+  .brow-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.7fr) 88px 96px; gap: 8px; margin-top: 8px; }
+  .brow-grid input:not([type=checkbox]), .brow-grid select { height: 36px; }
+  .brow.done .brow-grid, .brow.done input[type=checkbox] { opacity: .5; }
+  .batch-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  #batchNoCodConfirm { margin-top: 16px; }
+  #batchErr { margin-top: 8px; }
+  @media (max-width: 719px) {
+    .brow-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .brow-grid [data-f="office"], .brow-grid [data-f="addr"] { grid-column: 1 / -1; }
+  }
+
+  /* ===================== APP: parcels ===================== */
+  .pl-title { display: flex; align-items: center; gap: 4px; }
+  .pl-sub { margin-top: 4px; min-height: 20px; font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
+  .add-row { margin-top: 16px; }
+  #clearAllConfirm { margin-top: 12px; }
+  #parcelList { margin-top: 24px; }
+  .plist:has(> .parcel) { border-radius: 12px; box-shadow: var(--g-shadow-border); }
+  .parcel { padding: 16px; border-top: 1px solid var(--g-border); content-visibility: auto; contain-intrinsic-size: auto 140px; }
+  .parcel:first-child { border-top: 0; border-radius: 12px 12px 0 0; }
+  .parcel:last-child { border-radius: 0 0 12px 12px; }
+  .parcel:only-child { border-radius: 12px; }
+  .parcel-top { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+  .parcel-num { font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -.1px; }
+  .parcel-pills { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-left: auto; }
+  .parcel-sub { margin-top: 2px; font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
+  .parcel-sub:empty { display: none; }
+  .ptrack { display: flex; gap: 4px; margin-top: 12px; }
+  .ptrack i { flex: 1; height: 4px; border-radius: 99px; background: var(--g-gray-200); transition: background-color .4s var(--ease); }
+  .ptrack[data-step="1"] i:nth-child(1), .ptrack[data-step="2"] i:nth-child(-n+2) { background: var(--g-blue-700); }
+  .ptrack[data-step="3"] i { background: var(--g-green-700); }
+  .ptrack[data-ret] i { background: var(--g-amber-700); }
+  .parcel-line { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 16px; margin-top: 8px; font-size: 13px; line-height: 18px; color: var(--g-gray-900); }
+  .parcel-timer:empty, .parcel-meta:empty { display: none; }
+  .parcel-timer .clk { color: var(--g-gray-1000); font-weight: 500; }
+  .parcel-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; margin-top: 12px; }
+  .parcel-x { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--g-border); }
+  .parcel.open [data-toggle] .ic { transform: rotate(180deg); }
+  .drow { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr); gap: 16px; padding: 2px 0; font-size: 13px; line-height: 20px; }
+  .drow .k { color: var(--g-gray-900); }
+  .drow .v { color: var(--g-gray-1000); overflow-wrap: anywhere; }
+  .events { margin-top: 16px; }
+  .events-h { margin-bottom: 4px; font-size: 13px; line-height: 20px; font-weight: 500; }
+  .event { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr); gap: 16px; padding: 2px 0; font-size: 13px; line-height: 20px; color: var(--g-gray-1000); }
+  .event time, .event .ev-o { color: var(--g-gray-900); }
+  .parcel-more { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 16px; }
+  /* The remove question sits in the row as plain text, not a box inside the list. */
+  .parcel-x .note { margin-top: 12px; padding: 0; border: 0; background: none; color: var(--g-gray-1000); }
+  .parcel.fresh { animation: freshBg 1.6s ease; }
+  @keyframes freshBg { from { background: var(--g-blue-100); } }
+  .parcel.leaving { opacity: 0; height: 0 !important; margin: 0; padding-block: 0; border-width: 0; overflow: hidden;
+    transition: opacity .25s var(--ease), height .28s var(--ease), padding .28s var(--ease); }
+  .card.empty { padding: 40px 24px; border-radius: 12px; box-shadow: var(--g-shadow-border); text-align: center; }
+  .card.empty b { display: block; font-size: 16px; line-height: 24px; font-weight: 600; }
+  .card.empty .muted { max-width: 30em; margin: 4px auto 20px; font-size: 14px; line-height: 20px; }
+
+  /* ===================== SETUP ===================== */
+  .steps { margin: 40px 0 0; padding: 0; list-style: none; }
+  .step { position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 16px; padding-bottom: 40px; }
+  .step::before { content: ""; position: absolute; left: 11.5px; top: 32px; bottom: 8px; width: 1px; background: var(--g-border-strong); transition: background-color .3s; }
+  .step.done::before { background: var(--g-gray-1000); }
+  .step-no { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--g-bg-100); box-shadow: 0 0 0 1px var(--g-border-strong);
+    color: var(--g-gray-900); font-size: 12px; line-height: 1; font-weight: 500; font-variant-numeric: tabular-nums; transition: background-color .25s, color .25s, box-shadow .25s; }
+  .step.done .step-no { background: var(--g-gray-1000); color: var(--g-bg-100); box-shadow: none; }
+  .step-b { min-width: 0; padding-top: 1px; }
+  .step-b h2 { font-size: 16px; line-height: 22px; letter-spacing: -.2px; }
+  .step-b > * + * { margin-top: 16px; }
+  .step-b > h2 + p { margin-top: 4px; font-size: 14px; line-height: 20px; }
+  .step-act { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+  .setup-end { padding-left: 40px; }
+  .setup-end #suFinishMsg { margin-top: 8px; }
+
+  /* ===================== LOCK ===================== */
+  #view-lock:not(.hide) { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 200px); min-height: calc(100svh - 200px); }
+  .lock { width: 100%; max-width: 360px; padding: 32px 0; text-align: center; }
+  .lock .pg-sub { margin-left: auto; margin-right: auto; }
+  .lock .pin { margin: 24px 0 12px; }
+  #lockMsg { margin-top: 8px; }
+  #forgetBtn { margin-top: 24px; white-space: normal; height: auto; min-height: 32px; padding: 6px 10px; }
+  #forgetConfirm { margin-top: 12px; text-align: left; }
+
+  /* ===================== SETTINGS ===================== */
+  .set-head { padding-bottom: 24px; }
+  .set-head .pg-h { margin-top: 8px; }
+  .save-bar { position: sticky; bottom: 0; z-index: 15; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+    margin: 0 calc(-1 * var(--gutter)); padding: 12px var(--gutter) calc(12px + env(safe-area-inset-bottom)); background: var(--g-bg-100); border-top: 1px solid var(--g-border); }
+  .save-bar #cfgMsg { flex: 1 1 100%; }
+  #refreshOfficesBtn { margin-left: -8px; }
+
+  /* ===================== ABOUT ===================== */
+  .about-hero { padding: 24px 0 40px; }
+  .about-mark { display: block; width: 40px; height: 40px; }
+  .about-hero h1 { margin-top: 20px; }
+  .creator-card { padding: 24px; border-radius: 12px; box-shadow: var(--g-shadow-border); }
+  .creator-card h2 { font-size: 16px; line-height: 24px; letter-spacing: -.2px; }
+  .creator { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+  .avatar { display: grid; place-items: center; flex: none; width: 48px; height: 48px; border-radius: 50%; background: var(--g-gray-100); box-shadow: var(--g-shadow-border);
+    font-size: 15px; line-height: 1; font-weight: 500; }
+  .creator-name { font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: -.2px; }
+  .creator .muted { font-size: 14px; line-height: 20px; }
+  .socials { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--g-border); }
+  .social { display: inline-flex; align-items: center; gap: 8px; min-height: 28px; color: var(--g-gray-1000); font-size: 14px; line-height: 20px; font-weight: 500;
+    text-decoration: underline; text-decoration-color: var(--g-border-strong); text-underline-offset: 4px; overflow-wrap: anywhere; }
+  .social:hover { text-decoration-color: currentColor; }
+  .social .ic { color: var(--g-gray-900); }
+  #copyLine { margin-top: 16px; }
+
+  /* ===================== FOOTER ===================== */
+  .footer { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; padding: 40px 0 0; font-size: 13px; line-height: 20px; color: var(--g-gray-900); }
+  .footer a { color: var(--g-gray-900); text-decoration: underline; text-decoration-color: var(--g-border); text-underline-offset: 3px; }
+  .footer a:hover { color: var(--g-gray-1000); text-decoration-color: currentColor; }
 
   /* ===================== LANDING (#view-landing, scoped to .ld) =====================
-     Vercel's Geist design language: Geist Sans and its type scale, the neutral gray
-     scale, a 4px spacing grid, radii by component (8px button, 12px surfaces, round
-     badges), a black primary button. Colour is kept for meaning: blue links each part
-     of the message to its waybill row (and marks focus), green is the status dot. */
-  :root:has(#view-landing:not(.hide)) { --bg: var(--g-bg-100); --line: var(--g-border); }
-  body:has(#view-landing:not(.hide))::before { display: none; }
-  body:has(#view-landing:not(.hide)) .footer { justify-content: flex-start; color: var(--g-gray-900); font-size: 13px; line-height: 20px; }
-  body:has(#view-landing:not(.hide)) .footer a { color: var(--g-gray-900); text-decoration-color: var(--g-border); }
-  body:has(#view-landing:not(.hide)) .footer a:hover { color: var(--g-gray-1000); text-decoration-color: currentColor; }
-  #view-landing:not(.hide) { animation: none; }
+     Colour is kept for meaning: blue links each part of the message to its waybill
+     row (and marks focus), green is the status dot. */
   .ld { color: var(--g-gray-1000); padding: 40px 0 8px; }
   .ld :where(h1, h2, h3) { margin: 0; color: var(--g-gray-1000); font-weight: 600; text-transform: none; text-wrap: balance; }
   .ld :where(.ld-num, .ld-amt, .ld-time, .ld-wb-num, .ld-chat-meta, .ld-out-meta) { font-variant-numeric: tabular-nums; }
@@ -515,9 +485,8 @@ try {
     border: 0; border-radius: 8px; background: var(--g-gray-1000); color: var(--g-bg-100); box-shadow: none;
     font-family: var(--font-text); font-size: 16px; line-height: 20px; font-weight: 500; font-feature-settings: "locl" 0;
     white-space: nowrap; cursor: pointer; transition: background-color .15s; }
-  @media (hover: hover) { .ld .ld-btn:hover { background: var(--g-btn-hover); transform: none; box-shadow: none; border: 0; } }
-  .ld .ld-btn:active { transform: none; }
-  /* The transparent outline is what forced-colors mode paints, since it drops box-shadow. */
+  @media (hover: hover) { .ld .ld-btn:hover { background: var(--g-btn-hover); } }
+  .ld .ld-btn:active { background: var(--g-btn-press); }
   .ld .ld-btn:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--g-focus); }
   .ld-note { margin: 0; max-width: 28em; font-size: 14px; line-height: 20px; color: var(--g-gray-900); text-wrap: pretty; }
   @media (max-width: 519px) { .ld .ld-btn { width: 100%; } }
@@ -543,9 +512,7 @@ try {
   .ld-small:empty { display: none; }
   .ld-out-meta { margin-top: 8px; text-align: right; font-size: 13px; line-height: 16px; color: var(--g-gray-900); }
 
-  /* Numbered links: a part of the message and its waybill row share one number.
-     Resting: blue-200 tint, blue-300 pin. Active pair: blue-400 tint, blue-800 pin
-     with white digits (5.7:1). The negative margin keeps marked words on the text edge. */
+  /* Numbered links: a part of the message and its waybill row share one number. */
   .ld-bubble mark { color: inherit; background: var(--g-blue-200); border-radius: 4px; padding: 1px 2px; margin-inline: -2px; cursor: pointer;
     -webkit-box-decoration-break: clone; box-decoration-break: clone; transition: background-color .15s; }
   .ld-bubble mark:not([data-n="3"]) { white-space: nowrap; }
@@ -555,10 +522,9 @@ try {
   .ld-bubble mark::after { content: attr(data-n); margin-left: 4px; vertical-align: 1px; }
   .ld-bubble mark.on, .ld-wb-row.on { background: var(--g-blue-400); }
   .ld-bubble mark.on::after, .ld-wb-row.on .ld-pin { background: var(--g-blue-800); color: #fff; }
-  .ld-bubble mark:focus-visible { outline: 2px solid var(--g-blue-700); outline-offset: 2px; }
+  .ld-bubble mark:focus-visible { outline: 2px solid var(--g-blue-700); outline-offset: 2px; box-shadow: none; }
 
-  /* The waybill: one Geist surface (12px radius, border + soft shadow). Its title is
-     for screen readers only: the caption above already names it. */
+  /* The waybill: one Geist surface (12px radius, border + soft shadow). */
   .ld-wb { background: var(--g-bg-100); border-radius: 12px; box-shadow: var(--g-shadow-medium); overflow: hidden;
     animation: ldRise .5s cubic-bezier(.2,.8,.2,1) .1s both; }
   @keyframes ldRise { from { opacity: 0; transform: translateY(8px); } }
@@ -580,28 +546,30 @@ try {
   .ld-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--g-green-700); flex: none; }
   .ld-wb-foot .ld-time { margin-left: auto; }
 
-  /* What else it does: one bordered list, title and description per row */
+  /* What else it does: four short facts, no table. */
   .ld-more { margin-top: 80px; }
   .ld-more h2 { font-size: 24px; line-height: 32px; letter-spacing: -.72px; }
-  .ld-spec { margin: 20px 0 0; border-radius: 12px; box-shadow: var(--g-shadow-border); }
-  .ld-spec-row { padding: 16px; border-top: 1px solid var(--g-border); }
-  .ld-spec-row:first-child { border-top: 0; }
-  .ld-spec-row dt { font-size: 14px; line-height: 20px; font-weight: 500; color: var(--g-gray-1000); }
-  .ld-spec-row dd { margin: 4px 0 0; font-size: 14px; line-height: 20px; color: var(--g-gray-900); text-wrap: pretty; }
-  .ld-end { margin-top: 40px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; }
+  .ld-facts { display: grid; gap: 24px 48px; margin: 24px 0 0; padding: 0; list-style: none; }
+  .ld-facts li { max-width: 26em; }
+  .ld-facts b { display: block; font-size: 16px; line-height: 24px; font-weight: 500; color: var(--g-gray-1000); }
+  .ld-facts span { display: block; margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--g-gray-900); text-wrap: pretty; }
+  .ld-end { margin-top: 48px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; }
   .ld-end p { margin: 0; flex: 1 1 280px; max-width: 30em; font-size: 16px; line-height: 24px; color: var(--g-gray-900); text-wrap: pretty; }
-  @media (prefers-reduced-motion: reduce) { .ld-wb { animation: none; } .ld .ld-btn, .ld-bubble mark, .ld-bubble mark::after, .ld-pin, .ld-wb-row { transition: none; } }
 
+  /* ===================== RESPONSIVE ===================== */
   @media (min-width: 720px) {
+    :root { --gutter: 24px; }
+    .page { padding-top: 48px; }
+    .pg-h { font-size: 32px; line-height: 40px; letter-spacing: -.96px; }
+    .fs { grid-template-columns: 176px minmax(0, 1fr); gap: 24px; }
     .ld { padding-top: 72px; }
     .ld-title { font-size: 56px; line-height: 60px; letter-spacing: -2.24px; }
     .ld-lead { margin-top: 20px; max-width: 30em; font-size: 20px; line-height: 32px; }
     .ld-demo { margin-top: 80px; }
     .ld-more { margin-top: 112px; }
     .ld-more h2 { font-size: 32px; line-height: 40px; letter-spacing: -.96px; }
-    .ld-spec-row { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 24px; padding: 16px 20px; }
-    .ld-spec-row dd { margin: 0; }
-    .ld-end { margin-top: 48px; }
+    .ld-facts { grid-template-columns: 1fr 1fr; margin-top: 32px; }
+    .ld-end { margin-top: 56px; }
   }
   @media (min-width: 840px) {
     .ld-demo { max-width: none; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); column-gap: 32px; align-items: start; }
@@ -614,27 +582,71 @@ try {
   @media (max-width: 380px) {
     .ld-wb-row { grid-template-columns: 18px 120px minmax(0, 1fr); column-gap: 8px; padding-inline: 12px; }
   }
+  @media (max-width: 559px) {
+    .composer-bar .chint { display: none; }
+    .segwide { flex-wrap: nowrap; }
+    .segwide button { flex: 1 1 0; min-width: 0; height: auto; min-height: 36px; padding: 6px 8px; line-height: 18px; white-space: normal; }
+    .res-actions > button { flex: 1 1 auto; }
+    .batch-actions > button { flex: 1 1 auto; }
+    .cb-row { flex-wrap: wrap; }
+    .cb-price { flex-basis: 100%; }
+    #createBtn { flex: 1 1 auto; }
+    .setup-end { padding-left: 0; }
+    .setup-end #suFinishBtn { width: 100%; }
+    #result { padding: 20px 16px; }
+    .res-foot { margin: 28px -16px -20px; padding: 16px; }
+    .res-foot > button { flex: 1 1 auto; }
+    .drow, .event { grid-template-columns: minmax(0, 120px) minmax(0, 1fr); gap: 12px; }
+  }
+  @media (pointer: coarse) {
+    .icon { width: 40px; height: 40px; }
+    .lnk { min-height: 36px; }
+    .topbar .lang { height: 32px; padding: 0 12px; }
+    .dd-menu a { padding: 12px; }
+    .footer a { display: inline-block; padding: 10px 0; }
+  }
+  /* Phones: 16px fields so iOS never zooms; brand + icons + language fit one row. */
+  @media (max-width: 640px), (pointer: coarse) {
+    input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: 16px; }
+    .composer textarea { font-size: 16px; }
+  }
+  @media (max-width: 479px) {
+    #infoBtn { display: none; }
+    .topbar-in { gap: 2px; }
+    .topbar .icon { width: 36px; height: 36px; }
+    .topbar .lang { padding: 0 9px; }
+  }
+  @media (max-width: 429px) {
+    body:has(#modeBadge:not(.hide):not([style*="none"])) .brand > span { display: none; }
+  }
+  @media (max-width: 379px) { .brand > span { display: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
+    html { scroll-behavior: auto; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-
-  <div class="topbar">
+<header class="topbar">
+  <div class="topbar-in">
     <a id="brandHome" class="brand" href="#">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#003c80"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-      <span>Econt <span style="color:var(--brand-2)">Shipper</span></span>
+      <svg class="brand-mark" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="6"/><path d="M8 8h8M8 12h8M8 16h5" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Econt Shipper</span>
     </a>
-    <span id="modeBadge" class="app-ctl badge demo hide" data-i18n="badge_demo">ДЕМО</span>
+    <span id="modeBadge" class="app-ctl badge demo hide" data-i18n="badge_demo">Демо</span>
     <div class="spacer"></div>
-    <button class="ghost icon app-ctl hide" id="settingsBtn" title="Settings"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
-    <button class="ghost icon app-ctl hide" id="lockNowBtn" title="Lock"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
-    <button id="themeBtn" class="icon" title="Theme"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5z"/></svg></button>
-    <button id="infoBtn" class="icon" title="What is this?">?</button>
+    <button class="icon app-ctl hide" id="settingsBtn" type="button" title="Settings"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    <button class="icon app-ctl hide" id="lockNowBtn" type="button" title="Lock"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
+    <button id="themeBtn" class="icon" type="button" title="Theme"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5z"/></svg></button>
+    <button id="infoBtn" class="icon" type="button" title="What is this?"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8 1c0 1.7-2.4 2.2-2.4 3.7"/><path d="M12 17.2h.01"/></svg></button>
     <div class="langtoggle">
-      <button id="langBg" class="lang">БГ</button>
-      <button id="langEn" class="lang">EN</button>
+      <button id="langBg" class="lang" type="button">БГ</button>
+      <button id="langEn" class="lang" type="button">EN</button>
     </div>
   </div>
+</header>
+
+<div class="wrap">
 
   <!-- ===================== LANDING ===================== -->
   <div id="view-landing" class="view hide">
@@ -696,16 +708,12 @@ try {
 
       <section class="ld-more" aria-labelledby="moreH">
         <h2 id="moreH" data-i18n="land_more_h">Какво още прави</h2>
-        <dl class="ld-spec">
-          <div class="ld-spec-row"><dt data-i18n="land_spec1_t"></dt><dd data-i18n="land_spec1_d"></dd></div>
-          <div class="ld-spec-row"><dt data-i18n="land_spec2_t"></dt><dd data-i18n="land_spec2_d"></dd></div>
-          <div class="ld-spec-row"><dt data-i18n="land_spec3_t"></dt><dd data-i18n="land_spec3_d"></dd></div>
-          <div class="ld-spec-row"><dt data-i18n="land_spec4_t"></dt><dd data-i18n="land_spec4_d"></dd></div>
-          <div class="ld-spec-row"><dt data-i18n="land_spec5_t"></dt><dd data-i18n="land_spec5_d"></dd></div>
-          <div class="ld-spec-row"><dt data-i18n="land_spec6_t"></dt><dd data-i18n="land_spec6_d"></dd></div>
-          <div class="ld-spec-row"><dt data-i18n="land_spec7_t"></dt><dd data-i18n="land_spec7_d"></dd></div>
-          <div class="ld-spec-row"><dt data-i18n="land_spec8_t"></dt><dd data-i18n="land_spec8_d"></dd></div>
-        </dl>
+        <ul class="ld-facts">
+          <li><b data-i18n="land_spec1_t"></b><span data-i18n="land_spec1_d"></span></li>
+          <li><b data-i18n="land_spec2_t"></b><span data-i18n="land_spec2_d"></span></li>
+          <li><b data-i18n="land_spec3_t"></b><span data-i18n="land_spec3_d"></span></li>
+          <li><b data-i18n="land_spec4_t"></b><span data-i18n="land_spec4_d"></span></li>
+        </ul>
         <div class="ld-end">
           <p data-i18n="land_need">Настройката отнема около минута.</p>
           <button class="ld-btn" id="getStartedBtn2" type="button" data-i18n="land_cta">Свържи профила си в Еконт</button>
@@ -715,381 +723,454 @@ try {
   </div>
 
   <!-- ===================== SETUP WIZARD ===================== -->
-  <div id="view-setup" class="view hide">
-    <div class="card">
-      <h2 data-i18n="setup_title">Настройка на вашия Еконт помощник</h2>
-      <p class="muted" data-i18n="setup_sub">Еднократна настройка. Всичко, което въведете, остава на това устройство, заключено с PIN. Нищо не се пази на сървър.</p>
-    </div>
-
-    <div class="card">
-      <h3><span class="step-no">1</span><span data-i18n="setup_s1">Изберете PIN</span></h3>
-      <p class="muted" data-i18n="setup_s1_sub">Заключва приложението и криптира паролата ви за Еконт на това устройство.</p>
-      <div class="row">
-        <div><label data-i18n="setup_pin">PIN (4-6 цифри)</label><input id="suPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
-        <div><label data-i18n="setup_pin2">Повторете PIN</label><input id="suPin2" class="pin" type="password" inputmode="numeric" enterkeyhint="go" maxlength="6" autocomplete="new-password" data-enter="suFinishBtn"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3><span class="step-no">2</span><span data-i18n="setup_s2">Вашият Еконт акаунт</span></h3>
-      <input type="hidden" id="suMode" value="production">
-      <div class="row">
-        <div><label data-i18n="setup_user">Потребителско име в Еконт (точно, с главни/малки букви)</label><input id="suUser" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" data-enter="suTestBtn"></div>
-        <div><label data-i18n="setup_pass">Парола за Еконт</label><input id="suPass" type="password" autocomplete="current-password" data-enter="suTestBtn"></div>
-      </div>
-      <button class="primary" id="suTestBtn" style="margin-top:12px" data-i18n="setup_test">Проверка на входа</button>
-      <button class="ghost block" id="suDemoBtn" type="button" style="margin-top:10px" data-i18n="setup_demo_try">Без вход в Еконт? Пробвай ДЕМО акаунта</button>
-      <div id="suTestMsg" class="muted" role="status"></div>
-    </div>
-
-    <div class="card">
-      <h3><span class="step-no">3</span><span data-i18n="setup_s3">Вие (подателят)</span></h3>
-      <div class="row">
-        <div><label data-i18n="setup_yourname">Вашето име</label><input id="suSenderName"></div>
-        <div><label data-i18n="setup_yourphone">Вашият телефон</label><input id="suSenderPhone" inputmode="tel"></div>
-      </div>
-      <label data-i18n="setup_youroffice">Вашият офис за подаване</label>
-      <div class="inline">
-        <input id="suSenderOfficeSearch" enterkeyhint="search" data-i18n-ph="setup_search_office" data-enter="suSenderSearchBtn" placeholder="търсене по град / име на офис…">
-        <button class="ghost" id="suSenderSearchBtn" data-i18n="find">Намери</button>
-      </div>
-      <select id="suSenderOffice" class="hide" style="margin-top:8px"></select>
-    </div>
-
-    <div class="card">
-      <h3><span class="step-no">4</span><span data-i18n="setup_s4">Вашите обичайни настройки</span></h3>
-      <div class="row">
-        <div><label data-i18n="weight">Тегло (кг)</label><input id="suWeight" type="number" inputmode="decimal" step="0.1" min="0.1" value="1"></div>
-        <div><label data-i18n="contents">Съдържание</label><input id="suDesc" placeholder="напр. слушалки"></div>
-        <div><label data-i18n="who_pays">Кой плаща</label>
-          <select id="suPayer"><option value="receiver" data-i18n="receiver_pays">Получателят плаща</option><option value="sender" data-i18n="i_pay">Аз плащам</option></select>
+  <div id="view-setup" class="view page hide">
+    <h1 class="pg-h" data-i18n="setup_title">Бърза настройка</h1>
+    <p class="pg-sub" data-i18n="setup_sub">Прави се веднъж. Всичко, което въведеш, остава на това устройство, заключено с PIN.</p>
+    <ol class="steps">
+      <li class="step" data-step="1">
+        <span class="step-no" aria-hidden="true">1</span>
+        <div class="step-b">
+          <h2 data-i18n="setup_s1">Избери PIN</h2>
+          <p class="muted" data-i18n="setup_s1_sub">Заключва приложението и криптира паролата ти за Еконт на това устройство.</p>
+          <div class="row">
+            <div class="field"><label data-i18n="setup_pin">PIN (4-6 цифри)</label><input id="suPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></div>
+            <div class="field"><label data-i18n="setup_pin2">Повтори PIN</label><input id="suPin2" class="pin" type="password" inputmode="numeric" enterkeyhint="go" maxlength="6" autocomplete="new-password" data-enter="suFinishBtn"></div>
+          </div>
         </div>
-      </div>
-      <label class="inline" style="margin-top:12px"><input type="checkbox" id="suCod"> <span data-i18n="setup_cod">Обикновено с наложен платеж (сумата въвеждате за всяка пратка)</span></label>
-      <label data-i18n="cod_currency">Валута на наложен платеж</label>
-      <select id="suCur"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
+      </li>
+      <li class="step" data-step="2">
+        <span class="step-no" aria-hidden="true">2</span>
+        <div class="step-b">
+          <h2 data-i18n="setup_s2">Твоят профил в Еконт</h2>
+          <input type="hidden" id="suMode" value="production">
+          <div class="row">
+            <div class="field"><label data-i18n="setup_user">Потребителско име в Еконт</label><input id="suUser" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" data-enter="suTestBtn"></div>
+            <div class="field"><label data-i18n="setup_pass">Парола за Еконт</label><input id="suPass" type="password" autocomplete="current-password" data-enter="suTestBtn"></div>
+          </div>
+          <div class="step-act">
+            <button id="suTestBtn" type="button" data-i18n="setup_test">Проверка на входа</button>
+            <button class="lnk" id="suDemoBtn" type="button" data-i18n="setup_demo_try">Нямаш профил? Пробвай с демо профила</button>
+          </div>
+          <div id="suTestMsg" class="muted tight" role="status"></div>
+        </div>
+      </li>
+      <li class="step" data-step="3">
+        <span class="step-no" aria-hidden="true">3</span>
+        <div class="step-b">
+          <h2 data-i18n="setup_s3">Подател</h2>
+          <p class="muted" data-i18n="setup_s3_sub">Както ще пише на товарителницата.</p>
+          <div class="row">
+            <div class="field"><label data-i18n="setup_yourname">Име</label><input id="suSenderName" autocomplete="name"></div>
+            <div class="field"><label data-i18n="setup_yourphone">Телефон</label><input id="suSenderPhone" inputmode="tel" autocomplete="tel"></div>
+          </div>
+          <div class="field">
+            <label id="suOfficeLbl" data-i18n="setup_youroffice">Офис, от който пращаш</label>
+            <div class="inline">
+              <input id="suSenderOfficeSearch" enterkeyhint="search" data-i18n-ph="setup_search_office" data-enter="suSenderSearchBtn" placeholder="град или име на офис">
+              <button id="suSenderSearchBtn" type="button" data-i18n="find">Намери</button>
+            </div>
+          </div>
+          <select id="suSenderOffice" class="hide tight" aria-labelledby="suOfficeLbl"></select>
+        </div>
+      </li>
+      <li class="step" data-step="4">
+        <span class="step-no" aria-hidden="true">4</span>
+        <div class="step-b">
+          <h2 data-i18n="setup_s4">Обичайна пратка</h2>
+          <p class="muted" data-i18n="setup_s4_sub">Попълва се във всяка нова пратка. Можеш да я промениш за всяка.</p>
+          <div class="row">
+            <div class="field narrow"><label data-i18n="weight">Тегло (кг)</label><input id="suWeight" type="number" inputmode="decimal" step="0.1" min="0.1" value="1"></div>
+            <div class="field"><label data-i18n="contents">Съдържание</label><input id="suDesc" data-i18n-ph="contents_ph" placeholder="напр. дрехи"></div>
+            <div class="field"><label data-i18n="who_pays">Кой плаща доставката</label>
+              <select id="suPayer"><option value="receiver" data-i18n="receiver_pays">Получателят</option><option value="sender" data-i18n="i_pay">Аз</option></select>
+            </div>
+          </div>
+          <label class="check"><input type="checkbox" id="suCod"> <span data-i18n="setup_cod">Обикновено пращам с наложен платеж</span></label>
+          <div class="field">
+            <label data-i18n="cod_currency">Валута на наложения платеж</label>
+            <select id="suCur" style="max-width:220px"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
+          </div>
+        </div>
+      </li>
+    </ol>
+    <div class="setup-end">
+      <button class="primary lg" id="suFinishBtn" type="button" disabled data-i18n="setup_finish">Завърши настройката</button>
+      <div id="suFinishMsg" class="err" role="alert"></div>
     </div>
-
-    <button class="go block" id="suFinishBtn" disabled data-i18n="setup_finish">Завършете настройката →</button>
-    <div id="suFinishMsg" class="err" role="alert"></div>
   </div>
 
   <!-- ===================== LOCK ===================== -->
   <div id="view-lock" class="view hide">
-    <div class="card tilt" style="text-align:center">
-      <div class="lock-ico"><svg class="ic ic-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-      <h2 data-i18n="lock_title">Въведете PIN</h2>
-      <input id="lockPin" class="pin" type="password" inputmode="numeric" enterkeyhint="go" maxlength="6" autocomplete="current-password" data-enter="lockBtn" style="margin:14px 0">
-      <button class="primary block" id="lockBtn" data-i18n="unlock">Отключи</button>
-      <div id="lockMsg" class="err" role="alert" style="text-align:center"></div>
-      <button class="ghost" id="forgetBtn" style="margin-top:14px" data-i18n="forget">Изтрий от това устройство и започни наново</button>
-      <div id="forgetConfirm" class="warn-box confirmrow hide" role="alertdialog">
+    <div class="lock">
+      <h1 class="pg-h" data-i18n="lock_title">Въведи PIN</h1>
+      <p class="pg-sub" data-i18n="lock_sub">Входът ти за Еконт е заключен на това устройство.</p>
+      <input id="lockPin" class="pin" type="password" inputmode="numeric" enterkeyhint="go" maxlength="6" autocomplete="current-password" data-enter="lockBtn" aria-labelledby="lockTitleSr">
+      <span id="lockTitleSr" class="sr-only" data-i18n="lock_title">Въведи PIN</span>
+      <button class="primary lg block" id="lockBtn" type="button" data-i18n="unlock">Отключи</button>
+      <div id="lockMsg" class="err" role="alert"></div>
+      <button class="tertiary" id="forgetBtn" type="button" data-i18n="forget">Изтрий от това устройство и започни наново</button>
+      <div id="forgetConfirm" class="note confirmrow hide" role="alertdialog">
         <span data-i18n="forget_confirm">Да премахна ли запазения Еконт вход и настройки от това устройство?</span>
-        <button class="ghost btn-xs" id="forgetYes" data-i18n="yes">Да</button>
-        <button class="ghost btn-xs" id="forgetNo" data-i18n="no">Не</button>
+        <button id="forgetYes" type="button" data-i18n="yes">Да</button>
+        <button id="forgetNo" type="button" data-i18n="no">Не</button>
       </div>
     </div>
   </div>
 
   <!-- ===================== ABOUT / CREDITS ===================== -->
-  <div id="view-about" class="view hide">
-    <div class="card tilt" style="padding:0; overflow:hidden">
-      <div class="hero" style="padding:34px 22px 30px">
-        <div class="appicon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M8 8h8M8 12h8M8 16h5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
-        </div>
-        <h1 style="font-size:28px">Econt Shipper</h1>
-        <p data-i18n="about_sub">Съобщение → товарителница. Направено с грижа, за да ви спестява време всеки ден.</p>
-      </div>
-    </div>
-
-    <div class="card tilt">
-      <h3 data-i18n="about_app_h">Полезно да знаете</h3>
-      <p class="muted" data-i18n="about_app_p">Приложението превръща съобщението на клиента в готова товарителница във вашия Еконт акаунт. Реален и демо режим, евро и лева, наложен платеж, опция „Преглед“, снимка → пратка и живо проследяване.</p>
-      <div class="feat"><span class="tick">✓</span><span data-i18n="about_priv">Поверителност: входът ви за Еконт остава на вашето устройство, криптиран с PIN. Няма база данни, няма следене, няма реклами.</span></div>
-      <div class="feat"><span class="tick">✓</span><span data-i18n="about_free">Безплатно за всички податели в Еконт.</span></div>
-    </div>
-
-    <div class="card tilt">
-      <h3 data-i18n="about_creator_h">Създател</h3>
+  <div id="view-about" class="view page hide">
+    <button class="tertiary back" id="aboutBack" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span data-i18n="about_back">Назад</span></button>
+    <header class="about-hero">
+      <svg class="about-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="6"/><path d="M8 8h8M8 12h8M8 16h5" stroke-width="2" stroke-linecap="round"/></svg>
+      <h1 class="pg-h">Econt Shipper</h1>
+      <p class="pg-sub" data-i18n="about_sub">Прави товарителница в твоя Еконт профил от съобщението на клиента, без преписване.</p>
+    </header>
+    <section class="creator-card" aria-labelledby="creatorH">
+      <h2 id="creatorH" data-i18n="about_creator_h">Създател</h2>
       <div class="creator">
-        <div class="avatar" id="creatorAvatar">ES</div>
+        <div class="avatar" id="creatorAvatar" aria-hidden="true">ES</div>
         <div>
           <div class="creator-name" id="creatorName">Econt Shipper</div>
           <div class="muted" data-i18n="about_creator_role">Идея, дизайн и разработка</div>
         </div>
       </div>
       <div class="socials" id="socialRow"></div>
-    </div>
-
-    <button class="ghost block" id="aboutBack" data-i18n="about_back">← Назад</button>
-    <div class="muted" id="copyLine" style="text-align:center; margin-top:16px; font-size:12.5px"></div>
+    </section>
+    <div class="muted" id="copyLine"></div>
   </div>
 
   <!-- ===================== SETTINGS ===================== -->
-  <div id="view-settings" class="view hide">
-    <div id="settings" class="card">
-      <button class="ghost" id="settingsBackBtn" type="button" style="margin-bottom:12px" data-i18n="about_back">← Назад</button>
-        <h3 data-i18n="set_account">Еконт акаунт</h3>
-        <div id="cfgDemoNote" class="warn-box hide" data-i18n="demo_note">В момента сте в ДЕМО режим. Въведете реалния си потребител и парола, запазете, и приложението минава на реалния ви акаунт.</div>
-        <div class="row">
-          <div><label data-i18n="username">Потребител</label><input id="cfgUser" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-enter="saveCfgBtn"></div>
-          <div><label data-i18n="pass_keep">Парола (празно = без промяна)</label><input id="cfgPass" type="password" placeholder="••••" autocomplete="off" data-enter="saveCfgBtn"></div>
-        </div>
-        <button class="ghost" id="cfgTestBtn" style="margin-top:10px" data-i18n="setup_test">Проверка на входа</button>
-        <div id="cfgTestMsg" class="muted" role="status" aria-live="polite"></div>
+  <div id="view-settings" class="view page hide">
+    <div id="settings">
+      <div class="set-head">
+        <button class="tertiary back" id="settingsBackBtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span data-i18n="about_back">Назад</span></button>
+        <h1 class="pg-h" data-i18n="settings_h">Настройки</h1>
+      </div>
 
-        <hr>
-        <h3 data-i18n="set_sender">Подател</h3>
-        <div class="row">
-          <div><label data-i18n="name">Име</label><input id="cfgSenderName"></div>
-          <div><label data-i18n="phone">Телефон</label><input id="cfgSenderPhone" inputmode="tel" autocomplete="tel"></div>
-        </div>
-        <label data-i18n="set_office_code">Код на вашия офис за подаване</label>
-        <div class="inline">
-          <input id="cfgSenderOffice" inputmode="numeric" placeholder="напр. 9049" style="max-width:120px">
-          <input id="cfgSenderSearch" enterkeyhint="search" data-i18n-ph="search" data-enter="cfgSenderSearchBtn" placeholder="търсене…">
-          <button class="ghost" id="cfgSenderSearchBtn" data-i18n="find">Намери</button>
-        </div>
-        <select id="cfgSenderOfficeSel" class="hide" style="margin-top:8px"></select>
-        <label data-i18n="ret_label">Ако получателят откаже пратката, къде да се върне</label>
-        <select id="cfgRetMode">
-          <option value="" data-i18n="ret_default">Както е настроено в Еконт</option>
-          <option value="office" data-i18n="ret_office">В офис (въведете код)</option>
-          <option value="address" data-i18n="ret_address">На адрес</option>
-        </select>
-        <div id="retOfficeBox" class="hide" style="margin-top:8px">
-          <input id="cfgRetOfficeCode" inputmode="numeric" data-i18n-ph="ret_office_ph" placeholder="код на офис, напр. 9049" style="max-width:220px">
-        </div>
-        <div id="retAddrBox" class="hide">
+      <section class="fs">
+        <div class="fs-h"><h2 data-i18n="set_account">Профил в Еконт</h2><p data-i18n="set_account_d">Потребителското име и паролата ти за Еконт. Паролата остава на това устройство, криптирана с PIN.</p></div>
+        <div class="fs-b">
+          <div id="cfgDemoNote" class="note hide" data-i18n="demo_note">Работиш с демо профила.</div>
           <div class="row">
-            <div><label data-i18n="addr_city">Град</label><input id="cfgRetCity"></div>
-            <div style="flex:0 0 120px"><label data-i18n="addr_post">Пощ. код</label><input id="cfgRetPost" inputmode="numeric"></div>
+            <div class="field"><label data-i18n="username">Потребителско име</label><input id="cfgUser" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-enter="saveCfgBtn"></div>
+            <div class="field"><label data-i18n="pass_keep">Парола (остави празно, за да не я сменяш)</label><input id="cfgPass" type="password" data-i18n-ph="pass_saved_ph" placeholder="запазена" autocomplete="off" data-enter="saveCfgBtn"></div>
+          </div>
+          <div><button id="cfgTestBtn" type="button" data-i18n="setup_test">Проверка на входа</button></div>
+          <div id="cfgTestMsg" class="muted tight" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="fs">
+        <div class="fs-h"><h2 data-i18n="set_sender">Подател</h2><p data-i18n="set_sender_d">Както ще пише на товарителницата и откъде пращаш.</p></div>
+        <div class="fs-b">
+          <div class="row">
+            <div class="field"><label data-i18n="name">Име</label><input id="cfgSenderName"></div>
+            <div class="field"><label data-i18n="phone">Телефон</label><input id="cfgSenderPhone" inputmode="tel" autocomplete="tel"></div>
+          </div>
+          <div class="field">
+            <label id="cfgOfficeLbl" data-i18n="set_office_code">Офис, от който пращаш</label>
+            <div class="inline">
+              <input id="cfgSenderOffice" inputmode="numeric" data-i18n-ph="office_code_ph" placeholder="код" style="flex:0 0 96px">
+              <input id="cfgSenderSearch" enterkeyhint="search" data-i18n-ph="search" data-enter="cfgSenderSearchBtn" placeholder="град или име на офис">
+              <button id="cfgSenderSearchBtn" type="button" data-i18n="find">Намери</button>
+            </div>
+          </div>
+          <select id="cfgSenderOfficeSel" class="hide tight" aria-labelledby="cfgOfficeLbl"></select>
+        </div>
+      </section>
+
+      <section class="fs">
+        <div class="fs-h"><h2 data-i18n="set_return">Връщане при отказ</h2></div>
+        <div class="fs-b">
+          <div class="field">
+            <label data-i18n="ret_label">Ако получателят откаже пратката, къде да се върне</label>
+            <select id="cfgRetMode">
+              <option value="" data-i18n="ret_default">Както е настроено в Еконт</option>
+              <option value="office" data-i18n="ret_office">В офис (въведи код)</option>
+              <option value="address" data-i18n="ret_address">На адрес</option>
+            </select>
+          </div>
+          <div id="retOfficeBox" class="hide tight">
+            <input id="cfgRetOfficeCode" inputmode="numeric" data-i18n-ph="ret_office_ph" placeholder="код на офис, напр. 9049" aria-labelledby="retOfficeLbl" style="max-width:240px">
+            <span id="retOfficeLbl" class="sr-only" data-i18n="ret_office_ph">код на офис</span>
+          </div>
+          <div id="retAddrBox" class="hide">
+            <div class="row">
+              <div class="field"><label data-i18n="addr_city">Град</label><input id="cfgRetCity"></div>
+              <div class="field narrow"><label data-i18n="addr_post">Пощенски код</label><input id="cfgRetPost" inputmode="numeric"></div>
+            </div>
+            <div class="row" style="margin-top:16px">
+              <div class="field"><label data-i18n="addr_street">Улица или квартал</label><input id="cfgRetStreet"></div>
+              <div class="field narrow"><label data-i18n="addr_num">Номер</label><input id="cfgRetNum"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="fs">
+        <div class="fs-h"><h2 data-i18n="set_defaults">Обичайна пратка</h2><p data-i18n="set_defaults_d">Попълва се във всяка нова пратка. Можеш да я промениш за всяка.</p></div>
+        <div class="fs-b">
+          <div class="row">
+            <div class="field narrow"><label data-i18n="weight">Тегло (кг)</label><input id="cfgWeight" type="number" inputmode="decimal" step="0.1" min="0.1"></div>
+            <div class="field"><label data-i18n="contents">Съдържание</label><input id="cfgDesc"></div>
+            <div class="field"><label data-i18n="who_pays">Кой плаща доставката</label>
+              <select id="cfgPayer"><option value="receiver" data-i18n="receiver">Получателят</option><option value="sender" data-i18n="sender">Подателят</option></select>
+            </div>
           </div>
           <div class="row">
-            <div><label data-i18n="addr_street">Улица / квартал</label><input id="cfgRetStreet"></div>
-            <div style="flex:0 0 90px"><label data-i18n="addr_num">№</label><input id="cfgRetNum"></div>
+            <div class="field"><label data-i18n="set_shiptype">Тип пратка</label>
+              <select id="cfgShipType"><option value="pack" data-i18n="shiptype_pack">Колет</option><option value="document" data-i18n="shiptype_doc">Документи</option></select>
+            </div>
+            <div class="field"><label data-i18n="set_packcount">Брой пакети</label><input id="cfgPackCount" type="number" inputmode="numeric" min="1" step="1" value="1"></div>
           </div>
         </div>
+      </section>
 
-        <hr>
-        <h3 data-i18n="set_defaults">Настройки по подразбиране</h3>
-        <div class="row">
-          <div><label data-i18n="weight">Тегло (кг)</label><input id="cfgWeight" type="number" inputmode="decimal" step="0.1" min="0.1"></div>
-          <div><label data-i18n="contents">Съдържание</label><input id="cfgDesc"></div>
-          <div><label data-i18n="who_pays">Кой плаща</label>
-            <select id="cfgPayer"><option value="receiver" data-i18n="receiver">Получател</option><option value="sender" data-i18n="sender">Подател</option></select>
+      <section class="fs">
+        <div class="fs-h"><h2 data-i18n="set_cod">Наложен платеж</h2><p data-i18n="set_cod_d">Валута, сметка за изплащане и обявена стойност.</p></div>
+        <div class="fs-b">
+          <label class="check"><input type="checkbox" id="cfgCodOn"> <span data-i18n="set_cod_default">Включвай наложен платеж във всяка нова пратка</span></label>
+          <div class="field">
+            <label data-i18n="cod_currency">Валута на наложения платеж</label>
+            <select id="cfgCur" style="max-width:220px"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
           </div>
-        </div>
-        <div class="row">
-          <div><label data-i18n="set_shiptype">Тип пратка</label>
-            <select id="cfgShipType"><option value="pack" data-i18n="shiptype_pack">Колет</option><option value="document" data-i18n="shiptype_doc">Документи</option></select>
+          <div class="field">
+            <label id="cfgPayoutLbl" data-i18n="payout_label">Изплащане на наложения платеж</label>
+            <select id="cfgPayout"><option value="" data-i18n="payout_default">Както е зададено в Еконт</option></select>
           </div>
-          <div><label data-i18n="set_packcount">Брой пакети</label><input id="cfgPackCount" type="number" inputmode="numeric" min="1" step="1" value="1"></div>
+          <div class="tight"><button class="lnk" id="cfgPayoutBtn" type="button" data-i18n="payout_load">Зареди сметките от Еконт</button></div>
+          <div id="cfgPayoutMsg" class="muted tight" role="status" data-i18n="payout_hint">Парите се превеждат по сметката от избраното споразумение с Еконт.</div>
+          <label class="check"><input type="checkbox" id="cfgDeclOn"> <span data-i18n="decl_default">Обявявай стойност, равна на наложения платеж</span></label>
         </div>
-        <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgCodOn"> <span data-i18n="set_cod_default">Наложен платеж по подразбиране</span></label>
-        <label data-i18n="cod_currency">Валута на наложен платеж</label>
-        <select id="cfgCur"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
-        <label id="cfgPayoutLbl" data-i18n="payout_label">Изплащане на наложения платеж</label>
-        <div class="inline">
-          <select id="cfgPayout" style="flex:1 1 200px"><option value="" data-i18n="payout_default">Както е зададено в Еконт</option></select>
-          <button class="ghost" id="cfgPayoutBtn" data-i18n="payout_load">Зареди сметките</button>
-        </div>
-        <div id="cfgPayoutMsg" class="muted" style="margin-top:6px" role="status" data-i18n="payout_hint">Парите се превеждат по сметката от избраното споразумение с Еконт.</div>
-        <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgDeclOn"> <span data-i18n="decl_default">Обявена стойност по подразбиране (= наложения платеж, ако няма друга сума)</span></label>
-        <label class="inline" style="margin-top:12px"><input type="checkbox" id="cfgSms"> <span data-i18n="set_sms">SMS известие до получателя за всяка пратка</span></label>
-        <label id="cfgReviewLbl" data-i18n="review_setting">Фиксирай „Преглед“ за всяка пратка</label>
-        <div class="segmini segwide" id="cfgReviewSeg" role="group" aria-labelledby="cfgReviewLbl">
-          <button type="button" data-val="" data-i18n="review_unanchored">Избирам за всяка пратка</button>
-          <button type="button" data-val="review" data-i18n="review_only">Преглед</button>
-          <button type="button" data-val="review_test" data-i18n="review_test">Преглед и тест</button>
-        </div>
-        <input type="hidden" id="cfgReviewMode" value="">
+      </section>
 
-        <hr>
-        <div class="toolbar">
-          <button class="ghost" id="refreshOfficesBtn" data-i18n="refresh_offices">Обнови офисите</button>
-          <button class="primary" id="saveCfgBtn" data-i18n="save">Запази</button>
+      <section class="fs">
+        <div class="fs-h"><h2 data-i18n="set_extra">Преглед и SMS</h2><p data-i18n="set_extra_d">Важи за всяка пратка.</p></div>
+        <div class="fs-b">
+          <div>
+            <label id="cfgReviewLbl" data-i18n="review_setting">Преглед преди плащане</label>
+            <div class="segmini segwide" id="cfgReviewSeg" role="group" aria-labelledby="cfgReviewLbl">
+              <button type="button" data-val="" data-i18n="review_unanchored">Избирам за всяка пратка</button>
+              <button type="button" data-val="review" data-i18n="review_only">Преглед</button>
+              <button type="button" data-val="review_test" data-i18n="review_test">Преглед и тест</button>
+            </div>
+            <input type="hidden" id="cfgReviewMode" value="">
+          </div>
+          <label class="check"><input type="checkbox" id="cfgSms"> <span data-i18n="set_sms">SMS до получателя за всяка пратка</span></label>
         </div>
+      </section>
+
+      <div class="save-bar">
         <div id="cfgMsg" class="muted" role="status"></div>
+        <button class="tertiary btn-sm" id="refreshOfficesBtn" type="button" data-i18n="refresh_offices">Обнови списъка с офиси</button>
+        <span class="spacer"></span>
+        <button class="primary" id="saveCfgBtn" type="button" data-i18n="save">Запази</button>
+      </div>
     </div>
   </div>
 
   <!-- ===================== APP ===================== -->
   <div id="view-app" class="view hide">
-    <div class="segnav" role="tablist">
+    <div class="tabs" role="tablist">
       <span class="seg-ind" aria-hidden="true"></span>
-      <button id="navNew" class="active" role="tab" aria-selected="true" aria-controls="tab-new" data-i18n="nav_new">Нова</button>
-      <button id="navParcels" role="tab" aria-selected="false" aria-controls="tab-parcels" data-i18n="nav_parcels">Пратки</button>
+      <button id="navNew" class="tab active" type="button" role="tab" aria-selected="true" aria-controls="tab-new" data-i18n="nav_new">Нова пратка</button>
+      <button id="navParcels" class="tab" type="button" role="tab" aria-selected="false" aria-controls="tab-parcels" data-i18n="nav_parcels">Пратки</button>
     </div>
 
     <div id="tab-new" role="tabpanel" aria-labelledby="navNew">
-      <!-- COMPOSER: text or screenshots in → parcels out -->
-      <div class="card composer-card" id="imgDrop">
+      <!-- COMPOSER: text or screenshots in, parcels out -->
+      <div class="composer" id="imgDrop">
         <textarea id="msg" data-i18n-ph="paste_ph" placeholder="Моля да ги изпратите в Офис на еконт: …  Име - 08xx xxx xxx"></textarea>
-        <div class="composer-bar">
-          <button type="button" class="icon icon-sm" id="attachBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></button>
-          <button type="button" class="icon icon-sm hide" id="pasteBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="16" rx="2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></button>
-          <span class="muted chint" data-i18n="comp_hint">Постави текст или снимка от чата, или просто ги пусни върху полето.</span>
-          <span class="spacer"></span>
-          <button class="ghost btn-sm" id="clearBtn" data-i18n="clear">Изчисти</button>
-          <button class="primary" id="parseBtn" data-i18n="preview">Преглед →</button>
-        </div>
-        <input type="file" id="imgInput" accept="image/*" multiple hidden>
         <div id="ocrBox" class="ocr hide" role="status"><span class="spin" aria-hidden="true"></span><span id="ocrMsg"></span></div>
         <div id="parseErr" class="err" role="alert"></div>
+        <div class="composer-bar">
+          <button type="button" class="icon" id="attachBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></button>
+          <button type="button" class="icon hide" id="pasteBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="16" rx="2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></button>
+          <span class="chint" data-i18n="comp_hint">Постави текст или снимка от чата, или ги пусни тук.</span>
+          <span class="spacer"></span>
+          <button class="tertiary btn-sm" id="clearBtn" type="button" data-i18n="clear">Изчисти</button>
+          <button class="primary btn-sm" id="parseBtn" type="button" data-i18n="preview">Разчети</button>
+        </div>
+        <input type="file" id="imgInput" accept="image/*" multiple hidden>
       </div>
 
       <!-- BATCH (several parcels in one paste) -->
-      <div id="batch" class="card hide">
-        <h3 data-i18n="batch_h">Партида: няколко пратки</h3>
-        <div id="batchInfo" class="muted" role="status"></div>
+      <section id="batch" class="hide" aria-labelledby="batchH">
+        <h2 id="batchH" class="sec-h" data-i18n="batch_h">Няколко пратки наведнъж</h2>
+        <div id="batchInfo" role="status"></div>
+        <div id="batchProg" class="bprog hide" aria-hidden="true"><i id="batchBar"></i></div>
         <div id="batchList"></div>
-        <div id="batchNoCodConfirm" class="warn-box confirmrow hide" role="alertdialog">
+        <div id="batchNoCodConfirm" class="note confirmrow hide" role="alertdialog">
           <span id="batchNoCodMsg"></span>
-          <button class="ghost btn-xs" id="batchNoCodGo" type="button"></button>
-          <button class="ghost btn-xs" id="batchNoCodFix" type="button"></button>
+          <button id="batchNoCodGo" type="button"></button>
+          <button id="batchNoCodFix" type="button"></button>
         </div>
-        <div class="toolbar" style="margin-top:12px">
-          <button class="ghost" id="batchCancelBtn" data-i18n="batch_cancel">Затвори</button>
-          <button class="go" id="batchCreateBtn" data-i18n="batch_create">✓ Изпълни избраните</button>
+        <div class="batch-actions">
+          <button class="tertiary" id="batchCancelBtn" type="button" data-i18n="batch_cancel">Затвори</button>
+          <button class="primary" id="batchCreateBtn" type="button" data-i18n="batch_create">Създай избраните</button>
         </div>
         <div id="batchErr" class="err" role="alert"></div>
-      </div>
+      </section>
 
       <!-- PREVIEW -->
-      <div id="preview" class="card hide">
-        <button class="ghost hide" id="backToBatchBtn" type="button" style="margin-bottom:10px">← Към партидата</button>
-        <h3 data-i18n="prev_h">Проверете и потвърдете</h3>
-        <div id="prevSummary" class="summary hide"></div>
-        <div id="parseGaps" class="warn-box hide" role="status"></div>
-        <div id="dupWarn" class="warn-box confirmrow hide" role="status"><span id="dupMsg"></span><button class="ghost btn-xs" id="dupShowBtn" type="button" data-i18n="dup_show">Покажи</button></div>
-        <div class="sec sec-first" data-i18n="sec_recipient">Получател</div>
-        <div class="row">
-          <div><label data-i18n="recipient">Име на получателя</label><input id="pName" data-enter="recalcBtn"></div>
-          <div><label data-i18n="phone">Телефон</label><input id="pPhone" inputmode="tel" data-enter="recalcBtn"></div>
+      <section id="preview" class="hide" aria-labelledby="prevH">
+        <button class="tertiary btn-sm back hide" id="backToBatchBtn" type="button">Обратно към партидата</button>
+        <div class="pv-head">
+          <h2 id="prevH" class="sec-h" data-i18n="prev_h">Провери пратката</h2>
+          <p id="prevSummary" class="sec-sub hide"></p>
         </div>
-        <div class="sec" data-i18n="sec_delivery">Доставка</div>
-        <div class="segmini" id="deliverToggle" role="tablist">
-          <button type="button" id="modeOfficeBtn" class="active" role="tab" aria-selected="true" data-i18n="to_office">До офис</button>
-          <button type="button" id="modeAddressBtn" role="tab" aria-selected="false" data-i18n="to_address">До адрес</button>
-        </div>
-        <div id="officeBlock">
-          <select id="pOffice"></select>
-          <div class="inline" style="margin-top:6px">
-            <input id="officeSearch" enterkeyhint="search" data-i18n-ph="wrong_office" data-enter="officeSearchBtn" placeholder="грешен офис? търсене по име/град…">
-            <button class="ghost" id="officeSearchBtn" data-i18n="search_btn">Търси</button>
-          </div>
-          <div id="officeHint" class="muted" style="margin-top:6px"></div>
-        </div>
-        <div id="addrBlock" class="hide">
-          <div class="row">
-            <div><label data-i18n="addr_city">Град</label><input id="pAddrCity" data-enter="recalcBtn"></div>
-            <div style="flex:0 0 120px"><label data-i18n="addr_post">Пощ. код</label><input id="pAddrPost" inputmode="numeric" data-enter="recalcBtn"></div>
-          </div>
-          <div class="row">
-            <div><label data-i18n="addr_street">Улица / квартал</label><input id="pAddrStreet" data-enter="recalcBtn"></div>
-            <div style="flex:0 0 90px"><label data-i18n="addr_num">№</label><input id="pAddrNum" data-enter="recalcBtn"></div>
-          </div>
-          <label data-i18n="addr_note">Ориентир (по избор)</label>
-          <input id="pAddrNote" data-enter="recalcBtn">
-        </div>
-        <div class="sec" data-i18n="sec_parcel">Пратка</div>
-        <div class="row" style="margin-top:8px">
-          <div><label data-i18n="weight">Тегло (кг)</label><input id="pWeight" type="number" inputmode="decimal" step="0.1" min="0.1" data-enter="recalcBtn"></div>
-          <div><label data-i18n="description">Описание</label><input id="pDesc" data-enter="recalcBtn"></div>
-          <div><label data-i18n="pays">Плаща</label>
-            <select id="pPayer"><option value="receiver" data-i18n="receiver">Получател</option><option value="sender" data-i18n="sender">Подател</option></select>
-          </div>
-        </div>
-        <div class="sec" data-i18n="sec_pay">Плащане и опции</div>
-        <label class="inline optline"><input type="checkbox" id="pCodOn"> <span data-i18n="cod">Нал. платеж</span>
-          <input id="pCodAmount" class="amt" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума">
-          <select id="pCodCur" style="width:auto"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select></label>
-        <div id="codCurHint" class="muted cur-hint hide" role="status"></div>
-        <div id="codWarn" class="warn-box hide" role="status" data-i18n="cod_warn">Няма наложен платеж на тази пратка</div>
-        <label class="inline optline"><input type="checkbox" id="pDeclOn"> <span data-i18n="decl">Обявена стойност</span>
-          <input id="pDeclAmount" class="amt" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума">
-          <select id="pDeclCur" style="width:auto"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select></label>
-        <div id="reviewRow">
-          <label id="pReviewLbl" data-i18n="review_label">Опция „Преглед“</label>
-          <div class="segmini segwide" id="pReviewSeg" role="group" aria-labelledby="pReviewLbl">
-            <button type="button" data-val="none" data-i18n="review_none">Без преглед</button>
-            <button type="button" data-val="review" data-i18n="review_only">Преглед</button>
-            <button type="button" data-val="review_test" data-i18n="review_test">Преглед и тест</button>
-          </div>
-          <input type="hidden" id="pReviewMode" value="none">
-        </div>
-        <div id="reviewAnchored" class="muted hide" style="margin-top:10px"></div>
-        <!-- Sticky confirm bar: price, errors and the create button stay in reach. -->
-        <div class="confirm-bar" id="confirmBar">
-          <div id="priceBox" class="muted" role="status"></div>
-          <div id="previewErr" class="err" role="alert"></div>
-          <div id="noCodConfirm" class="warn-box confirmrow hide" role="alertdialog">
-            <span data-i18n="nocod_confirm">Тази пратка тръгва без наложен платеж. Да продължа ли?</span>
-            <button class="ghost btn-xs" id="noCodGo" type="button" data-i18n="nocod_go">Да, без наложен платеж</button>
-            <button class="ghost btn-xs" id="noCodFix" type="button" data-i18n="nocod_fix">Ще добавя сума</button>
-          </div>
-          <div class="toolbar">
-            <button class="ghost icon" id="recalcBtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4v6h-6"/><path d="M20.2 14a8.2 8.2 0 1 1-1.9-8.4L21 8.2"/></svg></button>
-            <button class="go" id="createBtn" data-i18n="create_btn">✓ Създай товарителница</button>
-          </div>
-          <div class="muted chint" id="createHint"></div>
-        </div>
-      </div>
+        <div id="parseGaps" class="note hide" role="status"></div>
+        <div id="dupWarn" class="note confirmrow hide" role="status"><span id="dupMsg"></span><button id="dupShowBtn" type="button" data-i18n="dup_show">Покажи</button></div>
 
-      <!-- RESULT -->
-      <div id="result" class="card tilt hide">
-        <div style="display:flex; align-items:center; gap:12px">
-          <svg class="check-c" viewBox="0 0 56 56"><circle cx="28" cy="28" r="25"/><path d="M16 29l8 8 17-19"/></svg>
-          <h3 data-i18n="res_h" style="margin:0; font-size:15px; color:var(--ink); text-transform:none; letter-spacing:0">Товарителницата е създадена</h3>
-        </div>
-        <div class="ok-num" id="shipNum" style="margin-top:10px"></div>
-        <div id="resultSummary" class="summary hide"></div>
-        <div class="toolbar" style="justify-content:flex-start; margin:12px 0">
-          <button class="ghost hide" id="backToBatchBtn2" type="button">← Към партидата</button>
-          <button class="primary" id="replyBtn"><svg class="ic ic-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg> <span data-i18n="send_customer">Прати на клиента</span></button>
-          <button class="ghost" id="copyBtn"><svg class="ic ic-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg> <span data-i18n="copy">Копирай номера</span></button>
-          <a id="trackLink" class="btnlink" href="#" target="_blank" rel="noopener noreferrer"><svg class="ic ic-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20.5 20.5 16 16"/></svg> <span data-i18n="track_link">Проследи</span></a>
-          <a id="pdfLink" class="btnlink" href="#" target="_blank"><svg class="ic ic-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v7H7z"/></svg> <span data-i18n="label_pdf">Етикет PDF</span></a>
-          <div class="dd" id="profileDD">
-            <button class="ghost" id="profileBtn" aria-haspopup="true" aria-expanded="false" aria-controls="profileMenu"><svg class="ic ic-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg> <span data-i18n="view_in_profile">Виж в профила</span> <span class="caret" aria-hidden="true">▾</span></button>
-            <div class="dd-menu" id="profileMenu">
-              <a href="https://www.econt.com/" target="_blank" rel="noopener noreferrer"><svg class="ic ic-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg> <span><span data-i18n="dd_site">econt.com</span><span class="sub" data-i18n="dd_site_sub">Официалният сайт на Еконт</span></span></a>
-              <a id="profileLink" href="https://ee.econt.com/" target="_blank" rel="noopener noreferrer"><svg class="ic ic-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg> <span><span data-i18n="dd_profile">e-Econt профил</span><span class="sub" data-i18n="dd_profile_sub">Пратките във вашия акаунт</span></span></a>
+        <div class="fs">
+          <h3 class="fs-h" data-i18n="sec_recipient">Получател</h3>
+          <div class="fs-b">
+            <div class="row">
+              <div class="field"><label data-i18n="recipient">Име</label><input id="pName" autocomplete="off" data-enter="recalcBtn"></div>
+              <div class="field"><label data-i18n="phone">Телефон</label><input id="pPhone" inputmode="tel" autocomplete="off" data-enter="recalcBtn"></div>
             </div>
           </div>
-          <button class="ghost" id="newBtn" data-i18n="new">+ Нова</button>
         </div>
-        <div id="resultMeta" class="muted"></div>
-        <div class="reply-prev" id="replyPreview" tabindex="0" role="button">
-          <div class="reply-prev-h"><span data-i18n="reply_prev_h">Това получава клиентът</span><span class="spacer"></span><span class="reply-prev-copy"><svg class="ic ic-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg> <span data-i18n="reply_copy">Отговор за клиента</span></span></div>
+
+        <div class="fs">
+          <h3 class="fs-h" data-i18n="sec_delivery">Доставка</h3>
+          <div class="fs-b">
+            <div class="segmini" id="deliverToggle" role="tablist">
+              <button type="button" id="modeOfficeBtn" class="active" role="tab" aria-selected="true" data-i18n="to_office">До офис</button>
+              <button type="button" id="modeAddressBtn" role="tab" aria-selected="false" data-i18n="to_address">До адрес</button>
+            </div>
+            <div id="officeBlock">
+              <label data-i18n="office_lbl">Офис на Еконт</label>
+              <select id="pOffice"></select>
+              <div class="inline" style="margin-top:8px">
+                <input id="officeSearch" enterkeyhint="search" data-i18n-ph="wrong_office" data-enter="officeSearchBtn" placeholder="друг офис: търси по град или име">
+                <button id="officeSearchBtn" type="button" data-i18n="search_btn">Търси</button>
+              </div>
+              <div id="officeHint" style="margin-top:8px"></div>
+            </div>
+            <div id="addrBlock" class="hide">
+              <div class="row">
+                <div class="field"><label data-i18n="addr_city">Град</label><input id="pAddrCity" data-enter="recalcBtn"></div>
+                <div class="field narrow"><label data-i18n="addr_post">Пощенски код</label><input id="pAddrPost" inputmode="numeric" data-enter="recalcBtn"></div>
+              </div>
+              <div class="row" style="margin-top:16px">
+                <div class="field"><label data-i18n="addr_street">Улица или квартал</label><input id="pAddrStreet" data-enter="recalcBtn"></div>
+                <div class="field narrow"><label data-i18n="addr_num">Номер</label><input id="pAddrNum" data-enter="recalcBtn"></div>
+              </div>
+              <div class="field" style="margin-top:16px"><label data-i18n="addr_note">Ориентир (по избор)</label><input id="pAddrNote" data-enter="recalcBtn"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fs">
+          <h3 class="fs-h" data-i18n="sec_parcel">Пратка</h3>
+          <div class="fs-b">
+            <div class="row">
+              <div class="field narrow"><label data-i18n="weight">Тегло (кг)</label><input id="pWeight" type="number" inputmode="decimal" step="0.1" min="0.1" data-enter="recalcBtn"></div>
+              <div class="field"><label data-i18n="description">Съдържание</label><input id="pDesc" data-enter="recalcBtn"></div>
+              <div class="field"><label data-i18n="pays">Кой плаща доставката</label>
+                <select id="pPayer"><option value="receiver" data-i18n="receiver">Получателят</option><option value="sender" data-i18n="sender">Подателят</option></select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fs">
+          <h3 class="fs-h" data-i18n="sec_pay">Плащане</h3>
+          <div class="fs-b">
+            <div class="optline">
+              <label class="check"><input type="checkbox" id="pCodOn"> <span id="codLbl" data-i18n="cod">Наложен платеж</span></label>
+              <input id="pCodAmount" class="amt" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" aria-labelledby="codLbl">
+              <select id="pCodCur" class="cur" aria-labelledby="codLbl"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
+            </div>
+            <div id="codCurHint" class="muted cur-hint hide tight" role="status"></div>
+            <div id="codWarn" class="note hide tight" role="status" data-i18n="cod_warn">Тази пратка е без наложен платеж.</div>
+            <div class="optline">
+              <label class="check"><input type="checkbox" id="pDeclOn"> <span id="declLbl" data-i18n="decl">Обявена стойност</span></label>
+              <input id="pDeclAmount" class="amt" type="number" inputmode="decimal" step="0.01" min="0" data-i18n-ph="amount" data-enter="recalcBtn" placeholder="сума" aria-labelledby="declLbl">
+              <select id="pDeclCur" class="cur" aria-labelledby="declLbl"><option value="EUR">€ EUR</option><option value="BGN">лв BGN</option></select>
+            </div>
+            <div id="reviewRow">
+              <label id="pReviewLbl" data-i18n="review_label">Преглед преди плащане</label>
+              <div class="segmini segwide" id="pReviewSeg" role="group" aria-labelledby="pReviewLbl">
+                <button type="button" data-val="none" data-i18n="review_none">Без преглед</button>
+                <button type="button" data-val="review" data-i18n="review_only">Преглед</button>
+                <button type="button" data-val="review_test" data-i18n="review_test">Преглед и тест</button>
+              </div>
+              <input type="hidden" id="pReviewMode" value="none">
+            </div>
+            <div id="reviewAnchored" class="muted hide"></div>
+          </div>
+        </div>
+
+        <!-- Sticky confirm bar: price, errors and the one primary action stay in reach. -->
+        <div class="confirm-bar" id="confirmBar">
+          <div id="previewErr" class="err" role="alert"></div>
+          <div id="noCodConfirm" class="note confirmrow hide" role="alertdialog">
+            <span data-i18n="nocod_confirm">Тази пратка тръгва без наложен платеж. Да продължа ли?</span>
+            <button id="noCodGo" type="button" data-i18n="nocod_go">Да, без наложен платеж</button>
+            <button id="noCodFix" type="button" data-i18n="nocod_fix">Ще добавя сума</button>
+          </div>
+          <div class="cb-row">
+            <div id="priceBox" class="cb-price" role="status"></div>
+            <button class="icon" id="recalcBtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4v6h-6"/><path d="M20.2 14a8.2 8.2 0 1 1-1.9-8.4L21 8.2"/></svg></button>
+            <button class="primary" id="createBtn" type="button" data-i18n="create_btn">Създай товарителница</button>
+          </div>
+          <div class="chint" id="createHint"></div>
+        </div>
+      </section>
+
+      <!-- RESULT: the waybill that was just created -->
+      <section id="result" class="hide" aria-labelledby="resH">
+        <h2 id="resH" class="sr-only" data-i18n="res_h">Товарителницата е създадена</h2>
+        <div class="ok-num" id="shipNum"></div>
+        <p class="res-sum res-after"><span class="res-dot" aria-hidden="true"></span><span id="resultSummary"></span> <span id="resultMeta"></span></p>
+        <div class="res-actions res-after">
+          <button class="primary" id="replyBtn" type="button" data-i18n="send_customer">Прати на клиента</button>
+          <button id="copyBtn" type="button" data-i18n="copy">Копирай номера</button>
+        </div>
+        <div class="res-links res-after">
+          <a id="trackLink" class="lnk" href="#" target="_blank" rel="noopener noreferrer" data-i18n="track_link">Проследи</a>
+          <a id="pdfLink" class="lnk" href="#" target="_blank" rel="noopener noreferrer" data-i18n="label_pdf">Етикет PDF</a>
+          <div class="dd" id="profileDD">
+            <button class="lnk" id="profileBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="profileMenu"><span data-i18n="view_in_profile">Виж в профила</span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <div class="dd-menu" id="profileMenu">
+              <a href="https://www.econt.com/" target="_blank" rel="noopener noreferrer"><span data-i18n="dd_site">econt.com</span><span class="sub" data-i18n="dd_site_sub">Официалният сайт на Еконт</span></a>
+              <a id="profileLink" href="https://ee.econt.com/" target="_blank" rel="noopener noreferrer"><span data-i18n="dd_profile">e-Econt профил</span><span class="sub" data-i18n="dd_profile_sub">Пратките в твоя профил</span></a>
+            </div>
+          </div>
+        </div>
+        <div class="reply-prev res-after" id="replyPreview" tabindex="0" role="button" aria-describedby="replyText">
+          <div class="reply-prev-h" data-i18n="reply_prev_h">Това получава клиентът</div>
           <div class="reply-prev-t" id="replyText"></div>
+          <div class="reply-prev-copy" data-i18n="reply_copy">Натисни, за да копираш</div>
         </div>
-      </div>
+        <div class="res-foot res-after">
+          <p class="res-today" id="resToday" aria-live="polite"></p>
+          <button class="tertiary hide" id="backToBatchBtn2" type="button">Обратно към партидата</button>
+          <button id="newBtn" type="button" data-i18n="new">Нова пратка</button>
+        </div>
+      </section>
     </div>
 
     <div id="tab-parcels" class="hide" role="tabpanel" aria-labelledby="navParcels">
-      <div class="card">
-        <div style="display:flex; align-items:center; gap:8px">
-          <strong data-i18n="parcels_h">Вашите пратки</strong>
-          <span class="spacer"></span>
-          <button class="ghost btn-sm" id="clearParcelsBtn" data-i18n="clear_all">Изчисти всички</button>
-          <button class="ghost icon icon-sm" id="refreshParcelsBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4v6h-6"/><path d="M20.2 14a8.2 8.2 0 1 1-1.9-8.4L21 8.2"/></svg></button>
-        </div>
-        <div id="clearAllConfirm" class="warn-box confirmrow hide" role="alertdialog">
-          <span data-i18n="clear_confirm">Да се премахнат ли ВСИЧКИ пратки от списъка?</span>
-          <button class="ghost btn-xs" id="clearAllYes" data-i18n="yes">Да</button>
-          <button class="ghost btn-xs" id="clearAllNo" data-i18n="no">Не</button>
-        </div>
-        <div class="muted" style="margin-top:6px" data-i18n="parcels_note">Показва пратките с актуален статус и време в движение от Еконт.</div>
-        <div id="parcelsUpdated" class="muted upd" role="status"></div>
-        <div class="inline" style="margin-top:10px">
-          <input id="trackNumInput" enterkeyhint="go" data-i18n-ph="track_ph" data-enter="trackNumBtn" placeholder="добави номер на пратка…" inputmode="numeric">
-          <button class="primary" id="trackNumBtn" data-i18n="track_add">Добави</button>
-        </div>
+      <div class="pl-title">
+        <h2 class="sec-h" data-i18n="parcels_h">Твоите пратки</h2>
+        <span class="spacer"></span>
+        <button class="tertiary btn-sm" id="clearParcelsBtn" type="button" data-i18n="clear_all">Изчисти всички</button>
+        <button class="icon" id="refreshParcelsBtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4v6h-6"/><path d="M20.2 14a8.2 8.2 0 1 1-1.9-8.4L21 8.2"/></svg></button>
       </div>
-      <div id="parcelList"></div>
+      <p class="pl-sub"><span id="plToday"></span> <span id="parcelsUpdated" class="upd" role="status"></span></p>
+      <div id="clearAllConfirm" class="note confirmrow hide" role="alertdialog">
+        <span data-i18n="clear_confirm">Да премахна ли всички пратки от списъка?</span>
+        <button id="clearAllYes" type="button" data-i18n="yes">Да</button>
+        <button id="clearAllNo" type="button" data-i18n="no">Не</button>
+      </div>
+      <div class="inline add-row">
+        <input id="trackNumInput" enterkeyhint="go" data-i18n-ph="track_ph" data-enter="trackNumBtn" placeholder="Добави номер на товарителница" inputmode="numeric">
+        <button id="trackNumBtn" type="button" data-i18n="track_add">Добави</button>
+      </div>
+      <div id="parcelList" class="plist"></div>
     </div>
   </div>
 
