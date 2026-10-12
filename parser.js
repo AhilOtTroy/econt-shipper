@@ -332,12 +332,20 @@ const NUM_PLAIN_Y = new RegExp('(?:' + NUM_PLAIN_SRC + ')(?!\\d)', 'y');
 // word or a number it is two numbers: a size, house/block/quarter number, model or
 // "3 в 1" right before a price ("Младост 1 120 лв", "размер 42 100 лв").
 const GROUP_OK_BEFORE_RE = new RegExp('(?:^|\\n)[ \\t]*$|[:=\\-–—,;(+/]\\s*$|' + NL + '(?:наложен[а-яё]*|платеж[а-яё]*|нп|cod|сума(?:та)?|общо|всичко|тотал|total|цена(?:та)?|стойност|получаване|плащане|е|за|от|€|евро|eur|лв\\.?|лева|bgn)\\s*$', 'i');
-const QTY_AFTER_RE = /^\s*(?:бр(?:ой(?:ки|ка)?|оя|\.)?|pcs|чифт[а-яё]*|x|х|\*|×)(?![а-яёa-z])/i;
+const QTY_AFTER_RE = /^\s*(?:бр(?:ой(?:ки|ка)?|оя|\.)?|pcs|чифт[а-яё]*|x|х|\*|×|%)(?![а-яёa-z])/i;
 const UNIT_BEFORE_RE = /(?:^|[^а-яёa-z])(?:по|x|х|\*|×)\s*$/i;
 const UNIT_AFTER_RE = new RegExp('^\\s*(?:(?:' + CUR_SRC + ')' + NR + ')?\\s*(?:/|на|за)\\s*(?:бр|брой|бройка|чифт)', 'i');
 const MULT_BEFORE_RE = new RegExp('(?:' + CUR_SRC + ')\\s*(?:x|х|\\*|×)\\s*$', 'i');
 const MULT_AFTER_RE = new RegExp('^\\s*(?:' + CUR_SRC + ')\\s*(?:x|х|\\*|×)\\s*\\d', 'i');
-const TOTAL_BEFORE_RE = /(?:=|(?:^|[^а-яёa-z])(?:общо|всичко|тотал|total|крайна\s+цена|сумата\s+е|общата\s+сума)(?:\s+е)?\s*:?)\s*$/i;
+const TOTAL_BEFORE_RE = /(?:=|(?:^|[^а-яёa-z])(?:общо|всичко|тотал|total|крайна\s+цена|сумата\s+е|общата\s+сума|става|стават|остава|остават|(?:за\s+)?доплащане|след\s+отстъпка(?:та)?)(?:\s+е)?\s*:?)\s*$/i;
+// Money the customer has already paid ("Вече платих 52 лв по Revolut", "Платено 20 лв
+// капаро", "сумата от 52 лв е преведена"): never the amount to collect.
+// ("без капаро", "платена доставка": not a paid amount)
+const PAID_BEFORE_RE = /(?:^|[^а-яёa-z])(?<!(?:без|не|няма)\s+)(?:(?:за)?плат(?:их|ихме|ил|ила|или|ено|ена|ен|ени)|преведох(?:ме)?|преведен[аио]?|преведени|капаро|аванс|депозит|предплат[а-яё]*)(?![а-яёa-z])(?!\s+(?:доставк|транспорт|куриер))[^,.;!?\n\d]{0,25}$/i;
+const PAID_AFTER_RE = new RegExp('^\\s*(?:(?:' + CUR_SRC + ')' + NR + ')?\\s*(?:(?:капаро|аванс|депозит|предплат[а-яё]*)' + NR
+  + '|[,(\\-–—]?\\s*(?:(?:са|е|бяха|беше)\\s+)?(?:вече\\s+)?(?:платен[аио]?|платени|преведен[аио]?|преведени|по\\s+(?:revolut|револют|банк[а-яё]*|сметка(?:та)?|iban|paypal))' + NR
+  // ("45 лв преведени 5 лв за доставката": the word goes with the amount after it)
+  + '(?!\\s+(?:доставк|транспорт|куриер))(?![^,.;!?\\n\\d]{0,20}\\d))', 'i');
 const DELIV_BEFORE_RE = /(?:^|[^а-яёa-z])(?:доставка(?:та)?|куриер(?:а|ска)?|транспорт|такса)(?:\s+(?:е|от|за))?\s*:?\s*$/i;
 const DELIV_AFTER_RE = new RegExp('^\\s*(?:(?:' + CUR_SRC + ')' + NR + ')?\\s*(?:за\\s+)?(?:доставка|куриер|транспорт)', 'i');
 // House/block/size/model numbers — never money unless a currency is attached.
@@ -398,6 +406,7 @@ function codCandidates(text) {
       total: TOTAL_BEFORE_RE.test(before),
       delivery: DELIV_BEFORE_RE.test(before) || DELIV_AFTER_RE.test(after),
       addr: !ca && !cb && ADDR_BEFORE_RE.test(before),
+      paid: PAID_BEFORE_RE.test(before) || PAID_AFTER_RE.test(after),
       // "2 якета", "1 яке": a count of something, not an amount.
       wordAfter: !ca && /^\s*[а-яёa-z]{2,}/i.test(after),
     });
@@ -439,7 +448,7 @@ function detectCod(text, phoneIndex) {
   text = String(text || '');
   const blank = (s) => ' '.repeat(s.length);
   const clean = text.replace(new RegExp(PHONE_RE.source, 'g'), blank).replace(LOOSE_PHONE_RE, blank);
-  const cands = codCandidates(clean);
+  const cands = codCandidates(clean).filter((c) => !c.paid);
   // Line lookups by binary search over the newline positions, so a long single-line
   // paste stays linear.
   const nlPos = []; for (let i = clean.indexOf('\n'); i >= 0; i = clean.indexOf('\n', i + 1)) nlPos.push(i);
@@ -509,8 +518,11 @@ const RV_W = '(?<![а-яёa-z])', RV_E = '(?![а-яёa-z])';
 // One mention: "преглед", "тест", or a pair written as one ("преглед и тест",
 // "преглед/тест", "преглед,тест", "преглед и/или тест", "тест и преглед").
 // (not a product: "тест за бременност", "бърз тест", "тест ленти")
-const RV_MENTION_RE = new RegExp(RV_W + '(?<!(?:бърз[аи]?|антигенен|антигенни|pcr|covid|ковид|кръвен|домашен)\\s+)(?:(преглед)(?:\\s*(?:и\\s*/\\s*или|и|или|/|,|&|\\+)\\s*(тест))?|(тест)(?!\\s+(?:за\\s+(?:бременност|овулация)|ленти|лента|касет))(?:\\s*(?:и|или|/|,|&|\\+)\\s*(преглед))?)' + RV_E, 'g');
-const RV_NEG_RE = new RegExp(RV_W + '(без|не|няма|нямам|нямаме|отказвам|отказваме|отказва|no|without|нито)' + RV_E, 'g');
+// (nor the seller's own check of the item: "минал тест", "тест ок", "Направих преглед")
+// Latin: "s pregled", "pregled i test".
+const RV_MENTION_RE = new RegExp(RV_W + '(?<!(?:бърз[аи]?|антигенен|антигенни|pcr|covid|ковид|кръвен|домашен|минал[аио]?|мина|премина(?:л[аио]?)?|издържа(?:л[аио]?)?|направих(?:ме)?|пуснах|успешен|успешно)\\s+)'
+  + '(?:(преглед|pregled)(?:\\s*(?:и\\s*/\\s*или|и|или|i|ili|/|,|&|\\+)\\s*(тест|test))?|(тест)(?!\\s+(?:за\\s+(?:бременност|овулация)|ленти|лента|касет)|\\s+(?:ок|ok|окей|мина|премина|успешен)' + RV_E + ')(?:\\s*(?:и|или|/|,|&|\\+)\\s*(преглед))?)' + RV_E, 'g');
+const RV_NEG_RE = new RegExp(RV_W + '(без|не|няма|нямам|нямаме|отказвам|отказваме|отказва|no|without|нито|bez|ne|nqma|nyama)' + RV_E, 'g');
 const RV_NEG_AFTER_RE = new RegExp('^\\s*[:\\-–—=)]?\\s*(?:не|no|няма|nope)' + RV_E + '(?!\\s+(?:знам|зная|съм|сме|мога|може|е\\s+ли))', 'i');
 // Is the mention at [st, en) refused? A negation earlier in the same clause, with at
 // most five words and no "с/със" ("без НП с преглед") in between, or a "не" right after
@@ -526,7 +538,9 @@ function reviewRefused(s, st, en) {
   if (!last) return false;
   const between = pre.slice(last.index + last[0].length);
   if (/^\s+(?:забрав|пропуск)/.test(between)) return false;          // "не забравяйте … преглед"
-  if (new RegExp(RV_W + '(?:с|със|но|а)' + RV_E).test(between)) return false;
+  // "Не искам с преглед", "не желая със": the "с" is part of the refused wish
+  if (/^(?:не|ne)$/.test(last[1]) && /^\s+(?:искам|искаме|желая|желаем|ща|щем|трябва|е\s+нужн[оа]?|е\s+необходим[оа]?|iskam)\s+(?:с|със|s)\s+$/.test(between)) return true;
+  if (new RegExp(RV_W + '(?:с|със|но|а|s|sas)' + RV_E).test(between)) return false;
   if (between.trim().split(/\s+/).filter(Boolean).length > 5) return false;
   if (last[1] === 'без' && /(?:^|[^а-яёa-z])не\s+(?:може|мога|можем|става|бива|искам|иска)\s+$/.test(pre.slice(0, last.index))) return false;
   return true;
@@ -627,6 +641,9 @@ function lineKind(line) {
   if (isNameLine(t)) return 'N';
   if (OFFICE_LINE_RE.test(t) || t.toLowerCase().split(/[^\p{L}]+/u).some((w) => isStrongPlace(w)) || hasPlacePhrase(t.toLowerCase()) || findPostCode(t)) return 'O';
   if (new RegExp(KW_SRC, 'i').test(t) || CUR_NUM_RE.test(t)) return 'C';
+  // A bare amount alone on its line ("45", "120", "45.", "12,50"): what detectCod reads
+  // as the COD of the phone above it.
+  if (/^\d{2,3}(?:[.,]\d{1,2})?\.?$|^\d[.,]\d\d$/.test(t)) return 'C';
   RV_MENTION_RE.lastIndex = 0;
   if (detectReview(t) || RV_MENTION_RE.test(t.toLowerCase())) return 'R'; // "с преглед", "без преглед"
   return 'X';
@@ -642,18 +659,34 @@ function personLike(words) {
 const nameLineWords = (line) => line.replace(/^(?:име(?:на)?|получател|клиент|name)\s*[:\-–]\s*/i, '').split(/[\s,]+/).filter((w) => w && !isPunct(w)).map((w) => w.replace(/[.,!]+$/, ''));
 // "Изпращам от Пловдив", "пращаме от гр. Русе": the seller's own town, never the
 // customer's office.
-const ORIGIN_RE = /(?<![а-яёa-z])(?:изпраща[а-яё]*|праща[а-яё]*|изпрат[а-яё]*|прат[а-яё]*|пуска[а-яё]*|подава[а-яё]*|тръгва[а-яё]*)\s+(?:[а-яё]+\s+){0,2}?от\s+(?:гр\.?\s*|град\s+|с\.\s*)?[а-яё]+(?:\s+[а-яё]+)?/gi;
+// The words before the town: "изпращам от", "пращаме утре от", "подавам ги от".
+const ORIGIN_HEAD_RE = /(?<![а-яёa-z])(?:изпраща[а-яё]*|праща[а-яё]*|изпрат[а-яё]*|прат[а-яё]*|пуска[а-яё]*|подава[а-яё]*|тръгва[а-яё]*)\s+(?:[а-яё]+\s+){0,2}?от\s/i;
+// ... then an optional office ("от офис Еконт", "от офиса на Еконт"), the town and,
+// after an office word, the office's own name ("от Еконт Бургас Сарафово").
+const ORIGIN_RE = new RegExp(ORIGIN_HEAD_RE.source.slice(0, -2) + '\\s+((?:(?:офис[а-яё]*|office|апс|автомат)\\s+)?(?:(?:на\\s+)?(?:еконт|econt)\\s+)?)'
+  + '(?:гр\\.?\\s*|град\\s+|с\\.\\s*)?([а-яё]+(?:\\s+[а-яё]+){0,2})', 'gi');
 function stripOrigin(s) {
-  return String(s).replace(ORIGIN_RE, (m) => {
-    // keep a second word only when it is part of the town ("Стара Загора")
-    const w = m.split(/\s+/), last = bare(w[w.length - 1]), prev = bare(w[w.length - 2] || '');
-    if (w.length >= 2 && !isPlace(last) && isPlace(prev)) return ' ' + w[w.length - 1];
-    return ' ';
+  return String(s).replace(ORIGIN_RE, (m, pre, words) => {
+    const w = words.split(/\s+/), b = w.map(bare), office = /\S/.test(pre);
+    const townWord = (x) => CITIES.has(x) || TOWNS.has(x);
+    const officeName = (i) => office && i < w.length && /^[А-ЯЁ]/.test(w[i]) && !LOC_MARKER.has(b[i]) && !CONNECTOR.has(b[i]);
+    let n = 1;
+    if (w.length >= 2) {
+      // keep a second word only when the town is known and the word is not part of it
+      // ("от Пловдив Иван"), unless an office word says it is the office's name
+      if (isPlace(b[0]) && (isPlace(b[1]) || PLACE_PHRASES.has(b[0] + ' ' + b[1]))) n = 2;
+      else if (!isPlace(b[0]) && !office) n = 2;
+      else if (officeName(1)) n = 2;
+      // "от Еконт Стара Загора Железник": a two-word town, then the office name
+      if (n === 2 && townWord(b[0]) && townWord(b[1]) && officeName(2)) n = 3;
+    }
+    return ' ' + w.slice(n).join(' ') + ' ';
   }).replace(/\s+/g, ' ').trim();
 }
 
 function parseMessage(text) {
-  text = String(text || '');
+  // (the seller's own "Подател: … 0888…" line is never the recipient)
+  text = dropSenderLines(String(text || ''));
   // Several parcels pasted at once must never be mixed into one waybill: when the
   // splitter finds 2+ parcels, this (single-parcel) parse reads the first only.
   const recs = splitBatch(text);
@@ -803,7 +836,11 @@ function stripMoney(s) {
 const OFFICE_TOKENS = new WeakMap();
 function officeTokens(o) {
   let t = OFFICE_TOKENS.get(o);
-  if (!t) { const hayArr = tokenize(officeHaystack(o)); t = { hayArr, hayTokens: new Set(hayArr) }; if (o && typeof o === 'object') OFFICE_TOKENS.set(o, t); }
+  if (!t) {
+    const hayArr = tokenize(officeHaystack(o)), city = (o && o.address && o.address.city) || {};
+    t = { hayArr, hayTokens: new Set(hayArr), cityTokens: new Set(tokenize(city.name)) };
+    if (o && typeof o === 'object') OFFICE_TOKENS.set(o, t);
+  }
   return t;
 }
 function matchOffices(locationText, offices, limit) {
@@ -813,13 +850,18 @@ function matchOffices(locationText, offices, limit) {
   const ranked = [];
   for (const o of offices) {
     if (!isCustomerOffice(o)) continue;
-    const { hayArr, hayTokens } = officeTokens(o);
+    const { hayArr, hayTokens, cityTokens } = officeTokens(o);
     let score = 0;
     for (const tt of qTokens) {
-      let hit = hayTokens.has(tt);
+      const exact = hayTokens.has(tt);
+      // A word form ("Чайката" / "Чайка") counts a little less than the word itself, and
+      // only a few letters apart: "Ботевград" is not "ул. Христо Ботев".
       // (numbers match exactly: a waybill or amount is not a postcode's "prefix")
-      if (!hit && tt.length >= 4 && !/^\d+$/.test(tt)) hit = hayArr.some((h) => h.length >= 4 && !/^\d+$/.test(h) && (h.startsWith(tt) || tt.startsWith(h)));
-      if (hit) score += /^\d{4}$/.test(tt) ? 4 : Math.min(tt.length, 8);
+      const near = !exact && tt.length >= 4 && !/^\d+$/.test(tt)
+        && hayArr.some((h) => h.length >= 4 && !/^\d+$/.test(h) && Math.abs(h.length - tt.length) <= 3 && (h.startsWith(tt) || tt.startsWith(h)));
+      if (!exact && !near) continue;
+      // The office's own town scores above a street named after a town ("ул. Ловеч").
+      score += /^\d{4}$/.test(tt) ? 4 : Math.min(tt.length, 8) + (near ? -2 : cityTokens.has(tt) ? 2 : 0);
     }
     if (postcode && (o.address?.city?.postCode === postcode)) score += 6;
     if (score > 0) ranked.push({ code: o.code, name: o.name, address: o.address?.fullAddress || '', city: o.address?.city?.name || '', postCode: o.address?.city?.postCode || '', score });
@@ -884,15 +926,88 @@ function isAltPhoneLine(line, gap) {
   const words = rest.split(/\s+/).filter(Boolean);
   if (!words.length) return gap === 0 || /^[/+]$/.test(prefix);
   if (ALT_CONNECT.has(words[0])) return true;
+  // "тел. на дъщеря ми Мария 0899…", "Ако не вдига - на съпругата 0899…": a relative's
+  // number for the same parcel (unless the line names a full person of its own).
+  if (ALT_HINT_RE.test(rest) && !(pm && trailingName(tokB(line.slice(0, pm.index)).toks).words.length >= 2)) return true;
   return gap === 0 && words.every((w) => TRAIL_LABEL.has(w));
 }
+const ALT_HINT_RE = /(?<![а-яё])(?:(?:дъщеря|син|съпруг|съпруга|мъж|жена|майка|баща|сестра|брат|снаха|зет|внук|внучка)\s+ми|дъщерята|сина|синът|съпругата|съпругът|мъжа|мъжът|жената|майката|бащата|сестрата|брата|братът|снахата|ако\s+не\s+(?:вдига|отговаря|се\s+обади|ме\s+намерите)|резервен|друг\s+(?:телефон|номер)|втори\s+(?:телефон|номер))(?![а-яё])/;
+// The seller's own line in a form or signature ("Подател: Иван Колев 0888…",
+// "Магазин Детски Свят, тел. 0899…"): never a parcel, never the recipient.
+const SENDER_LINE_RE = /^\s*(?:(?:подател|изпращач|sender)(?![а-яёa-z])|от\s*[:\-–])/i;
+const SHOP_LINE_RE = /^\s*(?:магазин|shop|store)(?![а-яёa-z])|(?<![а-яёa-z])е?оод(?![а-яёa-z])/i;
+function isSenderLine(line) {
+  const pm = PHONE_RE.exec(line);
+  if (!pm) return false;
+  return SENDER_LINE_RE.test(line) || SHOP_LINE_RE.test(line.slice(0, pm.index));
+}
+// Drop sender lines when another phone line remains (the recipient's).
+function dropSenderLines(text) {
+  const ls = String(text).split('\n');
+  if (!ls.some(isSenderLine)) return text;
+  const rest = ls.filter((l) => !isSenderLine(l));
+  return rest.some((l) => PHONE_RE.test(l)) ? rest.join('\n') : text;
+}
+// The recipient name a line carries, lowercased ("" when none): a name line, or the
+// name around the phone on a phone line.
+function nameKey(line) {
+  const pm = PHONE_RE.exec(line);
+  let w;
+  if (pm) {
+    const b = tokB(line.slice(0, pm.index));
+    const bt = b.toks.slice(); while (bt.length && (isPunct(bt[bt.length - 1]) || TRAIL_LABEL.has(bare(bt[bt.length - 1])))) bt.pop();
+    w = trailingName(bt, b.brk).words;
+    if (!w.length) w = leadingName(tokB(line.slice(pm.index + pm[0].length)).toks.filter((x) => !isPunct(x)));
+  } else w = isNameLine(line) ? nameLineWords(line) : [];
+  return w.map(bare).join(' ');
+}
+// Two customers written on one line ("Тома Иванов 0887… Свищов 20 лв, Злати Иванова
+// 0887… Левски 25 лв", also with ';', '|' or "1) … 2) …"): cut the line before the
+// second customer when the first part is a parcel of its own (a name, and an office or
+// an amount) and the second part names a person. An alternate number ("0888… / 0899…",
+// "Мартин Колев 0888…, Мария Колева 0899… офис Еконт Перник") stays on the line.
+function splitTwoOnLine(line) {
+  const ms = [...line.matchAll(PHONE_RE_G)];
+  if (ms.length < 2) return [line];
+  const out = []; let from = 0;
+  for (let k = 1; k < ms.length; k++) {
+    const segStart = ms[k - 1].index + ms[k - 1][0].length, segEnd = ms[k].index;
+    const seg = line.slice(segStart, segEnd);
+    // the last separator before the next phone: ',' ';' '|', or a list number "2)"
+    const sepRe = /[;|,]|(?<!\S)\d{1,2}\)\s/g; let sm, cut = -1, cutEnd = -1;
+    while ((sm = sepRe.exec(seg))) { cut = sm.index; cutEnd = sm.index + sm[0].length; }
+    if (cut < 0) continue;
+    const at = segStart + cut;
+    // (the first part around its own phone only, so a line of many numbers stays linear)
+    const piece = line.slice(Math.max(from, k >= 2 ? ms[k - 2].index + ms[k - 2][0].length : 0, ms[k - 1].index - 80), at);
+    if (!lineHasName(piece) || (!lineHasLocation(piece) && !CUR_NUM_RE.test(piece.replace(PHONE_RE_G, ' ')) && !new RegExp(KW_SRC, 'i').test(piece))) continue;
+    const after = seg.slice(cutEnd), T = tokB(after);
+    const tn = trailingName(T.toks.filter((x) => !isPunct(x) && !TRAIL_LABEL.has(bare(x))), T.brk).words;
+    const rest = segEnd + ms[k][0].length;
+    const named = (tn.length >= 2 && personLike(tn))
+      || (!/\p{L}/u.test(after) && personLike(leadingName(tokB(line.slice(rest, rest + 80)).toks.filter((x) => !isPunct(x)))));
+    if (!named) continue;
+    out.push(line.slice(from, at).replace(/[\s,;|]+$/, ''));
+    from = at + (/[,;|]/.test(line[at]) ? 1 : 0);
+  }
+  out.push(line.slice(from).trim());
+  return out.filter((l) => l.trim());
+}
+// A later chat bubble about the seller's own drop-off ("Подавам ги утре от Еконт
+// Бургас Сарафово", "Моя офис за подаване: …").
+const DROPOFF_RE = /(?<![а-яё])(?:за\s+подаване|подава[а-яё]*|предава[а-яё]*|мо(?:я|ят|ия)\s+офис|наши(?:я|ят)\s+офис)(?![а-яё])/i;
+// A note for every parcel ("Всички с преглед", "и двете с преглед").
+const ALL_PARCELS_RE = /(?<![а-яё])(?:всички(?:те)?|всичките|двете|трите|четирите|всяка|всеки)(?![а-яё])/i;
 
 // A heading line ("Поръчка 2:", "Пратки Еконт за днес:", "2)", "#3"): it starts the
 // next parcel and is not part of any parcel's layout.
 function isHeadingLine(line) {
   const t = String(line).trim();
   if (PHONE_RE.test(t)) return false;
-  if (/^(?:поръчка|пратка|клиент|order|№|#)?\s*(?:№|#|no\.?)?\s*\d{1,3}\s*[.:)\-]?$/i.test(t)) return true;
+  // A marked number ("Поръчка 2", "№3", "#3", "2)", "2:") or a lone list number
+  // ("2", "2."). A bare 10+ ("45", "120", "45.") is an amount, not a heading.
+  if (/^(?:поръчка|пратка|клиент|order|№|#|no\.)\s*(?:№|#|no\.?)?\s*\d{1,3}\s*[.:)\-]?$/i.test(t)
+    || /^(?:№|#|no\.?)?\s*\d{1,3}\s*[:)\-]$/i.test(t) || /^\d\.?$/.test(t)) return true;
   return /:\s*$/.test(t) && t.split(/\s+/).length <= 6 && !CUR_NUM_RE.test(t);
 }
 // A field label alone on its line ("Име:", "Тел:", "Офис:"): it belongs with the line
@@ -927,10 +1042,14 @@ function splitBatch(text) {
   for (const l of String(text).split('\n')) {
     if (!l.trim() || /^\s*[-=_*~•·]{3,}\s*$/.test(l)) { pendB = true; continue; }
     if (isNoiseLine(l)) continue;
-    lines.push(l); bnd.push(pendB); pendB = false;
+    for (const part of splitTwoOnLine(l)) { lines.push(part); bnd.push(pendB); pendB = false; }
   }
   if (!lines.length) return [];
   const isRec = lines.map((l) => PHONE_RE.test(l));
+  // The seller's own line (sender, shop signature) is no parcel, while another remains.
+  const sender = lines.map((l, i) => isRec[i] && isSenderLine(l));
+  if (sender.some(Boolean) && isRec.some((r, i) => r && !sender[i])) sender.forEach((x, i) => { if (x) isRec[i] = false; });
+  else sender.fill(false);
   let lastPhone = -1;
   for (let i = 0; i < lines.length; i++) {
     if (!isRec[i]) continue;
@@ -940,26 +1059,47 @@ function splitBatch(text) {
   }
   const P = []; isRec.forEach((r, i) => { if (r) P.push(i); });
   if (!P.length) return [lines.join('\n')];
-  const kinds = lines.map((l, i) => (isRec[i] ? 'P' : PHONE_RE.test(l) ? 'A' : batchKind(l)));
+  // S: a sender line, which is ignored by the layout.
+  const kinds = lines.map((l, i) => (isRec[i] ? 'P' : sender[i] ? 'S' : PHONE_RE.test(l) ? 'A' : batchKind(l)));
   const lastP = P[P.length - 1];
+  // Lines dropped from every chunk: a Messenger copy repeats the customer's name over
+  // each of their bubble groups ("Асен Милев\n0898…\n\nАсен Милев\nЕконт …").
+  const drop = new Set();
   // Lines after the last phone: its own bubble is kept whole; later bubbles keep their
   // office/COD/review lines (and a name line if the parcel has none), skipping short
-  // small talk ("Благодаря!") and stopping at anything else.
+  // small talk ("Благодаря!") and stopping at anything else. A later bubble that names
+  // another customer ("На Генади сумата е 40 лв") ends the scan; the seller's own
+  // drop-off office, or a second office for a parcel that has one, is skipped.
   let end = lastP + 1, lastBubble = lastP;
   while (end < lines.length && !bnd[end]) end++;
   while (lastBubble > 0 && !bnd[lastBubble]) lastBubble--;
+  const prevP = P.length >= 2 ? P[P.length - 2] : -1;
+  const own = lines.slice(Math.max(lastBubble, prevP + 1), end);
+  const lastKeys = new Set(own.map(nameKey).filter(Boolean));
+  const ownName = recHasName(own.join('\n'));
+  let lastLoc = own.some(lineHasLocation), others = null;
   const keep = [];
   for (let i = end; i < lines.length; i++) {
-    const kd = kinds[i];
+    const kd = kinds[i], l = lines[i];
     if (kd === 'A' || kd === 'L') { keep.push(i); continue; }
-    if ('OCR'.includes(kd) || (kd === 'N' && !recHasName(lines.slice(lastBubble, end).join('\n')))) { keep.push(i); continue; }
-    if (kd === 'X' && isSmallTalk(lines[i])) continue;
-    break;
+    if (kd === 'N' && lastKeys.has(nameKey(l))) { drop.add(i); continue; }
+    if ((kd === 'X' && isSmallTalk(l)) || kd === 'S') continue;
+    if (!('OCR'.includes(kd) || (kd === 'N' && !ownName))) break;
+    if (!others) {
+      // name words of the other customers (not shared with this one)
+      const mine = new Set([...lastKeys].join(' ').split(' '));
+      others = new Set(lines.slice(0, prevP + 1).map(nameKey).join(' ').split(' ').filter((w) => w.length >= 3 && !mine.has(w)));
+    }
+    if (l.toLowerCase().split(/[^\p{L}]+/u).some((w) => others.has(w))) break;
+    if (DROPOFF_RE.test(l) || ORIGIN_HEAD_RE.test(l)) continue;
+    if (kd === 'O') { if (lastLoc) continue; lastLoc = true; }
+    keep.push(i);
   }
   const tailIdx = []; for (let i = lastP + 1; i < end; i++) tailIdx.push(i); tailIdx.push(...keep);
-  const head = kinds.slice(0, P[0]).filter((k) => k !== 'H' && k !== 'L');
-  const tail = tailIdx.map((i) => kinds[i]).filter((k) => k !== 'A' && k !== 'L');
+  const head = kinds.slice(0, P[0]).filter((k) => k !== 'H' && k !== 'L' && k !== 'S');
+  const tail = tailIdx.map((i) => kinds[i]).filter((k) => k !== 'A' && k !== 'L' && k !== 'S');
   const chunks = [];
+  const range = (from, to) => { const r = []; for (let i = from; i < to; i++) r.push(i); return r; };
   let start = 0;
   for (let j = 0; j < P.length - 1; j++) {
     const a = P[j], nb = P[j + 1];
@@ -967,7 +1107,19 @@ function splitBatch(text) {
     const prevLines = lines.slice(start, a + 1);
     const prevHasName = recHasName(prevLines.join('\n')), prevLoc = prevLines.some(lineHasLocation);
     const nextHasName = lineHasName(lines[nb]), nextLoc = lineHasLocation(lines[nb]);
+    // The previous customer's name repeated over their next bubble group (Messenger)
+    // belongs to them, like an alternate number; it is dropped from the chunk.
+    const prevKeys = new Set(prevLines.map(nameKey).filter(Boolean));
+    // (not the line right above a nameless next phone: that is the next parcel's own
+    // name, e.g. two parcels to the same person)
+    gap.forEach((kd, i) => {
+      if (kd === 'N' && !(i === g - 1 && !nextHasName) && prevKeys.has(nameKey(lines[a + 1 + i]))) { gap[i] = 'A'; drop.add(a + 1 + i); }
+    });
     let minK = 0; gap.forEach((kd, i) => { if (kd === 'A') minK = i + 1; });
+    // The next phone's own bubble, when it starts after the previous phone: its lines
+    // above the phone ("НП 36 лв\nСтанка … 0894…") go with that phone.
+    let nbStart = nb; while (nbStart > a + 1 && !bnd[nbStart]) nbStart--;
+    const inNext = bnd[nbStart] ? nbStart - (a + 1) : g;
     let bestK = g, bestS = -Infinity;
     // Real gaps are a few lines; on a huge one only cuts near its ends are tried, so
     // the work stays linear in the paste's length.
@@ -978,13 +1130,13 @@ function splitBatch(text) {
       let s = 0, ti = 0, nameP = prevHasName, locP = prevLoc;
       for (let i = 0; i < k; i++) {
         const kd = gap[i];
-        if (kd === 'A' || kd === 'L') continue;
+        if (kd === 'A' || kd === 'L' || kd === 'S') continue;
         if (kd === 'H') { s -= 3; continue; }
         s += ti < tail.length ? (kd === tail[ti] ? 2 : -1) : -0.5; ti++;
         if (kd === 'N') { s += nameP ? -3 : 3; nameP = true; }
         if (kd === 'O') { s += locP ? -1.5 : 1; locP = true; }
       }
-      const next = gap.slice(k).filter((kd) => kd !== 'H' && kd !== 'L');
+      const next = gap.slice(k).filter((kd) => kd !== 'H' && kd !== 'L' && kd !== 'S');
       let nameN = nextHasName, locN = nextLoc;
       for (let i = next.length - 1; i >= 0; i--) {
         const kd = next[i], pos = head.length - next.length + i;
@@ -994,18 +1146,26 @@ function splitBatch(text) {
       }
       if (gap.slice(k).includes('H')) s += 2;
       if (bnd[a + 1 + k]) s += 1.5;
+      if (k > inNext) s -= 2;
       if (s > bestS) { bestS = s; bestK = k; } // ties: the larger k (lines stay with the parcel before)
       else if (s === bestS) bestK = k;
     }
-    chunks.push(lines.slice(start, a + 1 + bestK).join('\n'));
+    chunks.push(range(start, a + 1 + bestK));
     start = a + 1 + bestK;
   }
-  chunks.push(lines.slice(start, lastP + 1).concat(tailIdx.map((i) => lines[i])).join('\n'));
+  chunks.push(range(start, lastP + 1).concat(tailIdx));
+  // A note for every parcel ("Всички с преглед") goes to each of them.
+  // (a review note without amounts, at most two such lines, so a pasted wall of them
+  // cannot multiply the rows' text)
+  const isAllNote = (l) => { RV_MENTION_RE.lastIndex = 0; return ALL_PARCELS_RE.test(l) && !/\d/.test(l) && RV_MENTION_RE.test(l.toLowerCase()); };
+  const allIdx = chunks.flat().filter((i) => 'RC'.includes(kinds[i]) && isAllNote(lines[i])).slice(0, 2);
+  for (const c of chunks) for (const i of allIdx) if (!c.includes(i)) c.push(i);
   // The same phone repeated across chunks is one conversation, not two parcels —
   // merge those chunks so a quoted/confirmed number can't duplicate a shipment.
   const byPhone = new Map(), result = [];
-  for (const c of chunks) {
-    const m = PHONE_RE.exec(c);
+  for (const ci of chunks) {
+    const c = ci.filter((i) => !drop.has(i)).map((i) => lines[i]).join('\n');
+    const m = PHONE_RE.exec(ci.filter((i) => isRec[i]).map((i) => lines[i]).join('\n'));
     const key = m ? normalizePhone(m[0]) : null;
     if (key && byPhone.has(key)) { const idx = byPhone.get(key); result[idx] += '\n' + c; continue; }
     if (key) byPhone.set(key, result.length);
