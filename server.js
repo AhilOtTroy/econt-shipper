@@ -10,7 +10,7 @@ const path = require('path');
 const crypto = require('crypto');
 const zlib = require('zlib');
 const econt = require('./econt');
-const { parseMessage, matchOffices, splitBatch, stripNoise, findWaybill } = require('./parser');
+const { parseMessage, matchOffices, splitBatch, stripNoise, findWaybill, stripMoney, countPhones, namedParcelCount, phoneIndexOf, isCommonFirstName } = require('./parser');
 
 const ROOT = __dirname;
 const PORT = process.env.PORT || 5005;
@@ -53,11 +53,15 @@ function officeStatus(key) {
 // create; offices, price and tracking may answer without one), and /api/warm runs
 // the check in the background when the app opens, so a real user normally never
 // waits on it.
-const credSeen = new Map(); // hash -> { ok: boolean, at: ms }
+const credSeen = new Map(); // hash -> { ok: true | false | null, at: ms }
 const CRED_OK_TTL_MS = 12 * 3600 * 1000;
 const CRED_BAD_TTL_MS = 60 * 1000;
+const CRED_UNKNOWN_TTL_MS = 60 * 1000; // Econt could not tell: don't ask again for a minute
 const CRED_MAX = 5000;
 const VERIFY_WAIT_MS = 5000;
+const VERIFY_TIMEOUT_MS = 15000;      // the profile call itself gives up after this
+const credTtl = (ok) => (ok === true ? CRED_OK_TTL_MS : ok === false ? CRED_BAD_TTL_MS : CRED_UNKNOWN_TTL_MS);
+const credInflight = new Map(); // hash -> { p: Promise, slow: boolean }
 function credKey(c) {
   return crypto.createHash('sha256').update([c.mode, String(c.username), String(c.password)].join('\0')).digest('hex');
 }
@@ -70,17 +74,38 @@ function rememberCreds(c, ok) {
 // true = Econt accepted them, false = Econt rejected them as a wrong login,
 // null = could not tell (Econt unreachable, profile service missing). A real user
 // is never locked out on null; the batch caps below still bound the work.
-async function verifyCreds(c) {
-  const hit = credSeen.get(credKey(c));
-  if (hit && Date.now() - hit.at < (hit.ok ? CRED_OK_TTL_MS : CRED_BAD_TTL_MS)) return hit.ok;
-  try {
-    await econt.getClientProfiles(c);
-    rememberCreds(c, true);
-    return true;
-  } catch (e) {
-    if (isAuthFail(e)) { rememberCreds(c, false); return false; }
-    return null;
-  }
+// One profile call per login at a time: concurrent pastes share it.
+function verifyCreds(c) {
+  const k = credKey(c);
+  const hit = credSeen.get(k);
+  if (hit && Date.now() - hit.at < credTtl(hit.ok)) return Promise.resolve(hit.ok);
+  const f = credInflight.get(k);
+  if (f) return f.p;
+  const p = (async () => {
+    try {
+      await econt.getClientProfiles(c, { timeoutMs: VERIFY_TIMEOUT_MS });
+      rememberCreds(c, true);
+      return true;
+    } catch (e) {
+      if (isAuthFail(e)) { rememberCreds(c, false); return false; }
+      rememberCreds(c, null);
+      return null;
+    } finally { credInflight.delete(k); }
+  })();
+  credInflight.set(k, { p, slow: false });
+  return p;
+}
+// verifyCreds with a bounded wait. When a check for this login has already made one
+// request wait the full time, later requests don't wait on it again ("could not tell").
+async function verifyCredsBounded(c, waitMs) {
+  const p = verifyCreds(c);
+  const f = credInflight.get(credKey(c));
+  if (f && f.slow) return null;
+  const TIMEOUT = {};
+  const v = await within(p, waitMs, TIMEOUT);
+  if (v !== TIMEOUT) return v;
+  if (f) f.slow = true;
+  return null;
 }
 
 // ---------- office matching for batch input ----------
@@ -88,12 +113,30 @@ async function verifyCreds(c) {
 // for long: a size cap, a row cap, a yield between rows and a wall-clock budget
 // after which the remaining rows simply get no office (the UI shows them as
 // "office missing", never a wrong office).
-const BATCH_MAX_TEXT = 200000;   // characters
+const BATCH_MAX_TEXT = 80000;    // characters (100 parcels with chat noise fit easily)
 const BATCH_MAX_ROWS = 100;
-const BATCH_BUDGET_MS = 10000;
-const QUERY_MAX = 1000;          // characters of a location phrase handed to the matcher
+const BATCH_BUDGET_MS = 10000;   // this request's own matching time
+const BATCH_WALL_MS = 30000;     // wall clock, including waiting for other batches
+const PARSE_MAX_TEXT = 20000;    // characters of a single /api/parse message
+const CHUNK_PARSE_MAX = 8000;    // characters of one batch row handed to the parser
+const QUERY_MAX = 400;           // characters of a location phrase handed to the matcher
 const SEARCH_MAX = 200;          // characters of an office-search query
 const yieldLoop = () => new Promise((r) => setImmediate(r));
+// One batch row at a time across ALL requests, each in its own event-loop turn, so
+// many concurrent batches add waiting time to each other, never event-loop delay.
+let rowChain = Promise.resolve();
+function rowTurn() {
+  const p = rowChain.then(yieldLoop);
+  rowChain = p;
+  return p;
+}
+// A very long row (pasted junk) is parsed only around its phone number.
+function parseWindow(chunk) {
+  if (chunk.length <= CHUNK_PARSE_MAX) return chunk;
+  const at = phoneIndexOf(chunk);
+  const from = Math.max(0, Math.min(at < 0 ? 0 : at - 3000, chunk.length - CHUNK_PARSE_MAX));
+  return chunk.slice(from, from + CHUNK_PARSE_MAX);
+}
 // Resolve with `fallback` if `p` has not settled within `ms`.
 function within(p, ms, fallback) {
   let t;
@@ -111,6 +154,9 @@ function capQuery(s, max) {
 }
 
 const words = (s) => String(s || '').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+// A text field from the request body: a string, a number, or nothing (an object or
+// array, e.g. {"toString": 1}, is never turned into text; String() could throw on it).
+const textField = (v) => (typeof v === 'string' ? v : typeof v === 'number' ? String(v) : '');
 
 // Per office list (the cache entry's array): a 3-letter-prefix index over every
 // word of each office's name and address, and the offices grouped by city and
@@ -137,7 +183,7 @@ function officeWords(o) {
 function officeIndex(offices) {
   let ix = OFFICE_INDEX.get(offices);
   if (ix) return ix;
-  ix = { byPrefix: new Map(), byCity: new Map(), byPost: new Map() };
+  ix = { byPrefix: new Map(), byCity: new Map(), byPost: new Map(), byCode: new Map(), cityOf: [] };
   const push = (map, k, i) => { const a = map.get(k); if (a) { if (a[a.length - 1] !== i) a.push(i); } else map.set(k, [i]); };
   offices.forEach((o, i) => {
     for (const w of officeWords(o)) if (w.length >= 3) push(ix.byPrefix, w.slice(0, 3), i);
@@ -146,6 +192,8 @@ function officeIndex(offices) {
     while (cw.length > 1 && CITY_PREFIX.has(cw[0])) cw.shift();
     const cname = cw.join(' ');
     if (cname.length >= 3) push(ix.byCity, cname, i);
+    ix.cityOf[i] = cname;
+    if (o && o.code != null) ix.byCode.set(String(o.code), i);
     if (/^\d{4}$/.test(String(city.postCode || ''))) push(ix.byPost, String(city.postCode), i);
   });
   OFFICE_INDEX.set(offices, ix);
@@ -182,7 +230,7 @@ function afterPhoneOfficeGuess(chunk, parsed, offices) {
   const at = parsed.phoneRaw ? chunk.indexOf(parsed.phoneRaw) : -1;
   if (at < 0) return [];
   const nameWords = new Set(words(parsed.recipientName));
-  const toks = words(capQuery(chunk.slice(at + parsed.phoneRaw.length), QUERY_MAX)).filter((w) => !nameWords.has(w));
+  const toks = words(stripMoney(capQuery(chunk.slice(at + parsed.phoneRaw.length), QUERY_MAX))).filter((w) => !nameWords.has(w));
   if (!toks.length) return [];
   const ix = officeIndex(offices);
   const joined = ' ' + toks.join(' ') + ' ';
@@ -199,6 +247,42 @@ function afterPhoneOfficeGuess(chunk, parsed, offices) {
   if (cands.length > 1 && cands[1].score === cands[0].score) return []; // ambiguous: let the user pick
   return cands;
 }
+
+// A batch row is shipped to candidates[0] without anyone looking at it, so only a
+// confident match may be returned: not a tie between offices, not a match on the
+// city name (or postcode) alone in a city with several offices ("Варна 30 лв"), and
+// not one made only by a first name ("…звънете на Васил" vs "бул. Васил Левски").
+function confidentMatch(q, cands, offices, source) {
+  if (!cands.length) return false;
+  if (cands.length > 1 && cands[1].score === cands[0].score) return false;
+  const ix = officeIndex(offices);
+  const i = ix.byCode.get(String(cands[0].code));
+  if (i == null) return true;
+  const top = offices[i];
+  const city = (top.address && top.address.city) || {};
+  const cityWords = new Set(words(city.name));
+  const pc = String(city.postCode || '');
+  // A first name counts only when it is in the office's own name ("София Надежда"),
+  // not just in its street ("бул. Васил Левски").
+  const inName = (w) => matchOffices(w, [{ code: top.code, name: top.name }]).length > 0;
+  const hits = new Set(words(stripMoney(q)).filter((w) => !cityWords.has(w) && w !== pc && matchOffices(w, [top]).length && (!isCommonFirstName(w) || inName(w))));
+  if (!hits.size) return (ix.byCity.get(ix.cityOf[i]) || []).length <= 1; // city only: fine if the town has just this office
+  // Some other word points at this office. It must sit in a location clause: one
+  // that also names the town, the postcode or an office/address word ("Еконт Варна
+  // Чайка", "офис Чайка", "9000 Чайка"), or holds nothing but such words ("Пловдив,
+  // Тракия"). Not a product or chatter clause ("Варна, книга Христо Ботев …",
+  // "2 бр. Христо Ботев", "тениска Левски размер М").
+  // (clauses from the original text: the parsed location phrase has lost its commas)
+  for (const clause of stripMoney(source || q).split(/[,;.!?\n()]|\s[-–—]\s/)) {
+    const cw = words(clause);
+    if (!cw.some((w) => hits.has(w))) continue;
+    if (cw.some((w) => cityWords.has(w) || w === pc || LOC_WORDS.has(w))) return true;
+    if (cw.every((w) => hits.has(w) || LOC_WORDS.has(w) || /^\d+$/.test(w))) return true;
+  }
+  return false;
+}
+const LOC_WORDS = new Set(['еконт', 'econt', 'офис', 'офиса', 'office', 'кв', 'квартал', 'жк', 'ж', 'к', 'ул', 'улица', 'бул',
+  'булевард', 'гр', 'град', 'район', 'апс', 'aps', 'автомат', 'еконтомат', 'до', 'на', 'в', 'във', 'при', 'срещу', 'с', 'село']);
 
 // ---------- Econt response helpers ----------
 // What Econt's ShipmentTrackingEvent.destinationType means, for events that
@@ -355,6 +439,8 @@ const FRIENDLY = {
   office_missing: { bg: 'Не е избран офис за подаване — отворете Настройки и изберете офис.', en: 'Your sender drop-off office is not set — open Settings and choose your office.' },
   batch_too_long: { bg: 'Текстът е твърде дълъг за едно поставяне. Поставете пратките на части.', en: 'That text is too long for one paste. Paste the parcels in parts.' },
   batch_too_many: { bg: 'Твърде много пратки в едно поставяне ({n}). Най-много {max} наведнъж — поставете ги на части.', en: 'Too many parcels in one paste ({n}). At most {max} at a time — paste them in parts.' },
+  parse_too_long: { bg: 'Текстът е твърде дълъг. Поставете само съобщението с данните за пратката.', en: 'That text is too long. Paste just the message with the parcel details.' },
+  multi_parcel: { bg: 'В текста има {n} пратки. Запишете телефоните като 0888 123 456, за да се отворят като списък, или ги поставете една по една.', en: 'This text holds {n} parcels. Write the phones as 0888 123 456 to open them as a list, or paste them one at a time.' },
   batch_slow: { bg: 'офисът не е разпознат за част от редовете — изберете го ръчно.', en: 'the office was not recognised for some rows — pick it by hand.' },
 };
 const fr = (body, key, params) => FRIENDLY[key][body && body.lang === 'en' ? 'en' : 'bg']
@@ -407,12 +493,24 @@ async function handleApi(req, res, url) {
   }
 
   if (url.pathname === '/api/parse') {
-    const parsed = parseMessage(stripNoise(body.text || ''));
+    const raw = textField(body.text);
+    if (raw.length > PARSE_MAX_TEXT) return sendJson(res, 200, { ok: false, code: 'text_too_long', error: fr(body, 'parse_too_long') });
+    const text = stripNoise(raw);
+    // Several parcels that reached the single editor (the browser counts phones with
+    // its own pattern and can miss "0888/123456"): never show just the first one and
+    // silently drop the rest.
+    const parcels = namedParcelCount(text);
+    if (parcels >= 2) return sendJson(res, 200, { ok: false, code: 'multi_parcel', count: parcels, error: fr(body, 'multi_parcel', { n: parcels }) });
+    const parsed = parseMessage(text);
     let candidates = [];
-    if (parsed.deliveryType === 'office' && parsed.locationText) {
+    if (parsed.deliveryType === 'office') {
       try {
         const creds = getCreds(body);
-        candidates = matchOffices(capQuery(parsed.locationText, QUERY_MAX), await loadOffices(creds));
+        const offices = await loadOffices(creds);
+        if (parsed.locationText) candidates = matchOffices(capQuery(parsed.locationText, QUERY_MAX), offices);
+        // The location phrase matched nothing (e.g. chatter before the name): try the
+        // text after the phone, with the same guards as a batch row.
+        if (!candidates.length && offices.length) candidates = afterPhoneOfficeGuess(text, parsed, offices);
       } catch (e) {
         return sendJson(res, 200, { ok: true, parsed, candidates: [], officesError: errorPayload(e).error });
       }
@@ -428,8 +526,11 @@ async function handleApi(req, res, url) {
   // with no confident match gets NO candidates, so the UI shows "office missing"
   // instead of preselecting a guess that a batch run would ship to.
   if (url.pathname === '/api/parse-batch') {
-    const text = typeof body.text === 'string' ? body.text : String(body.text || '');
+    const text = textField(body.text);
     if (text.length > BATCH_MAX_TEXT) return sendJson(res, 200, { ok: false, code: 'batch_too_big', error: fr(body, 'batch_too_long') });
+    // Cheap pre-check before the splitter runs on a paste with thousands of numbers.
+    const phones = countPhones(text);
+    if (phones > BATCH_MAX_ROWS * 3) return sendJson(res, 200, { ok: false, code: 'batch_too_big', error: fr(body, 'batch_too_many', { n: phones, max: BATCH_MAX_ROWS }) });
     const chunks = splitBatch(text);
     if (chunks.length > BATCH_MAX_ROWS) {
       return sendJson(res, 200, { ok: false, code: 'batch_too_big', error: fr(body, 'batch_too_many', { n: chunks.length, max: BATCH_MAX_ROWS }) });
@@ -441,28 +542,36 @@ async function handleApi(req, res, url) {
       // asked right now): the shared cache must not do free work for made-up logins.
       // Bounded wait: if Econt hangs, carry on as "could not tell" (the check
       // keeps running in the background and is remembered when it finishes).
-      const verdict = await within(verifyCreds(creds), VERIFY_WAIT_MS, null);
+      const verdict = await verifyCredsBounded(creds, VERIFY_WAIT_MS);
       if (verdict === false) officesError = fr(body, 'bad_login');
       else offices = await loadOffices(creds);
     } catch (e) { officesError = e.friendly ? e.message : errorPayload(e).error; }
     const started = Date.now();
-    let skipped = false;
+    let spent = 0, skipped = false;
     const rows = [];
     for (let i = 0; i < chunks.length; i++) {
-      if (i) await yieldLoop();            // let other requests run between rows
+      await rowTurn();                     // one row at a time across all requests
       if (req.socket && req.socket.destroyed) return; // client gave up: stop working
+      const t0 = Date.now();
       const chunk = chunks[i];
-      const parsed = parseMessage(chunk);
+      const parsed = parseMessage(parseWindow(chunk));
       const trackNum = findWaybill(chunk);
-      let candidates = [];
+      const row = { chunk, parsed, candidates: [], trackNum };
       if (offices && offices.length && parsed.deliveryType === 'office') {
-        if (Date.now() - started > BATCH_BUDGET_MS) skipped = true;
+        if (spent > BATCH_BUDGET_MS || t0 - started > BATCH_WALL_MS) skipped = true;
         else {
-          if (parsed.locationText) candidates = fastMatchOffices(capQuery(parsed.locationText, QUERY_MAX), offices);
-          if (!candidates.length) candidates = afterPhoneOfficeGuess(chunk, parsed, offices);
+          const q = capQuery(parsed.locationText || '', QUERY_MAX);
+          let cands = q ? fastMatchOffices(q, offices) : [];
+          if (cands.length) {
+            // A tie or a city-only match is not shipped to: the row shows "office
+            // missing" and the user picks; the tied offices go back as suggestions.
+            if (confidentMatch(q, cands, offices, chunk)) row.candidates = cands;
+            else { row.ambiguous = true; row.suggestions = cands; }
+          } else row.candidates = afterPhoneOfficeGuess(chunk, parsed, offices);
         }
       }
-      rows.push({ chunk, parsed, candidates, trackNum });
+      spent += Date.now() - t0;
+      rows.push(row);
     }
     if (skipped && !officesError) officesError = fr(body, 'batch_slow');
     return sendJson(res, 200, { ok: true, rows, officesError });
@@ -472,7 +581,7 @@ async function handleApi(req, res, url) {
     try {
       const creds = getCreds(body);
       const offices = await loadOffices(creds);
-      return sendJson(res, 200, { ok: true, candidates: matchOffices(capQuery(body.q, SEARCH_MAX), offices, 12) });
+      return sendJson(res, 200, { ok: true, candidates: matchOffices(capQuery(textField(body.q), SEARCH_MAX), offices, 12) });
     } catch (e) { return sendJson(res, 200, e.friendly ? { ok: false, error: e.message } : errorPayload(e)); }
   }
 
@@ -498,7 +607,7 @@ async function handleApi(req, res, url) {
   if (url.pathname === '/api/track') {
     try {
       const creds = getCreds(body);
-      const nums = (body.shipmentNumbers || []).filter(Boolean);
+      const nums = (Array.isArray(body.shipmentNumbers) ? body.shipmentNumbers : []).filter((n) => typeof n === 'string' || typeof n === 'number').map(String).filter(Boolean);
       if (!nums.length) return sendJson(res, 200, { ok: true, parcels: [] });
       const r = await econt.getShipmentStatuses(creds, nums);
       const parcels = (r.shipmentStatuses || []).map((e) => {

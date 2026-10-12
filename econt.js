@@ -10,9 +10,12 @@ function baseUrl(creds) {
     : 'http://demo.econt.com/ee/services';
 }
 
-async function callEcont(creds, path, body) {
+// opts.timeoutMs: give up (as a network failure) when Econt has not answered in
+// time. Never used for createLabel: a create cut short may still have made a waybill.
+async function callEcont(creds, path, body, opts) {
   const url = baseUrl(creds) + path;
   const auth = Buffer.from(`${creds.username}:${creds.password}`).toString('base64');
+  const timeoutMs = opts && opts.timeoutMs;
   let res;
   try {
     res = await fetch(url, {
@@ -22,6 +25,7 @@ async function callEcont(creds, path, body) {
         'Authorization': 'Basic ' + auth,
       },
       body: JSON.stringify(body),
+      signal: timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined,
     });
   } catch (e) {
     const err = new Error('Cannot reach Econt (' + url + '): ' + e.message);
@@ -73,8 +77,8 @@ function getShipmentStatuses(creds, shipmentNumbers) {
 // The client's own profile(s). Carries `cdPayOptions[]` — the COD payout
 // agreements (споразумения) registered on the account. A bank agreement holds
 // the IBAN/BIC; a label references one by its `num`, never by raw IBAN.
-function getClientProfiles(creds) {
-  return callEcont(creds, '/Profile/ProfileService.getClientProfiles.json', {});
+function getClientProfiles(creds, opts) {
+  return callEcont(creds, '/Profile/ProfileService.getClientProfiles.json', {}, { timeoutMs: (opts && opts.timeoutMs) || 20000 });
 }
 
 function toAddress(a) {
