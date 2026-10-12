@@ -140,6 +140,7 @@ try {
   @media (hover: hover) { .tertiary:hover { background: var(--g-alpha-100); color: var(--g-gray-1000); } }
   .tertiary:active { background: var(--g-alpha-200); }
   button:disabled, button:disabled:hover { background: var(--g-gray-100); color: var(--g-gray-700); box-shadow: none; cursor: not-allowed; }
+  .tertiary:disabled, .tertiary:disabled:hover { background: transparent; }
   button[aria-busy="true"] { cursor: progress; }
   .btn-sm { height: 32px; padding: 0 10px; }
   .btn-xs { height: 28px; padding: 0 8px; font-size: 13px; }
@@ -211,9 +212,15 @@ try {
   /* Notes: tinted, fully bordered, never a coloured side bar. */
   .note, .warn-box { padding: 8px 12px; border: 1px solid color-mix(in srgb, var(--g-amber-900) 28%, transparent); border-radius: 6px;
     background: var(--g-amber-100); color: var(--g-amber-900); font-size: 14px; line-height: 20px; }
-  .confirmrow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-  .confirmrow > span:first-child { flex: 1 1 220px; }
-  .confirmrow button { height: 28px; padding: 0 10px; font-size: 13px; }
+  .note .lnk { display: inline; min-height: 0; height: auto; padding: 0 2px; margin: 0 -2px; color: inherit; font-size: inherit; line-height: inherit;
+    text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); }
+  /* Questions (no COD, a repeat, remove, forget): a plain sentence, never a box. The safe answer
+     is the one small button and takes focus; the risky answer is a quiet link before it. */
+  .confirmrow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; line-height: 20px; font-weight: 500; color: var(--g-gray-1000); }
+  .confirmrow > span:first-child { flex: 1 1 260px; text-wrap: pretty; }
+  .confirmrow > button { flex: none; }
+  .confirmrow:not(.hide) { animation: askIn .2s var(--ease); }
+  @keyframes askIn { from { opacity: 0; transform: translateY(4px); } }
 
   /* Badges */
   .statusb, .match { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; font-size: 12px; line-height: 1; font-weight: 500; white-space: nowrap; }
@@ -282,12 +289,11 @@ try {
   .composer-bar { display: flex; align-items: center; gap: 4px; padding: 8px; border-top: 1px solid var(--g-border); border-radius: 0 0 12px 12px; background: var(--g-bg-200); }
   .composer-bar .chint { min-width: 0; margin-left: 4px; font-size: 13px; line-height: 16px; color: var(--g-gray-900); }
   .composer-bar #parseBtn { margin-left: 4px; }
-  /* One primary per screen: once a preview or batch is open it owns the black button and
-     Разчети becomes secondary; next to a created waybill Разчети is only a quiet text button. */
-  #tab-new:has(#preview:not(.hide), #batch:not(.hide)) #parseBtn:not(:disabled) { background: var(--g-bg-100); color: var(--g-gray-1000); box-shadow: var(--g-shadow-border); }
-  @media (hover: hover) { #tab-new:has(#preview:not(.hide), #batch:not(.hide)) #parseBtn:not(:disabled):hover { background: var(--g-gray-100); } }
-  #tab-new:has(#result:not(.hide)) #parseBtn:not(:disabled) { background: transparent; color: var(--g-gray-900); box-shadow: none; }
-  @media (hover: hover) { #tab-new:has(#result:not(.hide)) #parseBtn:not(:disabled):hover { background: var(--g-alpha-100); color: var(--g-gray-1000); } }
+  /* One primary per screen: once a preview, a batch or a created waybill is open below, that
+     owns the black button and Разчети steps back to a quiet text button like Изчисти. */
+  #tab-new:has(#preview:not(.hide), #batch:not(.hide), #result:not(.hide)) #parseBtn { background: transparent; color: var(--g-gray-900); box-shadow: none; }
+  @media (hover: hover) { #tab-new:has(#preview:not(.hide), #batch:not(.hide), #result:not(.hide)) #parseBtn:not(:disabled):hover { background: var(--g-alpha-100); color: var(--g-gray-1000); } }
+  #tab-new:has(#preview:not(.hide), #batch:not(.hide), #result:not(.hide)) #parseBtn:disabled { color: var(--g-gray-700); }
   .new-today { margin-top: 12px; font-size: 14px; line-height: 20px; color: var(--g-gray-900); }
   .new-today:empty, #tab-new:has(#preview:not(.hide), #batch:not(.hide), #result:not(.hide)) .new-today { display: none; }
 
@@ -323,6 +329,7 @@ try {
   .confirm-bar .chint { font-size: 12px; line-height: 16px; text-align: right; color: var(--g-gray-900); }
   .confirm-bar .chint:empty { display: none; }
   #preview.frozen > :not(.confirm-bar) { opacity: .5; transition: opacity .2s; }
+  #preview:has(#noCodConfirm:not(.hide)) #codWarn { display: none; }
   @media (pointer: coarse) {
     #createHint { display: none; }
     /* Keyboard open: let the bar fall back into the flow so it never covers the field. */
@@ -445,8 +452,7 @@ try {
   .event { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr); gap: 16px; padding: 2px 0; font-size: 13px; line-height: 20px; color: var(--g-gray-1000); }
   .event time, .event .ev-o { color: var(--g-gray-900); }
   .parcel-more { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 16px; }
-  /* The remove question sits in the row as plain text, not a box inside the list. */
-  .parcel-x .note { margin-top: 12px; padding: 0; border: 0; background: none; color: var(--g-gray-1000); }
+  .parcel-x .confirmrow { margin-top: 12px; }
   .parcel.fresh { animation: freshBg 1.6s ease; }
   @keyframes freshBg { from { background: var(--g-blue-100); } }
   .parcel.leaving { opacity: 0; height: 0 !important; margin: 0; padding-block: 0; border-width: 0; overflow: hidden;
@@ -479,7 +485,8 @@ try {
   .lock .pin { margin: 24px 0 12px; }
   #lockMsg { margin-top: 8px; }
   #forgetBtn { margin-top: 24px; white-space: normal; height: auto; min-height: 32px; padding: 6px 10px; }
-  #forgetConfirm { margin-top: 12px; text-align: left; }
+  #forgetConfirm { justify-content: center; margin-top: 12px; }
+  #forgetConfirm > span:first-child { flex-basis: 100%; }
 
   /* ===================== SETTINGS ===================== */
   .set-head { padding-bottom: 24px; }
@@ -673,7 +680,7 @@ try {
   @media (max-width: 429px) {
     body:has(#modeBadge:not(.hide):not([style*="none"])) .brand > span { display: none; }
   }
-  @media (max-width: 379px) { .brand > span { display: none; } }
+  @media (max-width: 379px) { .brand > span { display: none; } .res-links { column-gap: 12px; } }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
     html { scroll-behavior: auto; }
@@ -864,10 +871,10 @@ try {
       <button class="primary lg block" id="lockBtn" type="button" data-i18n="unlock">Отключи</button>
       <div id="lockMsg" class="err" role="alert"></div>
       <button class="tertiary" id="forgetBtn" type="button" data-i18n="forget">Изтрий от това устройство и започни наново</button>
-      <div id="forgetConfirm" class="note confirmrow hide" role="alertdialog">
-        <span data-i18n="forget_confirm">Да премахна ли запазения Еконт вход и настройки от това устройство?</span>
-        <button id="forgetYes" type="button" data-i18n="yes">Да</button>
-        <button id="forgetNo" type="button" data-i18n="no">Не</button>
+      <div id="forgetConfirm" class="confirmrow hide" role="alertdialog" aria-labelledby="forgetQ">
+        <span id="forgetQ" data-i18n="forget_confirm">Да премахна ли запазения вход за Еконт и настройките от това устройство? Пратките в списъка остават.</span>
+        <button id="forgetYes" class="lnk lnk-danger" type="button" data-i18n="forget_yes">Да, изтрий</button>
+        <button id="forgetNo" class="btn-sm" type="button" data-i18n="no">Не</button>
       </div>
     </div>
   </div>
@@ -1059,10 +1066,10 @@ try {
         <div id="batchInfo" role="status"></div>
         <div id="batchProg" class="bprog hide" aria-hidden="true"><i id="batchBar"></i></div>
         <div id="batchList"></div>
-        <div id="batchNoCodConfirm" class="note confirmrow hide" role="alertdialog">
+        <div id="batchNoCodConfirm" class="confirmrow hide" role="alertdialog" aria-labelledby="batchNoCodMsg">
           <span id="batchNoCodMsg"></span>
-          <button id="batchNoCodGo" type="button"></button>
-          <button id="batchNoCodFix" type="button"></button>
+          <button id="batchNoCodGo" class="lnk" type="button"></button>
+          <button id="batchNoCodFix" class="btn-sm" type="button"></button>
         </div>
         <div class="batch-actions">
           <p class="res-today" id="batchToday"></p>
@@ -1081,7 +1088,7 @@ try {
           <p id="prevSummary" class="sec-sub hide"></p>
         </div>
         <div id="parseGaps" class="note hide" role="status"></div>
-        <div id="dupWarn" class="note confirmrow hide" role="status"><span id="dupMsg"></span><button id="dupShowBtn" type="button" data-i18n="dup_show">Покажи</button></div>
+        <div id="dupWarn" class="note hide" role="status"><span id="dupMsg"></span> <button id="dupShowBtn" class="lnk" type="button" data-i18n="dup_show">Покажи</button></div>
 
         <div class="fs">
           <h3 class="fs-h" data-i18n="sec_recipient">Получател</h3>
@@ -1167,10 +1174,10 @@ try {
         <!-- Sticky confirm bar: price, errors and the one primary action stay in reach. -->
         <div class="confirm-bar" id="confirmBar">
           <div id="previewErr" class="err" role="alert"></div>
-          <div id="noCodConfirm" class="note confirmrow hide" role="alertdialog">
-            <span data-i18n="nocod_confirm">Тази пратка тръгва без наложен платеж. Да продължа ли?</span>
-            <button id="noCodGo" type="button" data-i18n="nocod_go">Да, без наложен платеж</button>
-            <button id="noCodFix" type="button" data-i18n="nocod_fix">Ще добавя сума</button>
+          <div id="noCodConfirm" class="confirmrow hide" role="alertdialog" aria-labelledby="noCodQ">
+            <span id="noCodQ" data-i18n="nocod_confirm">Тази пратка тръгва без наложен платеж. Да продължа ли?</span>
+            <button id="noCodGo" class="lnk" type="button" data-i18n="nocod_go">Да, без наложен платеж</button>
+            <button id="noCodFix" class="btn-sm" type="button" data-i18n="nocod_fix">Ще добавя сума</button>
           </div>
           <div class="cb-row">
             <div id="priceBox" class="cb-price" role="status"></div>
@@ -1224,10 +1231,10 @@ try {
         <button class="icon" id="refreshParcelsBtn" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4v6h-6"/><path d="M20.2 14a8.2 8.2 0 1 1-1.9-8.4L21 8.2"/></svg></button>
       </div>
       <p class="pl-sub"><span id="plToday"></span> <span id="parcelsUpdated" class="upd" role="status"></span></p>
-      <div id="clearAllConfirm" class="note confirmrow hide" role="alertdialog">
-        <span data-i18n="clear_confirm">Да премахна ли всички пратки от списъка?</span>
-        <button id="clearAllYes" type="button" data-i18n="yes">Да</button>
-        <button id="clearAllNo" type="button" data-i18n="no">Не</button>
+      <div id="clearAllConfirm" class="confirmrow hide" role="alertdialog" aria-labelledby="clearAllQ">
+        <span id="clearAllQ" data-i18n="clear_confirm">Да премахна ли всички пратки от списъка? В Еконт те остават.</span>
+        <button id="clearAllYes" class="lnk lnk-danger" type="button" data-i18n="clear_yes">Да, премахни всички</button>
+        <button id="clearAllNo" class="btn-sm" type="button" data-i18n="no">Не</button>
       </div>
       <div class="inline add-row">
         <input id="trackNumInput" enterkeyhint="go" data-i18n-ph="track_ph" data-enter="trackNumBtn" placeholder="Номер на товарителница" inputmode="numeric">

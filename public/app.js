@@ -112,7 +112,7 @@ const I18N = {
     match_high: 'сигурно съвпадение', match_mid: 'вероятно съвпадение', match_lo: 'провери офиса',
     // parcels
     parcels_h: 'Твоите пратки', parcels_refresh: 'Обнови статуса',
-    clear_all: 'Изчисти всички', clear_confirm: 'Да премахна ли всички пратки от списъка? В Еконт те остават.', del_confirm: 'Да премахна ли пратката от списъка? В Еконт тя остава.', yes: 'Да', no: 'Не', removed: 'Премахната от списъка', del_link: 'Премахни от списъка',
+    clear_all: 'Изчисти всички', clear_confirm: 'Да премахна ли всички пратки от списъка? В Еконт те остават.', del_confirm: 'Да премахна ли пратката от списъка? В Еконт тя остава.', clear_yes: 'Да, премахни всички', del_yes: 'Да, премахни', forget_yes: 'Да, изтрий', no: 'Не', removed: 'Премахната от списъка', del_link: 'Премахни от списъка',
     exp_delivery: 'Очаквана доставка', collected: 'Събрани {amt}',
     track_events: 'Проследяване', reprint: 'Етикет PDF', need_desc: 'Попълни съдържание. Еконт го изисква за колети.',
     loading: 'Зареждане…', no_status: 'Няма статус', other_env: 'От друг Еконт профил', kg: 'кг',
@@ -268,7 +268,7 @@ const I18N = {
     match_high: 'strong match', match_mid: 'likely match', match_lo: 'check the office',
     // parcels
     parcels_h: 'Your parcels', parcels_refresh: 'Refresh status',
-    clear_all: 'Clear all', clear_confirm: 'Remove all parcels from this list? They stay in Econt.', del_confirm: 'Remove this parcel from the list? It stays in Econt.', yes: 'Yes', no: 'No', removed: 'Removed from the list', del_link: 'Remove from list',
+    clear_all: 'Clear all', clear_confirm: 'Remove all parcels from this list? They stay in Econt.', del_confirm: 'Remove this parcel from the list? It stays in Econt.', clear_yes: 'Yes, remove all', del_yes: 'Yes, remove', forget_yes: 'Yes, delete', no: 'No', removed: 'Removed from the list', del_link: 'Remove from list',
     exp_delivery: 'Expected delivery', collected: 'Collected {amt}',
     track_events: 'Tracking', reprint: 'Label PDF', need_desc: 'Fill in the contents. Econt needs it for parcels.',
     loading: 'Loading…', no_status: 'No status', other_env: 'From another Econt account', kg: 'kg',
@@ -2047,10 +2047,10 @@ function parcelCardHTML(p) {
         <a class="lnk" data-pdf ${p.pdfURL ? `href="${esc(p.pdfURL)}"` : 'hidden'} target="_blank" rel="noopener noreferrer">${esc(t('reprint'))}</a>
         <button class="lnk lnk-danger" type="button" data-del>${esc(t('del_link'))}</button>
       </div>
-      <div class="note confirmrow hide" data-confirm role="alertdialog">
+      <div class="confirmrow hide" data-confirm role="alertdialog">
         <span>${esc(t('del_confirm'))}</span>
-        <button type="button" data-yes>${esc(t('yes'))}</button>
-        <button type="button" data-no>${esc(t('no'))}</button>
+        <button class="lnk lnk-danger" type="button" data-yes>${esc(t('del_yes'))}</button>
+        <button class="btn-sm" type="button" data-no>${esc(t('no'))}</button>
       </div>
     </div>
   </div>`;
