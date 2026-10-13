@@ -354,7 +354,7 @@ function decorateLabelReply(resp) {
   }
   if (notes.length) {
     extra.reviewIgnored = true;
-    extra.reviewIgnoredMessage = [...new Set(notes.filter(Boolean))].join(' — ') || null;
+    extra.reviewIgnoredMessage = [...new Set(notes.filter(Boolean))].join('; ') || null;
   }
   return extra;
 }
@@ -422,7 +422,7 @@ function errorPayload(e) {
   if (e.kind === 'http') {
     const b = e.body || {};
     const msgs = flattenEcontError(b, []);
-    const msg = msgs.length ? [...new Set(msgs)].join(' — ') : ('Econt HTTP ' + e.status);
+    const msg = msgs.length ? [...new Set(msgs)].join('; ') : ('Econt HTTP ' + e.status);
     const out = { ok: false, error: msg, status: e.status, body: b };
     if (isAuthFail(e)) out.code = 'bad_login';
     return out;
@@ -433,15 +433,15 @@ function errorPayload(e) {
 // Friendly (user-facing) messages, in the UI's language — the client sends body.lang.
 const FRIENDLY = {
   missing_creds: { bg: 'Липсват данни за вход в Еконт.', en: 'Missing Econt credentials.' },
-  sender_missing: { bg: 'Липсват име/телефон на подателя — довършете настройката.', en: 'Sender name/phone missing — finish setup.' },
+  sender_missing: { bg: 'Липсват име и телефон на подателя. Довърши настройката.', en: 'Sender name or phone is missing. Finish setup.' },
   bad_login: { bg: 'Грешен потребител или парола за Еконт. Използвайте същите данни, с които влизате в e-econt.com (главните и малките букви имат значение).', en: 'Wrong Econt username or password. Use the same details you sign in to e-econt.com with (case-sensitive).' },
   econt_down: { bg: 'Няма връзка с Еконт в момента. Опитайте пак след малко.', en: 'Cannot reach Econt right now. Try again in a moment.' },
-  office_missing: { bg: 'Не е избран офис за подаване — отворете Настройки и изберете офис.', en: 'Your sender drop-off office is not set — open Settings and choose your office.' },
+  office_missing: { bg: 'Не е избран офис за подаване. Отвори Настройки и избери офис.', en: 'Your drop-off office is not set. Open Settings and choose your office.' },
   batch_too_long: { bg: 'Текстът е твърде дълъг за едно поставяне. Поставете пратките на части.', en: 'That text is too long for one paste. Paste the parcels in parts.' },
-  batch_too_many: { bg: 'Твърде много пратки в едно поставяне ({n}). Най-много {max} наведнъж — поставете ги на части.', en: 'Too many parcels in one paste ({n}). At most {max} at a time — paste them in parts.' },
+  batch_too_many: { bg: 'Твърде много пратки в едно поставяне ({n}). Най-много {max} наведнъж. Постави ги на части.', en: 'Too many parcels in one paste ({n}). At most {max} at a time. Paste them in parts.' },
   parse_too_long: { bg: 'Текстът е твърде дълъг. Поставете само съобщението с данните за пратката.', en: 'That text is too long. Paste just the message with the parcel details.' },
   multi_parcel: { bg: 'В текста има {n} пратки. Запишете телефоните като 0888 123 456, за да се отворят като списък, или ги поставете една по една.', en: 'This text holds {n} parcels. Write the phones as 0888 123 456 to open them as a list, or paste them one at a time.' },
-  batch_slow: { bg: 'офисът не е разпознат за част от редовете — изберете го ръчно.', en: 'the office was not recognised for some rows — pick it by hand.' },
+  batch_slow: { bg: 'офисът не е разпознат за част от редовете. Избери го ръчно.', en: 'the office was not recognised for some rows. Pick it by hand.' },
 };
 const fr = (body, key, params) => FRIENDLY[key][body && body.lang === 'en' ? 'en' : 'bg']
   .replace(/\{(\w+)\}/g, (m, k) => (params && params[k] != null ? String(params[k]) : m));
