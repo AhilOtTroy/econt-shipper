@@ -78,10 +78,10 @@ const I18N = {
     batch_h: 'Няколко пратки наведнъж', batch_found: '{n} пратки: {c} за създаване, {t} за проследяване.', batch_found_c: '{n} пратки за създаване.',
     batch_create: 'Създай избраните', batch_cancel: 'Затвори', batch_run: 'Създавам {i} от {n}…',
     batch_edit: 'Отвори', batch_no_office: 'избери офис', batch_addr_row: 'до адрес: {a}',
-    st_create: 'нова пратка', st_create_conv: 'нова пратка, около {v}', st_track: 'има товарителница, ще се проследява', st_missing: 'липсва офис', st_creating: 'създавам…', st_ok: 'създадена: {num}', st_tracked: 'добавена за проследяване', st_skip: 'пропусната',
+    st_create: 'нова пратка', st_create_cod: 'нова пратка, наложен платеж {amt}', st_create_conv: 'нова пратка, наложен платеж {amt}, около {v}', st_pick: 'няколко офиса пасват, избери един', st_badamt: 'сумата не е число, поправи я', st_baddecl: 'обявената стойност липсва или не е число, отвори реда', st_nocontact: 'липсва име или телефон', st_track: 'има товарителница, ще се проследява', st_missing: 'липсва офис', st_creating: 'създавам…', st_ok: 'създадена: {num}', st_ok_norev: 'създадена: {num}, Еконт не добави преглед', st_tracked: 'добавена за проследяване', st_skip: 'пропусната',
     batch_done: 'Готово. {parts}.',
     bd_ok1: 'създадена е 1 товарителница', bd_ok: 'създадени са {n} товарителници', bd_tr1: '1 номер е добавен за проследяване', bd_tr: '{n} номера са добавени за проследяване',
-    bd_fail1: '1 ред е с грешка', bd_fail: '{n} реда са с грешка', bd_skip1: '1 ред е пропуснат', bd_skip: '{n} реда са пропуснати',
+    bd_fail1: '1 ред е с грешка', bd_fail: '{n} реда са с грешка', bd_skip1: '1 ред е пропуснат', bd_skip: '{n} реда са пропуснати', bd_wait1: '1 ред чака избор на офис', bd_wait: '{n} реда чакат избор на офис',
     row_label: 'Ред {n}', row_one: 'ред {n}', row_many: 'редове {list}', list_and: ' и ',
     ret_incomplete: 'Връщането при отказ не е запазено. Попълни код на офис или адрес.',
     back_to_batch: 'Обратно към списъка (ред {n})',
@@ -108,7 +108,7 @@ const I18N = {
     today_one: 'Днес: 1 пратка', today_many: 'Днес: {n} пратки', today_cod: '{amt} наложен платеж', today_and: ' и ',
     dd_site: 'econt.com', dd_site_sub: 'Официалният сайт на Еконт', dd_profile: 'e-Econt профил', dd_profile_sub: 'Пратките в твоя профил',
     reply_copy: 'Натисни, за да копираш', track_link: 'Проследи',
-    reply_template: 'Готово! Поръчката ви тръгва с Еконт.\nТоварителница: {num}\nПроследяване: {url}',
+    reply_template: 'Готово! Пратката е подадена.\nТоварителница: {num}\nПроследяване: {url}',
     match_high: 'сигурно съвпадение', match_mid: 'вероятно съвпадение', match_lo: 'провери офиса',
     // parcels
     parcels_h: 'Твоите пратки', parcels_refresh: 'Обнови статуса',
@@ -121,14 +121,19 @@ const I18N = {
     review_label: 'Преглед преди плащане',
     review_set_review: 'Всяка пратка е с преглед преди плащане. Сменя се в Настройки.', review_set_test: 'Всяка пратка е с преглед и тест преди плащане. Сменя се в Настройки.',
     track_ph: 'Номер на товарителница', track_add: 'Добави', already_added: 'Тази пратка вече е в списъка', invalid_number: 'Това не прилича на номер на товарителница',
-    details: 'Детайли', delivered_ok: 'Доставена', returned_ok: 'Върната към подателя', in_operation: 'В движение от {d}', delivered_in: 'Доставена за {d}', returned_in: 'Върната към подателя след {d}', awaiting_dispatch: 'Очаква изпращане',
+    details: 'Детайли', delivered_ok: 'Доставена', returned_ok: 'Върната към подателя', in_operation: 'В движение от {d}', delivered_in: 'Доставена за {d}', returned_in: 'Върната към подателя след {d}', awaiting_dispatch: 'Очаква изпращане', cancelled_ok: 'Анулирана', dur_sent: 'изпратена преди {d}', dur_in: 'за {d}', dur_after: 'след {d}',
     dur_min: '{n}\u00A0мин', dur_h: '{n}\u00A0ч', dur_d1: '1\u00A0ден', dur_d: '{n}\u00A0дни', dur_join: ' и ',
     d_status: 'Статус', d_sender: 'Подател', d_recipient: 'Получател', d_phone: 'Телефон', d_office: 'Офис на получателя', d_sender_office: 'Офис на подателя', d_storage: 'Съхранява се в', d_type: 'Тип', d_packs: 'Брой', d_weight: 'Тегло', d_contents: 'Съдържание', d_review: 'Преглед', d_sent: 'Изпратена', d_expected: 'Очаквана доставка', d_delivered: 'Доставена на', d_cod: 'Наложен платеж', d_price: 'Цена', d_attempts: 'Опити за доставка', d_routing: 'Маршрут',
     testing: 'Проверявам…', login_saved: 'Запазено.', fix_login_hint: 'Отвори Настройки (зъбното колело горе) и натисни „Проверка на входа“ с паролата си за e-econt.com.', server_waking: 'Сървърът се събужда. Изчакай 30 секунди и опитай пак.', net_down: 'Няма връзка с интернет.', login_ok: 'Входът работи. Налични са {n} офиса.', need_creds: 'Първо въведи потребителско име и парола.',
     pin_short: 'PIN трябва да е поне 4 цифри.', pin_mismatch: 'Двата PIN-а не съвпадат.', test_first: 'Първо провери входа за Еконт (стъпка 2).',
     fill_sender: 'Попълни име, телефон и офис, от който пращаш (стъпка 3).',
     paste_first: 'Първо постави съобщение.', pick_office: 'Избери офис.', need_recip: 'Трябват име, телефон и офис.',
-    cod_blank: 'Наложеният платеж е включен, но сумата е празна. Въведи сума или го изключи.',
+    cod_blank: 'Наложеният платеж е включен, но сумата липсва или не е число. Въведи сума или го изключи.',
+    decl_blank: 'Обявената стойност е включена, но сумата липсва или не е число. Въведи сума или я изключи.',
+    review_ignored_prev: 'Еконт не предлага преглед за тази доставка, затова пратката ще е без преглед.',
+    review_ignored_res: 'Еконт не добави преглед към пратката, затова отговорът до клиента не го обещава.',
+    ocr_stale: 'Докато четях снимката, съобщението или пратката се промениха, затова текстът от снимката не е използван.',
+    a11y_cod_amount: 'Сума на наложения платеж', a11y_decl_amount: 'Сума на обявената стойност', a11y_decl_cur: 'Валута на обявената стойност',
     saved: 'Запазено', creating: 'Създавам…', validated: 'Еконт прие данните',
     est_price: 'Очаквана цена <span class="price">{v}</span>',
     no_match: 'Няма офис за „{q}“. Потърси по-долу.', office_err: 'Списъкът с офиси не се зареди: {err}',
@@ -234,10 +239,10 @@ const I18N = {
     batch_h: 'Several parcels at once', batch_found: '{n} parcels: {c} to create, {t} to track.', batch_found_c: '{n} parcels to create.',
     batch_create: 'Create selected', batch_cancel: 'Close', batch_run: 'Creating {i} of {n}…',
     batch_edit: 'Open', batch_no_office: 'pick an office', batch_addr_row: 'to address: {a}',
-    st_create: 'new parcel', st_create_conv: 'new parcel, about {v}', st_track: 'has a waybill, will be tracked', st_missing: 'office missing', st_creating: 'creating…', st_ok: 'created: {num}', st_tracked: 'added to tracking', st_skip: 'skipped',
+    st_create: 'new parcel', st_create_cod: 'new parcel, cash on delivery {amt}', st_create_conv: 'new parcel, cash on delivery {amt}, about {v}', st_pick: 'several offices match, pick one', st_badamt: 'the amount is not a number, fix it', st_baddecl: 'the declared value is missing or not a number, open the row', st_nocontact: 'name or phone missing', st_track: 'has a waybill, will be tracked', st_missing: 'office missing', st_creating: 'creating…', st_ok: 'created: {num}', st_ok_norev: 'created: {num}, Econt added no inspection', st_tracked: 'added to tracking', st_skip: 'skipped',
     batch_done: 'Done. {parts}.',
     bd_ok1: '1 waybill created', bd_ok: '{n} waybills created', bd_tr1: '1 number added to tracking', bd_tr: '{n} numbers added to tracking',
-    bd_fail1: '1 row failed', bd_fail: '{n} rows failed', bd_skip1: '1 row skipped', bd_skip: '{n} rows skipped',
+    bd_fail1: '1 row failed', bd_fail: '{n} rows failed', bd_skip1: '1 row skipped', bd_skip: '{n} rows skipped', bd_wait1: '1 row needs an office picked', bd_wait: '{n} rows need an office picked',
     row_label: 'Row {n}', row_one: 'row {n}', row_many: 'rows {list}', list_and: ' and ',
     ret_incomplete: 'Return on refusal was not saved. Fill in the office code or the address.',
     back_to_batch: 'Back to the list (row {n})',
@@ -264,7 +269,7 @@ const I18N = {
     today_one: 'Today: 1 parcel', today_many: 'Today: {n} parcels', today_cod: '{amt} cash on delivery', today_and: ' and ',
     dd_site: 'econt.com', dd_site_sub: 'The official Econt website', dd_profile: 'e-Econt account', dd_profile_sub: 'The parcels in your account',
     reply_copy: 'Click or tap to copy', track_link: 'Track',
-    reply_template: 'Done! Your order is going out with Econt.\nTracking number: {num}\nTrack it: {url}',
+    reply_template: 'Done! Your parcel is on its way.\nTracking number: {num}\nTrack it: {url}',
     match_high: 'strong match', match_mid: 'likely match', match_lo: 'check the office',
     // parcels
     parcels_h: 'Your parcels', parcels_refresh: 'Refresh status',
@@ -277,14 +282,19 @@ const I18N = {
     review_label: 'Inspection before paying',
     review_set_review: 'Every parcel goes with inspection before paying. You can change this in Settings.', review_set_test: 'Every parcel goes with inspection and test before paying. You can change this in Settings.',
     track_ph: 'Waybill number', track_add: 'Add', already_added: 'This parcel is already on the list', invalid_number: 'That does not look like a waybill number',
-    details: 'Details', delivered_ok: 'Delivered', returned_ok: 'Returned to sender', in_operation: 'In transit for {d}', delivered_in: 'Delivered in {d}', returned_in: 'Returned to sender after {d}', awaiting_dispatch: 'Waiting to be sent',
+    details: 'Details', delivered_ok: 'Delivered', returned_ok: 'Returned to sender', in_operation: 'In transit for {d}', delivered_in: 'Delivered in {d}', returned_in: 'Returned to sender after {d}', awaiting_dispatch: 'Waiting to be sent', cancelled_ok: 'Cancelled', dur_sent: 'sent {d} ago', dur_in: 'in {d}', dur_after: 'after {d}',
     dur_min: '{n}\u00A0min', dur_h: '{n}\u00A0h', dur_d1: '1\u00A0day', dur_d: '{n}\u00A0days', dur_join: ' ',
     d_status: 'Status', d_sender: 'Sender', d_recipient: 'Recipient', d_phone: 'Phone', d_office: 'Recipient office', d_sender_office: 'Sender office', d_storage: 'Stored at', d_type: 'Type', d_packs: 'Packs', d_weight: 'Weight', d_contents: 'Contents', d_review: 'Inspection', d_sent: 'Sent', d_expected: 'Expected delivery', d_delivered: 'Delivered at', d_cod: 'Cash on delivery', d_price: 'Price', d_attempts: 'Delivery attempts', d_routing: 'Routing',
     testing: 'Testing…', login_saved: 'Saved.', fix_login_hint: 'Open Settings (the cog at the top) and press "Test login" with your e-econt.com password.', server_waking: 'The server is waking up. Wait 30 seconds and try again.', net_down: 'No internet connection.', login_ok: 'Login works. {n} offices available.', need_creds: 'Enter your username and password first.',
     pin_short: 'The PIN needs at least 4 digits.', pin_mismatch: 'The two PINs do not match.', test_first: 'Test your Econt login first (step 2).',
     fill_sender: 'Fill in your name, phone and the office you ship from (step 3).',
     paste_first: 'Paste a message first.', pick_office: 'Pick an office.', need_recip: 'A name, a phone and an office are needed.',
-    cod_blank: 'Cash on delivery is on but the amount is empty. Enter an amount or turn it off.',
+    cod_blank: 'Cash on delivery is on but the amount is missing or not a number. Enter an amount or turn it off.',
+    decl_blank: 'Declared value is on but the amount is missing or not a number. Enter an amount or turn it off.',
+    review_ignored_prev: 'Econt does not offer inspection for this delivery, so the parcel will go without it.',
+    review_ignored_res: 'Econt did not add inspection to this parcel, so the reply to the customer does not promise it.',
+    ocr_stale: 'The message or the parcel changed while the screenshot was being read, so its text was not used.',
+    a11y_cod_amount: 'Cash on delivery amount', a11y_decl_amount: 'Declared value amount', a11y_decl_cur: 'Declared value currency',
     saved: 'Saved', creating: 'Creating…', validated: 'Econt accepted the details',
     est_price: 'Estimated price <span class="price">{v}</span>',
     no_match: 'No office matched "{q}". Search below.', office_err: 'The office list did not load: {err}',
@@ -372,6 +382,10 @@ function applyLang() {
   for (const [id, k] of [['infoBtn', 'a11y_info'], ['settingsBtn', 'a11y_settings'], ['lockNowBtn', 'a11y_lock'], ['brandHome', 'a11y_home'], ['attachBtn', 'a11y_attach'], ['pasteBtn', 'a11y_paste'], ['recalcBtn', 'recalc'], ['msg', 'paste_label'], ['refreshParcelsBtn', 'parcels_refresh']]) {
     const el = $(id); if (el) { el.setAttribute('aria-label', t(k)); el.title = t(k); }
   }
+  // Money fields sit next to their checkbox label; each gets its own spoken name.
+  for (const [id, k] of [['pCodAmount', 'a11y_cod_amount'], ['pCodCur', 'cod_currency'], ['pDeclAmount', 'a11y_decl_amount'], ['pDeclCur', 'a11y_decl_cur']]) {
+    const el = $(id); if (el) el.setAttribute('aria-label', t(k));
+  }
   $('createHint').textContent = t('create_hint', { k: isMac ? '⌘' : 'Ctrl' });
   renderLandingReply();
   syncThemeBtnLabel();
@@ -391,6 +405,11 @@ function setLang(l) {
   if (!$('tab-parcels').classList.contains('hide')) openParcels();
   if (!$('view-about').classList.contains('hide')) renderAbout();
   if (!$('batch').classList.contains('hide')) renderBatch();
+  // Strings built from state: the back-to-list buttons, the payout select and its message.
+  showBatchBackBtns();
+  renderPayoutSelect(PAYOUTS, $('cfgPayout').value);
+  renderPayoutMsg();
+  syncModeBadge();
   // Refresh dynamically-generated strings in an open preview so they follow the language.
   if (!$('view-app').classList.contains('hide') && !$('preview').classList.contains('hide')) { applyReviewUI(); doPreview(); }
 }
@@ -418,9 +437,34 @@ function fmtNum(n, trim) {
   return LANG === 'bg' ? s.replace('.', ',') : s;
 }
 function fmtMoney(n, cur) {
-  const c = String(cur || 'EUR').toUpperCase();
-  return fmtNum(n) + '\u00A0' + (c === 'BGN' ? 'лв' : c === 'EUR' ? '€' : c);
+  // Only a plain currency code ever reaches the page (Econt's reply is relayed as is).
+  const c = String(cur || 'EUR').toUpperCase(), code = /^[A-Z]{3}$/.test(c) ? c : '';
+  return fmtNum(n) + (c === 'BGN' ? '\u00A0лв' : c === 'EUR' ? '\u00A0€' : code ? '\u00A0' + code : '');
 }
+// A typed money amount, the way Bulgarians write it as well, read like the message
+// parser reads it: "45,50", "45.50", "1 234,50", "1.234,50", "1.200" (thousands),
+// "45 лв". Empty is 0; anything else that is not a number is NaN, so a typo is caught
+// instead of becoming 4550 (type=number in an English browser drops the comma).
+function parseAmount(v) {
+  let s = String(v == null ? '' : v).trim().replace(/[\s\u00A0\u202F]/g, '').replace(/(лв\.?|лева|bgn|eur|евро|€)$/i, '');
+  if (!s) return 0;
+  if (/^[1-9]\d{0,2}(?:\.\d{3})+(?:,\d{1,2})?$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');
+  else if (/^[1-9]\d{0,2}(?:,\d{3})+(?:\.\d{1,2})?$/.test(s)) s = s.replace(/,/g, '');
+  else if (/^\d+[.,]\d{1,2}$/.test(s)) s = s.replace(',', '.');
+  else if (!/^\d+$/.test(s)) return NaN;
+  return Number(s);
+}
+const amtOf = (id) => parseAmount($(id).value);
+// The declared value a seller ticked must be a real amount: a typo or an empty box
+// would make Econt drop the insurance without a word. The one empty box that is fine
+// is the one that follows the COD ("equal to the COD" in Settings) while there is no COD.
+function declBad(on, raw, auto) {
+  if (!on) return false;
+  raw = String(raw == null ? '' : raw).trim();
+  if (!raw && auto) return false;
+  return !(parseAmount(raw) > 0);
+}
+const declBadEd = () => declBad($('pDeclOn').checked, $('pDeclAmount').value, $('pDeclAmount').dataset.auto === '1');
 // The customer reply as HTML: a long tracking URL may break after a slash, never mid-word.
 // The landing shows the link short and blue (urlCls); the app shows it exactly as sent.
 const urlParts = (rest) => rest.split('/').map((seg) => (seg ? `<span class="nw">${seg}</span>` : '')).join('/<wbr>');
@@ -545,6 +589,7 @@ async function sendReply(num, btn, info) {
 let LAST_OK = 0;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const RETRY_WAITS = [2000, 4000, 8000, 16000, 30000];
+const noDash = (m) => String(m).replace(/\s+[\u2013\u2014]\s+/g, ', ').replace(/[\u2013\u2014]/g, '-');
 const api = async (path, body, opts) => {
   opts = opts || {};
   for (let attempt = 0; ; attempt++) {
@@ -552,7 +597,13 @@ const api = async (path, body, opts) => {
     try {
       const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ lang: LANG }, body || {})) });
       const txt = await res.text();
-      try { const j = JSON.parse(txt); LAST_OK = Date.now(); return j; } catch { kind = 'waking'; }
+      try {
+        const j = JSON.parse(txt); LAST_OK = Date.now();
+        // Server and Econt messages are shown as written, minus their dashes (house style).
+        if (j && typeof j.error === 'string') j.error = noDash(j.error);
+        if (j && typeof j.officesError === 'string') j.officesError = noDash(j.officesError);
+        return j;
+      } catch { kind = 'waking'; }
     } catch { kind = navigator.onLine === false ? 'offline' : 'net'; }
     const fail = { ok: false, error: t(kind === 'waking' ? 'server_waking' : 'net_down'), transient: true };
     if (!opts.retry || kind === 'offline' || attempt >= RETRY_WAITS.length) return fail;
@@ -616,13 +667,17 @@ async function fillOfficeSelect(sel, q, credsObj) {
 }
 
 // ===================== WIZARD =====================
-let wizardTested = false;
+let wizardTested = false, WIZ_TEST_SEQ = 0;
 const wizardCreds = () => ({ mode: $('suMode').value, username: $('suUser').value.trim(), password: $('suPass').value });
 $('suTestBtn').onclick = async () => {
   const c = wizardCreds();
   if (!c.username || !c.password) { $('suTestMsg').className = 'err'; $('suTestMsg').textContent = t('need_creds'); return; }
   $('suTestMsg').className = 'muted'; $('suTestMsg').textContent = t('testing');
+  const seq = ++WIZ_TEST_SEQ;
   const r = await api('/api/test', { creds: c });
+  // A reply for credentials that were changed meanwhile says nothing about the new ones.
+  const now = wizardCreds();
+  if (seq !== WIZ_TEST_SEQ || now.mode !== c.mode || now.username !== c.username || now.password !== c.password) return;
   if (r.ok) { wizardTested = true; $('suTestMsg').className = 'good'; $('suTestMsg').textContent = t('login_ok', { n: r.officeCount }); $('suFinishBtn').disabled = false; }
   else { wizardTested = false; $('suTestMsg').className = 'err'; $('suTestMsg').textContent = r.error; $('suFinishBtn').disabled = true; }
   syncSetupSteps();
@@ -640,7 +695,10 @@ function syncSetupSteps() {
 }
 $('view-setup').addEventListener('input', syncSetupSteps);
 $('view-setup').addEventListener('change', syncSetupSteps);
-for (const id of ['suUser', 'suPass', 'suMode']) $(id).addEventListener('input', () => { wizardTested = false; $('suFinishBtn').disabled = true; });
+for (const id of ['suUser', 'suPass', 'suMode']) $(id).addEventListener('input', () => {
+  wizardTested = false; $('suFinishBtn').disabled = true;
+  WIZ_TEST_SEQ++; $('suTestMsg').className = 'muted'; $('suTestMsg').textContent = '';
+});
 $('suSenderSearchBtn').onclick = async () => { await fillOfficeSelect($('suSenderOffice'), $('suSenderOfficeSearch').value, wizardCreds()); syncSetupSteps(); };
 // First-timers without an Econt login can try the public DEMO account. This is
 // the ONLY place demo exists — settings always drives toward the real account.
@@ -668,28 +726,48 @@ $('suFinishBtn').onclick = async () => {
 };
 
 // ===================== LOCK =====================
-function showLock() { show('lock'); $('forgetConfirm').classList.add('hide'); $('lockMsg').textContent = ''; $('lockPin').value = ''; setTimeout(() => $('lockPin').focus(), 50); ping(); }
-let UNLOCKING = false;
+function showLock() {
+  show('lock'); $('forgetConfirm').classList.add('hide'); $('lockMsg').textContent = ''; $('lockPin').value = '';
+  // New PINs are 4 to 6 digits. A store from before that cap (no pinLen) may hold a
+  // longer PIN, so its field takes any length; a stored length above 6 is honoured too.
+  const store = loadStore(), pin = $('lockPin');
+  if (store && store.pinLen) pin.maxLength = Math.max(6, store.pinLen); else pin.removeAttribute('maxlength');
+  setTimeout(() => $('lockPin').focus(), 50); ping();
+}
+// The PIN is read once per attempt: digits typed while it decrypts never become
+// SESSION.pin (the next save would re-encrypt with them). A request made while an
+// attempt runs is kept and runs right after it, for whatever the field then holds.
+let UNLOCKING = false, UNLOCK_NEXT = null;
 async function tryUnlock(silentOnFail) {
-  if (UNLOCKING) return;
+  if (UNLOCKING) { UNLOCK_NEXT = { silent: !!silentOnFail && !(UNLOCK_NEXT && !UNLOCK_NEXT.silent) }; return; }
   const store = loadStore(); if (!store) return show('landing');
-  UNLOCKING = true;
+  const pin = $('lockPin').value;
+  UNLOCKING = true; UNLOCK_NEXT = null;
+  let ok = false;
   try {
-    SESSION.password = await decryptSecret(store.enc, $('lockPin').value); SESSION.pin = $('lockPin').value;
+    const password = await decryptSecret(store.enc, pin);
+    SESSION.password = password; SESSION.pin = pin; ok = true;
     CONFIG = { mode: store.mode, username: store.username, sender: store.sender, defaults: store.defaults };
     enterApp();
-  } catch { if (!silentOnFail) $('lockMsg').textContent = t('wrong_pin'); }
-  finally { UNLOCKING = false; }
+  } catch { if (!ok && !silentOnFail && $('lockPin').value === pin) $('lockMsg').textContent = t('wrong_pin'); }
+  finally {
+    UNLOCKING = false;
+    const next = UNLOCK_NEXT; UNLOCK_NEXT = null;
+    if (!ok && next && !$('view-lock').classList.contains('hide')) {
+      if ($('lockPin').value !== pin) tryUnlock(next.silent);
+      else if (!next.silent) $('lockMsg').textContent = t('wrong_pin');
+    }
+  }
 }
 const unlock = () => tryUnlock(false);
 $('lockBtn').onclick = unlock;
-// Auto-unlock the moment the full PIN is entered — no button click needed.
+// Auto-unlock the moment the full PIN is entered, no button click needed.
 $('lockPin').addEventListener('input', () => {
   $('lockMsg').textContent = '';
   const store = loadStore(); if (!store) return;
   const len = $('lockPin').value.length, expected = store.pinLen || 0;
   if (expected) { if (len === expected) tryUnlock(false); }
-  else if (len >= 4) tryUnlock(len < 6); // legacy store: only show error at the 6-char cap
+  else if (len >= 4) tryUnlock(true); // legacy store, length unknown: quiet tries, the button says if it is wrong
 });
 // In-place confirm (no native dialog). Removes the login and settings only, as
 // the prompt says; the parcel list stays so nothing in transit is lost.
@@ -710,9 +788,14 @@ function switchTab(which) {
   if (ind) ind.style.transform = which === 'parcels' ? 'translateX(calc(100% + 5px))' : 'translateX(0)';
   if (which === 'parcels') openParcels(); else stopTimers();
 }
-function enterApp() {
-  const badge = $('modeBadge'); badge.textContent = t('badge_demo'); badge.className = 'app-ctl badge demo'; badge.style.display = CONFIG.mode === 'demo' ? '' : 'none';
+// The Demo badge follows CONFIG.mode wherever the mode changes (unlock, Save, a login check).
+function syncModeBadge() { const badge = $('modeBadge'); badge.textContent = t('badge_demo'); badge.style.display = CONFIG.mode === 'demo' ? '' : 'none'; }
+// The settings form always opens showing what is saved: edits left with Back are dropped,
+// so a later unrelated Save can never store them by accident.
+function fillSettingsForm() {
   $('cfgUser').value = CONFIG.username || ''; $('cfgPass').value = '';
+  $('cfgTestMsg').textContent = ''; $('cfgMsg').textContent = '';
+  $('cfgSenderSearch').value = ''; $('cfgSenderOfficeSel').classList.add('hide');
   $('cfgDemoNote').classList.toggle('hide', CONFIG.mode !== 'demo');
   const s = CONFIG.sender, d = CONFIG.defaults;
   $('cfgSenderName').value = s.name || ''; $('cfgSenderPhone').value = s.phone || ''; $('cfgSenderOffice').value = s.officeCode || '';
@@ -732,7 +815,13 @@ function enterApp() {
   $('cfgRetStreet').value = ra.street || ''; $('cfgRetNum').value = ra.num || '';
   applyRetUI();
   setSeg('cfgReviewSeg', 'cfgReviewMode', reviewAnchor(d));
+  renderPayoutMsg();
+}
+function enterApp() {
+  syncModeBadge();
+  fillSettingsForm();
   applyReviewUI();  // keep the preview's review control in sync after a settings change
+  if (!$('batch').classList.contains('hide') && !createBusy()) renderBatch();  // review / COD defaults show in the rows
   switchTab('new');
   show('app');
   renderToday();
@@ -741,7 +830,7 @@ function enterApp() {
 }
 $('navNew').onclick = () => switchTab('new');
 $('navParcels').onclick = () => switchTab('parcels');
-$('settingsBtn').onclick = () => { show('settings'); fetchOfficeStatus(); };
+$('settingsBtn').onclick = () => { fillSettingsForm(); show('settings'); fetchOfficeStatus(); };
 $('settingsBackBtn').onclick = () => show('app');
 // Credentials being tested/saved in settings: brand-new username+password mean
 // the real account (production); otherwise stay in the current mode.
@@ -765,12 +854,18 @@ async function cfgTestLogin(btn) {
     await persist(); $('cfgPass').value = '';
     m.textContent += ' ' + t('login_saved');
     $('cfgDemoNote').classList.toggle('hide', CONFIG.mode !== 'demo');
+    syncModeBadge();
   }
   return !!r.ok;
 }
 $('cfgTestBtn').onclick = (ev) => cfgTestLogin(ev.currentTarget);
 for (const id of ['cfgUser', 'cfgPass']) $(id).addEventListener('input', () => { $('cfgTestMsg').textContent = ''; });
-$('cfgSenderSearchBtn').onclick = () => fillOfficeSelect($('cfgSenderOfficeSel'), $('cfgSenderSearch').value, cfgCreds());
+// The office the select shows is the one Save stores: a single result (or the first of
+// several) fires no change event, so adopt it as soon as the list is filled.
+$('cfgSenderSearchBtn').onclick = async () => {
+  const sel = $('cfgSenderOfficeSel');
+  if ((await fillOfficeSelect(sel, $('cfgSenderSearch').value, cfgCreds())) && sel.value) sel.onchange();
+};
 $('cfgSenderOfficeSel').onchange = () => {
   const sel = $('cfgSenderOfficeSel');
   $('cfgSenderOffice').value = sel.value; $('cfgOfficeName').textContent = sel.value ? optName(sel.selectedOptions[0]) : '';
@@ -817,7 +912,13 @@ $('saveCfgBtn').onclick = async (ev) => {
 
 
 // ---------- COD payout agreements (Econt holds the IBAN, we only reference it) ----------
-let PAYOUTS = [];
+let PAYOUTS = [], PAYOUT_MSG = { k: 'payout_hint' };
+// The message under the payout select is state (hint, loading, result, error), so a
+// language switch re-renders it instead of putting the static hint back.
+function renderPayoutMsg() {
+  const m = PAYOUT_MSG;
+  $('cfgPayoutMsg').textContent = m.err != null ? t('error_prefix') + m.err : t(m.k, m.p);
+}
 function payoutLabel(o) {
   const m = o.method === 'bank' ? t('payout_bank') : o.method === 'office' ? t('payout_office')
     : o.method === 'address' ? t('payout_address') : (o.method || '');
@@ -845,14 +946,15 @@ function renderPayoutSelect(options, selected) {
 $('cfgPayoutBtn').onclick = async (ev) => {
   const btn = ev.currentTarget;
   btnBusy(btn, true);
-  $('cfgPayoutMsg').textContent = t('loading');
+  PAYOUT_MSG = { k: 'loading' }; renderPayoutMsg();
   const r = await api('/api/payouts', { creds: cfgCreds() });
   btnBusy(btn, false);
-  if (!r.ok) { $('cfgPayoutMsg').textContent = t('error_prefix') + r.error; return; }
+  if (!r.ok) { PAYOUT_MSG = { err: r.error }; renderPayoutMsg(); return; }
   PAYOUTS = r.options || [];
-  renderPayoutSelect(PAYOUTS, (CONFIG.defaults.cod && CONFIG.defaults.cod.payOptionNum) || '');
+  renderPayoutSelect(PAYOUTS, $('cfgPayout').value || (CONFIG.defaults.cod && CONFIG.defaults.cod.payOptionNum) || '');
   const banks = PAYOUTS.filter((o) => o.method === 'bank').length;
-  $('cfgPayoutMsg').textContent = PAYOUTS.length ? t('payout_found', { n: PAYOUTS.length, b: banks }) : t('payout_none');
+  PAYOUT_MSG = PAYOUTS.length ? { k: 'payout_found', p: { n: PAYOUTS.length, b: banks } } : { k: 'payout_none' };
+  renderPayoutMsg();
 };
 
 // ---------- refusal-return anchor ----------
@@ -913,7 +1015,12 @@ function fillAddress(a) {
 function gatherAddress() {
   return { city: $('pAddrCity').value.trim(), postCode: $('pAddrPost').value.trim(), street: $('pAddrStreet').value.trim(), num: $('pAddrNum').value.trim(), other: $('pAddrNote').value.trim(), countryCode: 'BGR' };
 }
-const PHONE_COUNT_RE = /(?:\+?\s?359|0)[\s\-.]?8(?:[\s\-.]?\d){8}/g;
+// The same mobile-number pattern as parser.js PHONE_RE (keep the two in step): 0, +359
+// or 00359, then 87x/88x/89x and seven more digits, with single space . - / separators,
+// slashes ("0888/123456") and brackets ("(0888) 123 456"). The browser counts phones with
+// it to decide whether a paste may be a batch, so both sides must see the same numbers.
+const PH_SEP = '(?:\\s?[\\-./]\\s?|\\)\\s?|\\s)';
+const PHONE_COUNT_RE = new RegExp('\\(?(?:(?:\\+|00)?\\s?359\\)?|0)' + PH_SEP + '?\\(?8' + PH_SEP + '?[7-9](?:' + PH_SEP + '?\\d){7}', 'g');
 // A newer paste supersedes an older parse that is still waiting on the server.
 let PARSE_SEQ = 0, PARSE_INFLIGHT = 0;
 function parseBusy(on) {
@@ -934,9 +1041,12 @@ async function doParse(ev, opts) {
   const text = $('msg').value.trim();
   if (!text) { $('parseErr').textContent = t('paste_first'); return false; }
   resetCreateGuards();
-  // Several phone numbers MAY mean a batch — but only if the splitter really
+  // Several phone numbers MAY mean a batch, but only if the splitter really
   // finds 2+ parcels (an alternate number in one message is still one parcel).
-  if (!(opts && opts.forceSingle) && (text.match(PHONE_COUNT_RE) || []).length >= 2) {
+  const forceSingle = !!(opts && opts.forceSingle);
+  let triedBatch = false;
+  if (!forceSingle && (text.match(PHONE_COUNT_RE) || []).length >= 2) {
+    triedBatch = true;
     const handled = await doBatchParse(text, seq);
     if (handled || seq !== PARSE_SEQ) return handled === 'applied';
   }
@@ -948,8 +1058,21 @@ async function doParse(ev, opts) {
     if (seq !== PARSE_SEQ) return false;
     if (createBusy()) { $('parseErr').className = 'muted'; $('parseErr').textContent = t('parse_again'); return false; }
     $('parseErr').className = 'err'; $('parseErr').textContent = '';
-    if (!r.ok) { $('parseErr').textContent = r.error || t('parse_failed'); return false; }
+    if (!r.ok) {
+      // The server found several parcels the browser did not count: open them as a
+      // list instead of showing one and dropping the rest. A batch Open (forceSingle)
+      // or a list that was already tried shows the server's message.
+      if (r.code === 'multi_parcel' && !forceSingle && !triedBatch) {
+        const handled = await doBatchParse(text, seq);
+        if (seq !== PARSE_SEQ) return false;
+        if (handled) return handled === 'applied';
+        $('parseErr').className = 'err';
+      }
+      // Too long, several parcels, or any other refusal: the server's own words.
+      $('parseErr').textContent = r.error || t('parse_failed'); return false;
+    }
     const p = r.parsed;
+    REVIEW_IGNORED = null;
     PARSED_CUR = !!(p.cod && p.cod.amount && p.cod.currency);
     $('pName').value = p.recipientName || ''; $('pPhone').value = p.phone || '';
     CANDIDATES = r.candidates || [];
@@ -1011,8 +1134,8 @@ function gatherOverrides() {
   const o = {
     recipientName: $('pName').value.trim(), phone: $('pPhone').value.trim(),
     weight: Number($('pWeight').value) || undefined, description: $('pDesc').value.trim(), payer: $('pPayer').value,
-    cod: { enabled: $('pCodOn').checked, amount: Number($('pCodAmount').value) || 0, currency: $('pCodCur').value },
-    declaredValue: { enabled: $('pDeclOn').checked, amount: Number($('pDeclAmount').value) || 0, currency: $('pDeclCur').value },
+    cod: { enabled: $('pCodOn').checked, amount: amtOf('pCodAmount') || 0, currency: $('pCodCur').value },
+    declaredValue: { enabled: $('pDeclOn').checked, amount: amtOf('pDeclAmount') || 0, currency: $('pDeclCur').value },
     payAfterAccept: rf.payAfterAccept, payAfterTest: rf.payAfterTest, reviewMode: mode,
   };
   if (deliverMode === 'address') o.address = gatherAddress();
@@ -1023,9 +1146,24 @@ const shipBody = (overrides) => ({ creds: creds(), sender: CONFIG.sender, defaul
 function showPrice(resp) {
   const st = resp.label || resp, total = st.totalPrice;
   const cur = st.totalPriceCurrency || st.currency || $('pCodCur').value || 'EUR';
-  return total != null ? t('est_price', { v: fmtMoney(total, cur) }) : esc(t('validated'));
+  return total != null ? t('est_price', { v: esc(fmtMoney(total, cur)) }) : esc(t('validated'));
 }
 function currentReviewMode() { return reviewAnchor(CONFIG.defaults) || $('pReviewMode').value || 'none'; }
+// Econt drops преглед/тест for some deliveries (parcel lockers and the like) and says so
+// in its reply (reviewIgnored). The last quote's answer, null until one arrives.
+let REVIEW_IGNORED = null;
+const cleanEcontNote = (m) => String(m || '').replace(/\s+[\u2013\u2014]\s+/g, '. ').trim();
+function reviewIgnoredText(key, info) {
+  if (!info) return '';
+  const m = cleanEcontNote(info.msg);
+  return t(key) + (m ? ' ' + t('econt_prefix') + m : '');
+}
+function renderReviewIgnored() {
+  const box = $('reviewIgnoredNote');
+  const on = !!REVIEW_IGNORED && currentReviewMode() !== 'none';
+  box.textContent = on ? reviewIgnoredText('review_ignored_prev', REVIEW_IGNORED) : '';
+  box.classList.toggle('hide', !on);
+}
 // One-glance confirmation chip-line so the user verifies the whole shipment in ~1s,
 // plus a caution note when the parcel carries no cash-on-delivery.
 // What the summary line shows, read from the editor (also captured at create time).
@@ -1039,12 +1177,14 @@ function summaryData() {
     const opt = sel.selectedOptions[0];
     dest = opt && sel.value ? optName(opt) : '';
   }
-  const codAmt = Number($('pCodAmount').value), declAmt = Number($('pDeclAmount').value);
+  const codAmt = amtOf('pCodAmount'), declAmt = amtOf('pDeclAmount');
+  const review = currentReviewMode();
   return {
     name: $('pName').value.trim(), dest, addr: deliverMode === 'address',
     cod: $('pCodOn').checked && codAmt > 0 ? { a: codAmt, c: $('pCodCur').value } : null,
     decl: $('pDeclOn').checked && declAmt > 0 ? { a: declAmt, c: $('pDeclCur').value } : null,
-    review: currentReviewMode(),
+    // Never promise review that Econt said it will not add.
+    review: REVIEW_IGNORED && review !== 'none' ? 'none' : review,
   };
 }
 // The parcel in plain words: who and where, then money and review.
@@ -1068,7 +1208,7 @@ function summaryText(d, created) {
 function updateSummary() {
   const sel = $('pOffice');
   const name = $('pName').value.trim();
-  const codOn = $('pCodOn').checked, codAmt = Number($('pCodAmount').value);
+  const codOn = $('pCodOn').checked, codAmt = amtOf('pCodAmount');
   const sd = summaryData(), box = $('prevSummary');
   if (sd.name || sd.dest) { box.textContent = summaryText(sd); box.classList.remove('hide'); }
   else box.classList.add('hide');
@@ -1094,7 +1234,8 @@ function updateSummary() {
   const addr = deliverMode === 'address';
   for (const [id, on] of [['pName', !name], ['pPhone', !$('pPhone').value.trim()], ['pOffice', !addr && !sel.value],
     ['pAddrCity', addr && !$('pAddrCity').value.trim()], ['pAddrStreet', addr && !$('pAddrStreet').value.trim()],
-    ['pCodAmount', codOn && !(codAmt > 0)]]) $(id).classList.toggle('need', !!on);
+    ['pCodAmount', codOn && !(codAmt > 0)], ['pDeclAmount', declBadEd()]]) $(id).classList.toggle('need', !!on);
+  renderReviewIgnored();
   renderDupWarn();
 }
 // Coalesce bursts of input events into a single summary update per frame.
@@ -1122,19 +1263,25 @@ async function doPreview(ev) {
   $('previewErr').textContent = '';
   updateSummary(); renderOfficeHint();
   const o = gatherOverrides();
+  const pb = $('priceBox');
   if (deliverMode === 'address') {
-    if (!o.address.city || !o.address.street) { $('priceBox').textContent = ''; $('previewErr').textContent = t('need_addr'); return; }
-  } else if (!o.officeCode) { $('priceBox').textContent = ''; $('previewErr').textContent = t('pick_office'); return; }
+    if (!o.address.city || !o.address.street) { pb.removeAttribute('aria-busy'); pb.textContent = ''; $('previewErr').textContent = t('need_addr'); return; }
+  } else if (!o.officeCode) { pb.removeAttribute('aria-busy'); pb.textContent = ''; $('previewErr').textContent = t('pick_office'); return; }
   const btn = ev && ev.currentTarget && ev.currentTarget.id === 'recalcBtn' ? $('recalcBtn') : null;
-  btnBusy(btn, true); $('priceBox').innerHTML = '<span class="sk">price price price</span>';
+  // The placeholder is visual only: the live region is busy (nothing is read out)
+  // until the price itself arrives.
+  btnBusy(btn, true); pb.setAttribute('aria-busy', 'true'); pb.innerHTML = '<span class="sk" aria-hidden="true">price price price</span>';
   const r = await api('/api/preview', shipBody(o), {
     retry: true, alive: () => seq === PREVIEW_SEQ,
-    onWait: () => { if (seq === PREVIEW_SEQ) $('priceBox').textContent = t('price_waiting'); },
+    onWait: () => { if (seq === PREVIEW_SEQ) { pb.removeAttribute('aria-busy'); pb.textContent = t('price_waiting'); } },
   });
   btnBusy(btn, false);
   if (seq !== PREVIEW_SEQ) return;
-  if (!r.ok) { $('priceBox').textContent = ''; $('previewErr').textContent = t('econt_prefix') + r.error + (r.code === 'bad_login' ? '\n' + t('fix_login_hint') : ''); return; }
-  $('priceBox').innerHTML = showPrice(r.response);
+  pb.removeAttribute('aria-busy');
+  if (!r.ok) { pb.textContent = ''; $('previewErr').textContent = t('econt_prefix') + r.error + (r.code === 'bad_login' ? '\n' + t('fix_login_hint') : ''); return; }
+  REVIEW_IGNORED = r.reviewIgnored ? { msg: r.reviewIgnoredMessage || '' } : null;
+  updateSummary();
+  pb.innerHTML = showPrice(r.response);
 }
 // The one success moment: the digits of the new number settle in once, and a
 // short buzz on phones. Nothing moves (or buzzes) when reduced motion is asked for.
@@ -1149,8 +1296,18 @@ function revealNumber() {
   el.innerHTML = [...num].map((c, i) => `<span class="d" aria-hidden="true" style="--i:${i}">${c}</span>`).join('');
   void card.offsetWidth;
   card.classList.add('revealing');
-  _revealT = setTimeout(() => { card.classList.remove('revealing'); if (el.querySelector('.d')) el.textContent = num; el.removeAttribute('aria-label'); }, 1500);
+  _revealT = setTimeout(settleReveal, 1500);
   try { if (navigator.vibrate && matchMedia('(pointer: coarse)').matches) navigator.vibrate(12); } catch (e) {}
+}
+// The moment is over (or cut short): plain text again. A selection on the number (the
+// Copy fallback asks for a long-press on it) is kept on the plain text.
+function settleReveal() {
+  const el = $('shipNum'); clearTimeout(_revealT);
+  $('result').classList.remove('revealing'); el.removeAttribute('aria-label');
+  if (!el.querySelector('.d')) return;
+  const sel = getSelection(), had = sel && sel.rangeCount > 0 && el.contains(sel.anchorNode);
+  el.textContent = el.textContent;
+  if (had) { const r = document.createRange(); r.selectNodeContents(el); sel.removeAllRanges(); sel.addRange(r); }
 }
 // Bring the new waybill into view with its number clear of the sticky top bar (html's
 // scroll-padding-top). A card that fits is shown whole with the least movement; a taller
@@ -1237,6 +1394,9 @@ function renderReplyPreview() {
     $('resultSummary').textContent = summaryText(LAST_SUM.sum, true);
     $('resultMeta').textContent = LAST_SUM.price ? t('sum_price', { v: fmtMoney(LAST_SUM.price.v, LAST_SUM.price.c) }) : '';
   }
+  const rn = $('resultNote'), dropped = LAST_SUM && LAST_SUM.reviewDropped;
+  rn.textContent = dropped ? reviewIgnoredText('review_ignored_res', dropped) : '';
+  rn.classList.toggle('hide', !dropped);
   if (!LAST_RESULT) { $('replyPreview').classList.add('hide'); return; }
   $('replyText').innerHTML = replyHTML(buildReply(LAST_RESULT.num, LAST_RESULT.info));
   $('replyPreview').classList.remove('hide');
@@ -1254,6 +1414,7 @@ async function doCreate() {
   }
   if (!o.description) { $('previewErr').textContent = t('need_desc'); $('pDesc').focus(); return; }
   if (o.cod.enabled && !(o.cod.amount > 0)) { $('previewErr').textContent = t('cod_blank'); return; }
+  if (declBadEd()) { $('previewErr').textContent = t('decl_blank'); $('pDeclAmount').focus(); return; }
   if (CONFIG.defaults.cod && CONFIG.defaults.cod.enabled && !o.cod.enabled && !NOCOD_ACK) {
     // Focus the safe choice: a stray Enter must not confirm shipping without COD.
     $('noCodConfirm').classList.remove('hide'); $('noCodFix').focus({ preventScroll: true }); return;
@@ -1300,17 +1461,22 @@ async function doCreate() {
     $('profileLink').href = econtProfileUrl();
     if (st.shipmentNumber) { $('trackLink').href = econtTrackUrl(num); $('trackLink').style.display = ''; } else { $('trackLink').style.display = 'none'; }
     const destLabel = o.address ? [o.address.city, o.address.street, o.address.num].filter(Boolean).join(' ') : o.officeCode;
-    const info = { cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode };
-    if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, phone: o.phone, phone9: normPhone9(o.phone), dest: destKey(o), office: destLabel, weight: o.weight, description: o.description, cod: info.cod, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
+    // Econt dropped the review (reviewIgnored): the parcel, the receipt line and the
+    // customer reply all say "no review", never what was asked for.
+    const dropped = !!r.reviewIgnored && o.reviewMode !== 'none';
+    const reviewMode = r.reviewIgnored ? 'none' : o.reviewMode;
+    if (r.reviewIgnored) sum.review = 'none';
+    const info = { cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode };
+    if (st.shipmentNumber) addParcel({ number: st.shipmentNumber, recipient: o.recipientName, phone: o.phone, phone9: normPhone9(o.phone), dest: destKey(o), office: destLabel, weight: o.weight, description: o.description, cod: info.cod, currency: o.cod.currency, reviewMode, createdAt: Date.now(), pdfURL: pdf, mode: CONFIG.mode });
     // Created from a batch row → mark THAT row done (captured before the wait).
     if (editRow && st.shipmentNumber) {
       editRow.done = true; editRow.on = true; editRow.unsure = false;
-      editRow.statusTpl = { k: 'st_ok', p: { num: st.shipmentNumber } }; editRow.statusColor = 'var(--go-d)';
+      editRow.statusTpl = { k: dropped ? 'st_ok_norev' : 'st_ok', p: { num: st.shipmentNumber } }; editRow.statusColor = 'var(--go-d)';
       editRow.name = o.recipientName; editRow.phone = o.phone; editRow.num = st.shipmentNumber; editRow.replyInfo = info;
     }
     const price = st.totalPrice != null ? { v: Number(st.totalPrice), c: st.totalPriceCurrency || o.cod.currency || 'EUR' } : null;
     LAST_RESULT = st.shipmentNumber ? { num: st.shipmentNumber, info, sum, price } : null;
-    LAST_SUM = { sum, price };
+    LAST_SUM = { sum, price, reviewDropped: dropped ? { msg: r.reviewIgnoredMessage || '' } : null };
     renderReplyPreview();
     $('replyBtn').classList.toggle('hide', !LAST_RESULT); $('copyBtn').classList.toggle('hide', !LAST_RESULT);
     showBatchBackBtns();
@@ -1324,7 +1490,7 @@ async function doCreate() {
     if (!created) {
       syncCreateLabel();
       // A quote cancelled for the create must not leave a skeleton behind.
-      if ($('priceBox').querySelector('.sk') || $('priceBox').textContent === t('price_waiting')) $('priceBox').textContent = '';
+      if ($('priceBox').querySelector('.sk') || $('priceBox').textContent === t('price_waiting')) { $('priceBox').removeAttribute('aria-busy'); $('priceBox').textContent = ''; }
     }
   }
   if (created) { resetCreateGuards(); if (LAST_RESULT) $('replyBtn').focus({ preventScroll: true }); }
@@ -1343,6 +1509,12 @@ $('clearBtn').onclick = () => { if (createBusy()) return; PARSE_SEQ++; resetCrea
 $('parseBtn').onclick = doParse;
 
 // ---------- batch: several parcels in one paste ----------
+// A row holds everything a run will send, so what the list shows is what ships:
+//   name, phone, cod (text as typed), cur, officeCode   the table cells
+//   door        the delivery address (null = to an office)
+//   review      the per-row review choice when settings do not fix one
+//   codOff      COD was turned off on purpose (an emptied cell, or unticked in the editor)
+//   ed          payer, weight, contents and declared value saved from the editor
 let BATCH = [];
 let BATCH_EDIT = -1; // row currently opened in the single-parcel editor
 function showBatchBackBtns() {
@@ -1352,24 +1524,39 @@ function showBatchBackBtns() {
     const b = $(id); b.classList.toggle('hide', !show); if (show) b.textContent = label;
   }
 }
-// Leave the editor and land back on the batch, carrying the edits into the row.
+// A recent parcel or an unclear create to this row's phone: the row says so (and a run asks).
+function recheckRowPhone(row) {
+  const u = findUnsure(row.phone), d = !u && findDup(row.phone);
+  if (u) { row.statusTpl = { k: 'st_unsure' }; row.statusColor = 'var(--warn)'; }
+  else if (d) { row.statusTpl = { k: 'st_dup', p: { num: d.number } }; row.statusColor = 'var(--warn)'; }
+  else if (row.statusTpl && (row.statusTpl.k === 'st_unsure' || row.statusTpl.k === 'st_dup')) { row.statusTpl = null; row.statusColor = ''; }
+}
+// Leave the editor and land back on the batch, carrying every edit into the row.
 function returnToBatch(syncFields) {
   const row = BATCH[BATCH_EDIT];
   if (row && syncFields && !row.done) {
-    row.name = $('pName').value.trim();
-    row.phone = $('pPhone').value.trim();
-    row.cod = $('pCodAmount').value;
+    const o = gatherOverrides();
+    row.name = o.recipientName;
+    row.phone = o.phone;
+    row.codOff = !$('pCodOn').checked;
+    row.cod = row.codOff ? '' : $('pCodAmount').value.trim();
     row.cur = $('pCodCur').value;
-    if (row.parsed.deliveryType !== 'door') {
+    row.review = $('pReviewMode').value || 'none';
+    row.ed = { payer: o.payer, weight: o.weight, description: o.description, decl: o.declaredValue, declRaw: $('pDeclAmount').value.trim(), declAuto: $('pDeclAmount').dataset.auto === '1' };
+    if (deliverMode === 'address') row.door = gatherAddress();
+    else {
+      row.door = null;
       const sel = $('pOffice');
       if (sel.value) {
         row.officeCode = sel.value;
         if (!row.candidates.some((c) => String(c.code) === sel.value)) {
-          const o = sel.selectedOptions[0];
-          row.candidates.unshift({ code: sel.value, name: o ? optName(o) : sel.value, address: '', city: '' });
+          const op = sel.selectedOptions[0];
+          row.candidates.unshift({ code: sel.value, name: op ? optName(op) : sel.value, address: '', city: '' });
         }
       }
     }
+    clearRowProblem(row);
+    recheckRowPhone(row);
   }
   const idx = BATCH_EDIT;
   BATCH_EDIT = -1;
@@ -1382,18 +1569,37 @@ function returnToBatch(syncFields) {
 }
 $('backToBatchBtn').onclick = () => returnToBatch(true);
 $('backToBatchBtn2').onclick = () => returnToBatch(false);
+const rowDoorOk = (row) => !!(row.door && row.door.city && row.door.street);
+const rowDoorText = (row) => [row.door.city, row.door.street, row.door.num].filter(Boolean).join(' ');
+// A declared value typed in the editor (one that follows the COD is checked as the COD).
+const rowDeclRaw = (row) => (row.ed.declRaw != null ? row.ed.declRaw : String(row.ed.decl.amount || ''));
+const rowDeclBad = (row) => !!(row.ed && row.ed.decl && row.ed.decl.enabled && !row.ed.declAuto && declBad(true, rowDeclRaw(row), false));
+// Tied offices and none picked yet: the row waits for the seller, it is not skipped.
+const rowNeedsPick = (row) => !row.done && !row.trackNum && row.ambiguous && !row.door && !row.officeCode;
+// What a run found wrong with a row and the seller can fix in place. Once the row is
+// edited the note goes, and the status says again what the row will do now.
+const ROW_PROBLEMS = ['st_badamt', 'st_baddecl', 'st_pick', 'st_missing', 'st_nocontact'];
+function clearRowProblem(row) {
+  const tp = row.statusTpl;
+  if (tp && (tp.raw != null || ROW_PROBLEMS.includes(tp.k))) { row.statusTpl = null; row.statusColor = ''; }
+  if (row.res === 'wait' && !rowNeedsPick(row)) row.res = null;
+}
 // Row status: explicit run results win; otherwise what will happen on "run".
-// A row with no COD while COD is the default is called out before it ships.
+// A row with no COD while COD is the default is called out before it ships, and
+// the amount is echoed, so a typo (4550 for 45,50) is seen before the run.
 function batchRowStatus(row) {
   if (row.statusTpl) return { text: row.statusTpl.raw != null ? row.statusTpl.raw : t(row.statusTpl.k, row.statusTpl.p), color: row.statusColor || '', needCod: false };
   if (row.trackNum) return { text: t('st_track'), color: '', needCod: false };
-  const doorOk = row.parsed.deliveryType === 'door' && row.parsed.address && row.parsed.address.city && row.parsed.address.street;
-  if (!(row.officeCode || doorOk)) return { text: t('st_missing'), color: 'var(--warn)', needCod: false };
-  const d = CONFIG.defaults.cod || {}, amt = Number(row.cod) || 0;
+  if (!(row.door ? rowDoorOk(row) : row.officeCode)) return { text: t(row.ambiguous && !row.door ? 'st_pick' : 'st_missing'), color: 'var(--warn)', needCod: false };
+  if (!String(row.name || '').trim() || !String(row.phone || '').trim()) return { text: t('st_nocontact'), color: 'var(--warn)', needCod: false };
+  const d = CONFIG.defaults.cod || {}, amt = parseAmount(row.cod);
+  if (isNaN(amt)) return { text: t('st_badamt'), color: 'var(--warn)', needCod: true };
+  if (rowDeclBad(row)) return { text: t('st_baddecl'), color: 'var(--warn)', needCod: false };
   if (d.enabled && !(amt > 0)) return { text: t('st_nocod'), color: 'var(--warn)', needCod: true };
-  let text = t('st_create');
-  if (amt > 0 && row.cur !== (d.currency || 'EUR')) text = t('st_create_conv', { v: row.cur === 'BGN' ? fmtMoney(amt / BGN_PER_EUR, 'EUR') : fmtMoney(amt * BGN_PER_EUR, 'BGN') });
-  return { text, color: '', needCod: false };
+  if (!(amt > 0)) return { text: t('st_create'), color: '', needCod: false };
+  const a = fmtMoney(amt, row.cur);
+  if (row.cur !== (d.currency || 'EUR')) return { text: t('st_create_conv', { amt: a, v: row.cur === 'BGN' ? fmtMoney(amt / BGN_PER_EUR, 'EUR') : fmtMoney(amt * BGN_PER_EUR, 'BGN') }), color: '', needCod: false };
+  return { text: t('st_create_cod', { amt: a }), color: '', needCod: false };
 }
 const batchSendBtn = () => `<button class="lnk" data-f="send" type="button">${esc(t('parcel_reply'))}</button>`;
 // "ред 1", "редове 1 и 3": rows named in words, never with a # sign.
@@ -1408,6 +1614,9 @@ function syncRowStatus(i) {
   se.textContent = st.text; se.style.color = st.color;
   const ci = el.querySelector('[data-f="cod"]'); if (ci) ci.classList.toggle('need', st.needCod);
 }
+// Offices a row can be sent to: confident candidates, or (an ambiguous match) the
+// tied suggestions. Suggestions are never preselected: the empty choice comes first.
+const rowOffices = (row) => (row.candidates.length ? row.candidates : (row.suggestions || []));
 function batchRowHTML(row, i) {
   const rs = batchRowStatus(row);
   const status = `<span class="brow-status" data-status${rs.color ? ` style="color:${rs.color}"` : ''}>${esc(rs.text)}</span>`;
@@ -1416,14 +1625,18 @@ function batchRowHTML(row, i) {
     return `<div class="brow done" data-i="${i}">
     <div class="brow-top">
       <input type="checkbox" data-f="on" checked hidden><span class="idx">${esc(t('row_label', { n: i + 1 }))}</span>
-      <span class="brow-mid">${row.name ? `<span class="brow-name">${esc(row.name)}</span>` : ''}${status}</span>
+      <span class="brow-mid">${row.trackNum ? `<span class="track-tag">${esc(row.trackNum)}</span>` : ''}${row.name ? `<span class="brow-name">${esc(row.name)}</span>` : ''}${status}</span>
       <span class="brow-acts">${row.num ? batchSendBtn() : ''}</span>
     </div>
   </div>`;
   }
-  const officeUI = row.parsed.deliveryType === 'door' && row.parsed.address
-    ? `<input data-f="addr" value="${esc(t('batch_addr_row', { a: [row.parsed.address.city, row.parsed.address.street, row.parsed.address.num].filter(Boolean).join(' ') }))}" disabled aria-label="${esc(t('to_address'))}">`
-    : `<select data-f="office" aria-label="${esc(t('office_lbl'))}">${row.candidates.length ? '' : `<option value="">${esc(t('batch_no_office'))}</option>`}${row.candidates.map((c) => `<option value="${esc(c.code)}" data-name="${esc(c.name || '')}">${esc(officeLabel(c))}</option>`).join('')}</select>`;
+  const offs = rowOffices(row);
+  const officeUI = row.door
+    ? `<input data-f="addr" value="${esc(t('batch_addr_row', { a: rowDoorText(row) }))}" disabled aria-label="${esc(t('to_address'))}">`
+    : `<select data-f="office" aria-label="${esc(t('office_lbl'))}">${row.officeCode && offs.length ? '' : `<option value="">${esc(t('batch_no_office'))}</option>`}${offs.map((c) => `<option value="${esc(c.code)}" data-name="${esc(c.name || '')}">${esc(officeLabel(c))}</option>`).join('')}</select>`;
+  const rv = row.review || 'none';
+  const reviewUI = reviewAnchor(CONFIG.defaults) ? ''
+    : `<select data-f="review" aria-label="${esc(t('review_label'))}">${[['none', 'review_none'], ['review', 'review_only'], ['review_test', 'review_test']].map(([v, k]) => `<option value="${v}"${rv === v ? ' selected' : ''}>${esc(t(k))}</option>`).join('')}</select>`;
   return `<div class="brow" data-i="${i}">
     <div class="brow-top">
       <label class="brow-pick"><input type="checkbox" data-f="on" ${row.on ? 'checked' : ''}><span class="idx">${esc(t('row_label', { n: i + 1 }))}</span></label>
@@ -1433,9 +1646,10 @@ function batchRowHTML(row, i) {
     <div class="brow-grid">
       <input data-f="name" value="${esc(row.name)}" placeholder="${esc(t('recipient'))}" aria-label="${esc(t('recipient'))}">
       <input data-f="phone" inputmode="tel" value="${esc(row.phone)}" placeholder="${esc(t('phone'))}" aria-label="${esc(t('phone'))}">
-      ${officeUI}
-      <input data-f="cod" class="${rs.needCod ? 'need' : ''}" type="number" inputmode="decimal" step="0.01" min="0" value="${esc(row.cod || '')}" placeholder="${esc(t('amount'))}" aria-label="${esc(t('cod'))}">
+      <input data-f="cod" class="${rs.needCod ? 'need' : ''}" type="text" inputmode="decimal" autocomplete="off" value="${esc(row.cod || '')}" placeholder="${esc(t('amount'))}" aria-label="${esc(t('a11y_cod_amount'))}">
       <select data-f="cur" aria-label="${esc(t('cod_currency'))}"><option value="EUR"${row.cur === 'EUR' ? ' selected' : ''}>EUR</option><option value="BGN"${row.cur === 'BGN' ? ' selected' : ''}>BGN</option></select>
+      ${officeUI}
+      ${reviewUI}
     </div>
   </div>`;
 }
@@ -1446,19 +1660,29 @@ async function doBatchParse(text, seq) {
     if (seq !== PARSE_SEQ) return true;
     if (createBusy()) { $('parseErr').className = 'muted'; $('parseErr').textContent = t('parse_again'); return true; }
     $('parseErr').className = 'err'; $('parseErr').textContent = '';
+    // Too big a paste (batch_too_big) and any other refusal: the server's own message.
     if (!r.ok) { $('parseErr').textContent = r.error || t('parse_failed'); return true; }
     if (!r.rows || r.rows.length < 2) return false; // one parcel → normal editor
-    BATCH = (r.rows || []).map((row) => ({
-      chunk: row.chunk, parsed: row.parsed, candidates: row.candidates || [], trackNum: row.trackNum || null,
-      on: true,
-      name: row.parsed.recipientName || '',
-      phone: row.parsed.phone || '',
-      officeCode: (row.candidates && row.candidates.length) ? String(row.candidates[0].code) : '',
-      cod: row.parsed.cod ? row.parsed.cod.amount : '',
-      cur: (row.parsed.cod && row.parsed.cod.currency) || (CONFIG.defaults.cod && CONFIG.defaults.cod.currency) || 'EUR',
-      done: false,
-    }));
-    // Already shipped to this phone in the last 72 h → start unticked; ticking is the confirm.
+    BATCH = (r.rows || []).map((row) => {
+      const p = row.parsed || {}, cands = row.candidates || [];
+      // A tie between offices comes back as suggestions with no candidate: the row
+      // starts unticked with "pick one", and nothing is preselected.
+      const ambiguous = !!row.ambiguous && !cands.length;
+      return {
+        chunk: row.chunk, parsed: p, candidates: cands, trackNum: row.trackNum || null,
+        ambiguous, suggestions: ambiguous ? (row.suggestions || []) : [],
+        on: !ambiguous,
+        name: p.recipientName || '',
+        phone: p.phone || '',
+        officeCode: cands.length ? String(cands[0].code) : '',
+        door: p.deliveryType === 'door' && p.address ? Object.assign({}, p.address) : null,
+        review: p.reviewMode || 'none',
+        cod: p.cod && p.cod.amount ? String(p.cod.amount) : '',
+        codOff: false, ed: null,
+        cur: (p.cod && p.cod.currency) || (CONFIG.defaults.cod && CONFIG.defaults.cod.currency) || 'EUR',
+        done: false,
+      };
+    });
     // An unclear earlier create or a recent parcel to the same phone → start
     // unticked; ticking the row is the deliberate confirm.
     for (const row of BATCH) {
@@ -1480,35 +1704,53 @@ async function doBatchParse(text, seq) {
 // Run progress for the batch on screen: "Създавам 2 от 5…", a bar, then the tally.
 let BATCH_RUN = null;
 // The tally names only what happened: "Готово. Създадени са 2 товарителници."
+// Counted from the rows as they are now, so a row created later from the editor
+// counts as created: every done row, then each other row's last run result.
+function batchTally(rows) {
+  const res = { ok: 0, tracked: 0, fail: 0, skip: 0, wait: 0 };
+  for (const r of rows) {
+    if (r.done) { res.ok++; if (r.trackNum) res.tracked++; }
+    else if (r.res && res[r.res] != null) res[r.res]++;
+  }
+  return res;
+}
 function batchDoneText(res) {
   const parts = [], add = (n, one, many) => { if (n > 0) parts.push(n === 1 ? t(one) : t(many, { n })); };
   add(res.ok - (res.tracked || 0), 'bd_ok1', 'bd_ok'); add(res.tracked || 0, 'bd_tr1', 'bd_tr');
-  add(res.fail, 'bd_fail1', 'bd_fail'); add(res.skip, 'bd_skip1', 'bd_skip');
+  add(res.fail, 'bd_fail1', 'bd_fail'); add(res.wait || 0, 'bd_wait1', 'bd_wait'); add(res.skip, 'bd_skip1', 'bd_skip');
   const txt = parts.join(', ');
   return t('batch_done', { parts: txt.charAt(0).toUpperCase() + txt.slice(1) });
 }
 function renderBatchInfo() {
   const creates = BATCH.filter((r) => !r.trackNum).length, tracks = BATCH.length - creates;
   const run = BATCH_RUN && BATCH_RUN.rows === BATCH ? BATCH_RUN : null;
-  $('batchInfo').textContent = run && run.res ? batchDoneText(run.res)
+  const tally = run && run.res ? batchTally(BATCH) : null;
+  $('batchInfo').textContent = tally ? batchDoneText(tally)
     : run ? t('batch_run', { i: Math.min(run.k + 1, run.n), n: run.n })
     : tracks ? t('batch_found', { n: BATCH.length, c: creates, t: tracks }) : t('batch_found_c', { n: BATCH.length });
   $('batchToday').textContent = run && run.res ? todayText() : '';
+  // Review fixed in Settings: one line says so (rows then carry no review choice).
+  const anchor = reviewAnchor(CONFIG.defaults);
+  $('batchReviewNote').textContent = anchor ? t(anchor === 'review_test' ? 'review_set_test' : 'review_set_review') : '';
+  $('batchReviewNote').classList.toggle('hide', !anchor);
   syncBatchActions();
   const bar = $('batchProg');
   bar.classList.toggle('hide', !run);
   if (!run) return;
   $('batchBar').style.width = (run.res ? 100 : run.n ? Math.round(run.k / run.n * 100) : 0) + '%';
-  bar.classList.toggle('ok', !!run.res && !run.res.fail);
-  bar.classList.toggle('bad', !!run.res && run.res.fail > 0);
+  bar.classList.toggle('ok', !!tally && !tally.fail && !tally.wait && !batchLive(BATCH));
+  bar.classList.toggle('bad', !!tally && tally.fail > 0);
 }
 // One primary at a time: Създай избраните while a row is still to be created; once
 // every row is through, Нова пратка takes its place. Never a run with nothing in it.
+// A row still waiting for an office, or one whose create is unclear, keeps the list
+// open: Нова пратка would drop that order without a word.
 const batchLive = (rows) => rows.filter((r) => r.on && !r.done).length;
+const batchUndecided = (rows) => rows.some((r) => rowNeedsPick(r) || (r.unsure && !r.done));
 function syncBatchActions() {
   const btn = $('batchCreateBtn'); if (btn.hasAttribute('aria-busy')) return;
   const live = batchLive(BATCH), ran = !!(BATCH_RUN && BATCH_RUN.rows === BATCH && BATCH_RUN.res);
-  const finished = ran && !live;
+  const finished = ran && !live && !batchUndecided(BATCH);
   btn.classList.toggle('hide', finished); btn.disabled = !finished && !live;
   $('batchCancelBtn').classList.toggle('hide', finished);
   $('batchNewBtn').classList.toggle('hide', !finished);
@@ -1516,36 +1758,72 @@ function syncBatchActions() {
 function renderBatch() {
   renderBatchInfo();
   $('batchList').innerHTML = BATCH.map((row, i) => batchRowHTML(row, i)).join('');
-  // Preselect the top office candidate in each row's select.
+  // Select each row's chosen office (none for an ambiguous row until one is picked).
   $('batchList').querySelectorAll('.brow').forEach((el) => {
     const row = BATCH[Number(el.dataset.i)];
     const sel = el.querySelector('select[data-f="office"]');
-    if (sel && row.officeCode) sel.value = row.officeCode;
+    if (sel) sel.value = row.officeCode || '';
   });
 }
 $('batchList').addEventListener('input', (e) => {
   const el = e.target, brow = el.closest('.brow'); if (!brow) return;
-  const row = BATCH[Number(brow.dataset.i)], f = el.dataset.f;
+  const i = Number(brow.dataset.i), row = BATCH[i], f = el.dataset.f;
   if (!row || !f) return;
   if (f === 'on') {
     row.on = el.checked;
     if (row.on && row.statusTpl && row.statusTpl.k === 'st_skip') { row.statusTpl = null; row.statusColor = ''; }
   }
   else if (f === 'name') row.name = el.value;
-  else if (f === 'phone') {
-    row.phone = el.value;
-    const u = findUnsure(row.phone), d = !u && findDup(row.phone);
-    if (u) { row.statusTpl = { k: 'st_unsure' }; row.statusColor = 'var(--warn)'; }
-    else if (d) { row.statusTpl = { k: 'st_dup', p: { num: d.number } }; row.statusColor = 'var(--warn)'; }
-    else if (row.statusTpl && (row.statusTpl.k === 'st_unsure' || row.statusTpl.k === 'st_dup')) { row.statusTpl = null; row.statusColor = ''; }
-    syncRowStatus(Number(brow.dataset.i));
+  else if (f === 'phone') row.phone = el.value;
+  else if (f === 'office') {
+    row.officeCode = el.value;
+    // Picking one of the tied offices is the decision the row was waiting for.
+    if (row.ambiguous && el.value && !row.on && !(row.statusTpl && (row.statusTpl.k === 'st_unsure' || row.statusTpl.k === 'st_dup'))) {
+      row.on = true; const cb = brow.querySelector('[data-f="on"]'); if (cb) cb.checked = true;
+    }
   }
-  else if (f === 'office') row.officeCode = el.value;
-  else if (f === 'cod') row.cod = el.value;
+  else if (f === 'cod') { row.cod = el.value; row.codOff = !el.value.trim(); }
   else if (f === 'cur') row.cur = el.value;
-  if (f === 'on' || f === 'office' || f === 'cod' || f === 'cur') syncRowStatus(Number(brow.dataset.i));
-  if (f === 'on') syncBatchActions();
+  else if (f === 'review') row.review = el.value;
+  if (f !== 'on') clearRowProblem(row);
+  if (f === 'phone') recheckRowPhone(row);
+  syncRowStatus(i);
+  if (f === 'on' || f === 'office') renderBatchInfo();
 });
+// Open a row in the single editor. The row's own values (table edits and what an
+// earlier visit to the editor saved) win over the re-parse of its text.
+function applyRowToEditor(row) {
+  $('pName').value = row.name || '';
+  $('pPhone').value = row.phone || '';
+  if (String(row.cod || '').trim()) { $('pCodOn').checked = true; $('pCodAmount').value = row.cod; $('pCodCur').value = row.cur; }
+  else if (row.codOff) { $('pCodOn').checked = false; $('pCodAmount').value = ''; $('pCodCur').value = row.cur; }
+  if (!reviewAnchor(CONFIG.defaults)) setSeg('pReviewSeg', 'pReviewMode', row.review || 'none');
+  const ed = row.ed;
+  if (ed) {
+    $('pPayer').value = ed.payer || 'receiver';
+    $('pWeight').value = ed.weight != null ? ed.weight : '';
+    $('pDesc').value = ed.description || '';
+    const dv = ed.decl || {};
+    $('pDeclOn').checked = !!dv.enabled; $('pDeclCur').value = dv.currency || $('pCodCur').value;
+    $('pDeclAmount').value = ed.declAuto ? (dv.enabled ? $('pCodAmount').value : '') : (ed.declRaw != null ? ed.declRaw : (dv.amount || ''));
+    if (ed.declAuto) $('pDeclAmount').dataset.auto = '1'; else delete $('pDeclAmount').dataset.auto;
+  } else if ($('pDeclOn').checked && $('pDeclAmount').dataset.auto === '1') {
+    $('pDeclAmount').value = $('pCodOn').checked ? $('pCodAmount').value : '';
+  }
+  if (row.door) { fillAddress(row.door); setDeliverMode('address', true); }
+  else {
+    setDeliverMode('office', true);
+    if (row.officeCode) {
+      const sel = $('pOffice');
+      if (![...sel.options].some((o) => o.value === String(row.officeCode))) {
+        const c = rowOffices(row).find((x) => String(x.code) === String(row.officeCode));
+        const o = officeOption(c || { code: String(row.officeCode), name: String(row.officeCode) });
+        sel.insertBefore(o, sel.firstChild);
+      }
+      sel.value = String(row.officeCode);
+    }
+  }
+}
 $('batchList').addEventListener('click', async (e) => {
   const sb = e.target.closest('button[data-f="send"]');
   if (sb) { const r = BATCH[Number(sb.closest('.brow').dataset.i)]; if (r && r.num) sendReply(r.num, sb, r.replyInfo); return; }
@@ -1564,36 +1842,30 @@ $('batchList').addEventListener('click', async (e) => {
     }
     return;
   }
-  // The row's fields may have been edited in the table — they win over a re-parse.
-  if (row.name) $('pName').value = row.name;
-  if (row.phone) $('pPhone').value = row.phone;
-  if (row.cod) { $('pCodOn').checked = true; $('pCodAmount').value = row.cod; $('pCodCur').value = row.cur; }
-  if (row.parsed.deliveryType !== 'door' && row.officeCode) {
-    const sel = $('pOffice');
-    if (![...sel.options].some((o) => o.value === String(row.officeCode))) {
-      const c = row.candidates.find((x) => String(x.code) === String(row.officeCode));
-      const o = officeOption(c || { code: String(row.officeCode), name: String(row.officeCode) });
-      sel.insertBefore(o, sel.firstChild);
-    }
-    sel.value = String(row.officeCode);
-  }
+  applyRowToEditor(row);
   showBatchBackBtns();
   updateSummary();
   doPreview();
 });
 function batchOverrides(row) {
-  const d = CONFIG.defaults;
-  const mode = reviewAnchor(d) || row.parsed.reviewMode || 'none';
+  const d = CONFIG.defaults, ed = row.ed || {};
+  const mode = reviewAnchor(d) || row.review || 'none';
   const rf = reviewFlags(mode);
-  const amt = Number(row.cod) || 0;
+  const amt = parseAmount(row.cod), codOk = amt > 0;
+  let declaredValue = (d.declaredValue && d.declaredValue.enabled && codOk) ? { enabled: true, amount: amt, currency: row.cur } : { enabled: false };
+  if (ed.decl) declaredValue = !ed.decl.enabled ? { enabled: false }
+    : ed.declAuto ? (codOk ? { enabled: true, amount: amt, currency: row.cur } : { enabled: false })
+    : { enabled: true, amount: parseAmount(rowDeclRaw(row)) || 0, currency: ed.decl.currency || row.cur };
   const o = {
     recipientName: row.name.trim(), phone: row.phone.trim(),
-    weight: d.weight, description: d.shipmentDescription, payer: d.payer || 'receiver',
-    cod: { enabled: amt > 0, amount: amt, currency: row.cur },
-    declaredValue: (d.declaredValue && d.declaredValue.enabled && amt > 0) ? { enabled: true, amount: amt, currency: row.cur } : { enabled: false },
+    weight: ed.weight != null ? ed.weight : d.weight,
+    description: ed.description != null ? ed.description : d.shipmentDescription,
+    payer: ed.payer || d.payer || 'receiver',
+    cod: { enabled: codOk, amount: codOk ? amt : 0, currency: row.cur },
+    declaredValue,
     payAfterAccept: rf.payAfterAccept, payAfterTest: rf.payAfterTest, reviewMode: mode,
   };
-  if (row.parsed.deliveryType === 'door' && row.parsed.address) o.address = Object.assign({ countryCode: 'BGR' }, row.parsed.address);
+  if (row.door) o.address = Object.assign({ countryCode: 'BGR' }, row.door);
   else o.officeCode = row.officeCode;
   return o;
 }
@@ -1609,7 +1881,8 @@ function batchRisk(rows) {
   const nocod = [], repeat = [];
   rows.forEach((r, i) => {
     if (!live(r)) return;
-    if (codOn && !(Number(r.cod) > 0)) nocod.push(i);
+    const amt = parseAmount(r.cod);
+    if (codOn && !isNaN(amt) && !(amt > 0)) nocod.push(i);
     if (findUnsure(r.phone) || findDup(r.phone)) repeat.push(i);
   });
   return { nocod, repeat, key: 'n' + nocod.join(',') + '|r' + repeat.join(',') };
@@ -1633,15 +1906,15 @@ $('batchNoCodFix').onclick = () => {
 function repaintRow(i) {
   const el = $q(`.brow[data-i="${i}"]`), row = BATCH[i]; if (!el || !row) return;
   el.outerHTML = batchRowHTML(row, i);
-  const sel = $q(`.brow[data-i="${i}"] select[data-f="office"]`); if (sel && row.officeCode) sel.value = row.officeCode;
+  const sel = $q(`.brow[data-i="${i}"] select[data-f="office"]`); if (sel) sel.value = row.officeCode || '';
 }
 $('batchCreateBtn').onclick = async () => {
   if (createBusy()) return;
   $('batchErr').textContent = '';
   const rows = BATCH; // snapshot BEFORE any wait: a paste meanwhile must never be acted upon
   if (!batchLive(rows)) { syncBatchActions(); return; }   // nothing ticked or left to create
-  // Creating without a contents description fails at Econt for every row — stop early.
-  if (!(CONFIG.defaults.shipmentDescription || '').trim() && rows.some((r) => r.on && !r.trackNum && !r.done)) {
+  // Creating without a contents description fails at Econt for every row: stop early.
+  if (rows.some((r) => r.on && !r.trackNum && !r.done && !String(batchOverrides(r).description || '').trim())) {
     $('batchErr').textContent = t('need_desc'); return;
   }
   // No COD although it is the default, or a repeat to a phone: ask, never ship silently.
@@ -1670,36 +1943,47 @@ $('batchCreateBtn').onclick = async () => {
       // Stored as a template so a language switch re-renders it correctly.
       const set = (k, p, color) => { row.statusTpl = typeof k === 'object' ? k : { k, p }; row.statusColor = color || ''; if (BATCH === rows) repaintRow(i); };
       if (!row.on) {
-        skip++;
+        // Still waiting for an office: it says so, and is not counted as skipped.
+        if (rowNeedsPick(row)) { row.res = 'wait'; if (BATCH === rows) repaintRow(i); continue; }
+        skip++; row.res = 'skip';
         // Keep an "unclear" / "already sent" warning; plain rows read "skipped".
         if (!(row.statusTpl && (row.statusTpl.k === 'st_unsure' || row.statusTpl.k === 'st_dup'))) set('st_skip');
         continue;
       }
       if (row.trackNum) {
         if (!loadParcels().some((x) => x.number === row.trackNum)) {
-          addParcel({ number: row.trackNum, recipient: row.name.trim(), office: row.officeCode || '', cod: Number(row.cod) || 0, currency: row.cur, createdAt: Date.now(), mode: CONFIG.mode, manual: true });
+          addParcel({ number: row.trackNum, recipient: row.name.trim(), office: row.officeCode || '', cod: parseAmount(row.cod) || 0, currency: row.cur, createdAt: Date.now(), mode: CONFIG.mode, manual: true });
         }
         row.done = true; ok++; tracked++; set('st_tracked', null, 'var(--go-d)'); step();
         continue;
       }
       const o = batchOverrides(row);
       const destOk = o.officeCode || (o.address && o.address.city && o.address.street);
-      if (!o.recipientName || !o.phone || !destOk) { fail++; set('st_missing', null, 'var(--warn)'); step(); continue; }
+      if (!destOk) {
+        const pick = row.ambiguous && !row.door;
+        if (pick) row.res = 'wait'; else { fail++; row.res = 'fail'; }
+        set(pick ? 'st_pick' : 'st_missing', null, 'var(--warn)'); step(); continue;
+      }
+      if (!o.recipientName || !o.phone) { fail++; row.res = 'fail'; set('st_nocontact', null, 'var(--warn)'); step(); continue; }
+      if (isNaN(parseAmount(row.cod))) { fail++; row.res = 'fail'; set('st_badamt', null, 'var(--warn)'); step(); continue; }
+      if (rowDeclBad(row)) { fail++; row.res = 'fail'; set('st_baddecl', null, 'var(--warn)'); step(); continue; }
       set('st_creating');
       const r = await api('/api/create', shipBody(o));   // never retried
       const st = r.ok ? (r.response.label || r.response) : null;
       if (r.ok && st && st.shipmentNumber) {
-        const info = { cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode: o.reviewMode };
-        addParcel({ number: st.shipmentNumber, recipient: o.recipientName, phone: o.phone, phone9: normPhone9(o.phone), dest: destKey(o), office: o.officeCode || (o.address && o.address.city) || '', weight: o.weight, description: o.description, cod: info.cod, currency: o.cod.currency, reviewMode: o.reviewMode, createdAt: Date.now(), pdfURL: st.pdfURL, mode: CONFIG.mode });
+        // Econt dropped the review (reviewIgnored): stored and replied as "no review".
+        const dropped = !!r.reviewIgnored && o.reviewMode !== 'none', reviewMode = r.reviewIgnored ? 'none' : o.reviewMode;
+        const info = { cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode };
+        addParcel({ number: st.shipmentNumber, recipient: o.recipientName, phone: o.phone, phone9: normPhone9(o.phone), dest: destKey(o), office: o.officeCode || (o.address && o.address.city) || '', weight: o.weight, description: o.description, cod: info.cod, currency: o.cod.currency, reviewMode, createdAt: Date.now(), pdfURL: st.pdfURL, mode: CONFIG.mode });
         clearUnsure(o.phone);
-        row.done = true; row.num = st.shipmentNumber; row.replyInfo = info; ok++; set('st_ok', { num: st.shipmentNumber }, 'var(--go-d)');
+        row.done = true; row.num = st.shipmentNumber; row.replyInfo = info; ok++; set(dropped ? 'st_ok_norev' : 'st_ok', { num: st.shipmentNumber }, 'var(--go-d)');
       } else if (r.transient || r.unsure) {
         // Unknown outcome: untick and remember, so neither a re-run nor the editor
         // can silently create a second waybill.
         markUnsure(o.phone);
-        fail++; row.unsure = true; row.on = false; set('st_unsure', null, 'var(--warn)');
+        fail++; row.res = 'fail'; row.unsure = true; row.on = false; set('st_unsure', null, 'var(--warn)');
       } else {
-        fail++; set({ raw: ((r && r.error) || 'error').slice(0, 120) }, null, 'var(--warn)');
+        fail++; row.res = 'fail'; set({ raw: ((r && r.error) || 'error').slice(0, 120) }, null, 'var(--warn)');
       }
       step();
     }
@@ -1728,24 +2012,29 @@ function loadTesseract() {
 }
 // Isolate the customer's message from a full-chat screenshot: start at the greeting
 // so the listing header/price above it (a false COD) is excluded from parsing.
+const GREETING_RE = /(здравей\S*|здрасти|привет|добър\s+ден|добро\s+утро|\bhello\b|\bhi\b)/i;
 function isolateMessage(text) {
-  const m = String(text).match(/(здравей\S*|здрасти|привет|добър\s+ден|добро\s+утро|\bhello\b|\bhi\b)/i);
+  const m = String(text).match(GREETING_RE);
   return m ? text.slice(m.index) : text;
 }
 // Best-effort listing description: the longest multi-word line before the greeting,
-// trimmed at a dash/comma and stripped of a trailing price.
+// trimmed at a dash/comma and stripped of a trailing price. Without a greeting there
+// is no listing header to tell apart from the customer's own words, so no guess; and
+// a line with a phone, a COD word or an office word is the customer's, never the item.
+const NOT_ITEM_RE = /наложен|нал\.\s*плат|офис|еконт|econt|автомат|\bcod\b/i;
 function guessDescription(text) {
-  const stop = /здравей|привет|\bhello\b|\bhi\b/i;
+  const g = String(text).match(GREETING_RE);
+  if (!g) return '';
   let best = '';
-  for (const raw of String(text).split(/\n+/)) {
+  for (const raw of String(text).slice(0, g.index).split(/\n+/)) {
     const line = raw.trim();
-    if (stop.test(line)) break;
     if (line.split(/\s+/).length < 2) continue;
+    if (new RegExp(PHONE_COUNT_RE.source).test(line) || NOT_ITEM_RE.test(line)) continue;
     if (line.length > best.length) best = line;
   }
   if (!best) return '';
-  let d = best.split(/[—–,|]/)[0].trim();
-  d = d.replace(/\s*\d+[.,]?\d*\s*(лв\.?|bgn|eur|€)\b.*$/i, '').trim();
+  let d = best.split(/\s-\s|[\u2013\u2014,|]/)[0].trim();
+  d = d.replace(/\s*\d+[.,]?\d*\s*(лв\.?|bgn|eur|€)(?![\p{L}\d]).*$/iu, '').trim();
   return d.slice(0, 40);
 }
 // Upscale small screenshots and boost contrast before OCR — the single biggest
@@ -1785,9 +2074,16 @@ function fixDigitRuns(text) {
     return run.replace(/[OoОо]/g, '0').replace(/[lI|]/g, '1');
   });
 }
+// Edits in the editor or the batch list since some moment (an OCR result must not
+// replace them). The newest OCR run wins; an older one that finishes later is dropped.
+let EDIT_SEQ = 0, OCR_SEQ = 0;
+['preview', 'batch'].forEach((id) => $(id).addEventListener('input', () => { EDIT_SEQ++; }));
 async function runOCRFiles(files) {
   const imgs = [...files].filter((f) => f && /^image\//.test(f.type || ''));
   if (!imgs.length) return;
+  const run = ++OCR_SEQ, tok = { parse: PARSE_SEQ, edit: EDIT_SEQ, msg: $('msg').value };
+  // A newer message, parse or edit since this screenshot was attached: keep those.
+  const stale = () => tok.parse !== PARSE_SEQ || tok.edit !== EDIT_SEQ || tok.msg !== $('msg').value;
   const box = $('ocrBox'), msgEl = $('ocrMsg');
   $('parseErr').textContent = '';
   box.classList.remove('hide'); msgEl.textContent = t('ocr_loading');
@@ -1802,9 +2098,12 @@ async function runOCRFiles(files) {
       });
       const txt = ((data && data.text) || '').replace(/[ \t]+\n/g, '\n').trim();
       if (txt) texts.push(fixDigitRuns(txt));
+      if (run !== OCR_SEQ) return;
     }
+    if (run !== OCR_SEQ) return;
     box.classList.add('hide');
-    if (!texts.length) { $('parseErr').textContent = t('ocr_empty'); return; }
+    if (stale()) { $('parseErr').className = 'muted'; $('parseErr').textContent = t('ocr_stale'); return; }
+    if (!texts.length) { $('parseErr').className = 'err'; $('parseErr').textContent = t('ocr_empty'); return; }
     if (texts.length > 1) {
       // Several screenshots = a batch; keep block boundaries for the splitter.
       $('msg').value = texts.join('\n\n');
@@ -1818,8 +2117,9 @@ async function runOCRFiles(files) {
     // The product from the screenshot is the most relevant description for this parcel.
     if (applied && desc && !$('preview').classList.contains('hide')) { $('pDesc').value = desc; doPreview(); }
   } catch (e) {
+    if (run !== OCR_SEQ) return;
     box.classList.add('hide');
-    $('parseErr').textContent = t('ocr_fail');
+    $('parseErr').className = 'err'; $('parseErr').textContent = t('ocr_fail');
   }
 }
 const runOCR = (file) => runOCRFiles(file ? [file] : []);
@@ -1890,7 +2190,9 @@ $('pOffice').onchange = () => doPreview();
 $('copyBtn').onclick = async (e) => {
   const btn = e.currentTarget;
   if (await copyText($('shipNum').textContent.trim())) { flashBtn(btn); return; }
-  // Copy blocked (some in-app browsers): select the number so a long-press copies it.
+  // Copy blocked (some in-app browsers): select the number so a long-press copies it,
+  // on the plain text (the digit boxes of the reveal are about to go).
+  settleReveal();
   const r = document.createRange(); r.selectNodeContents($('shipNum'));
   const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
   toast(t('copy_fail'));
@@ -1926,7 +2228,15 @@ const schedulePreview = debounce(() => {
 ['pPayer', 'pCodOn'].forEach((id) => $(id).addEventListener('change', schedulePreview));
 // A changed COD answer means the "ship without COD?" question must be asked again.
 ['pCodOn', 'pCodAmount'].forEach((id) => $(id).addEventListener('input', () => { NOCOD_ACK = false; }));
-$('pDeclOn').addEventListener('change', () => { if ($('pDeclOn').checked && !$('pDeclAmount').value && $('pCodAmount').value) { $('pDeclAmount').value = $('pCodAmount').value; $('pDeclAmount').dataset.auto = '1'; } doPreview(); });
+$('pDeclOn').addEventListener('change', () => {
+  const da = $('pDeclAmount');
+  if ($('pDeclOn').checked && !da.value.trim()) {
+    // Ticked by hand: follow the COD when there is one, otherwise ask for an amount.
+    if ($('pCodAmount').value.trim()) { da.value = $('pCodAmount').value; da.dataset.auto = '1'; }
+    else delete da.dataset.auto;
+  }
+  doPreview();
+});
 // A COD amount typed after parsing keeps the declared value in sync until the
 // user edits the declared amount themselves.
 $('pDeclAmount').addEventListener('input', () => { delete $('pDeclAmount').dataset.auto; });
@@ -1938,6 +2248,29 @@ $('pCodAmount').addEventListener('input', () => {
 // pre-fill from the last parsed address.
 $('modeOfficeBtn').onclick = () => setDeliverMode('office');
 $('modeAddressBtn').onclick = () => { if (!$('pAddrCity').value.trim() && PARSED_ADDR) fillAddress(PARSED_ADDR); setDeliverMode('address'); };
+// Sticky bars and keyboard focus: the browser scrolls a focused field just inside the
+// viewport, which on a laptop screen is under the confirm (or save) bar. The bars'
+// real heights feed html's scroll-padding-bottom (--cb-h, --sb-h), and a field that
+// still ends up under a bar, or under the top bar, is brought to the middle.
+(function initStickyBars() {
+  const root = document.documentElement, cb = $('confirmBar'), sb = $q('.save-bar'), top = $q('.topbar');
+  const measure = () => {
+    if (cb.offsetHeight) root.style.setProperty('--cb-h', cb.offsetHeight + 'px');
+    if (sb && sb.offsetHeight) root.style.setProperty('--sb-h', sb.offsetHeight + 'px');
+  };
+  if (window.ResizeObserver) { const ro = new ResizeObserver(measure); ro.observe(cb); if (sb) ro.observe(sb); }
+  document.addEventListener('focusin', (e) => {
+    const el = e.target;
+    if (!el || !el.getBoundingClientRect || el === document.body) return;
+    const bar = $('preview').contains(el) ? cb : (sb && $('settings').contains(el)) ? sb : null;
+    if (!bar || bar.contains(el)) return;
+    requestAnimationFrame(() => {
+      if (document.activeElement !== el || getComputedStyle(bar).position !== 'sticky') return;
+      const r = el.getBoundingClientRect(), b = bar.getBoundingClientRect(), tb = top ? top.getBoundingClientRect().bottom : 0;
+      if (r.bottom > b.top - 4 || r.top < tb + 4) el.scrollIntoView({ block: 'center', behavior: 'instant' });
+    });
+  });
+})();
 
 // ---------- parcels (live status + operation timer) ----------
 function fmtDateTime(v) { const ms = toMs(v); if (!ms) return ''; const d = new Date(ms); if (isNaN(d.getTime())) return ''; return d.toLocaleString(LANG === 'bg' ? 'bg-BG' : 'en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
@@ -1950,25 +2283,32 @@ function fmtDuration(ms) {
   const d = Math.floor(h / 24), rh = h % 24, ds = d === 1 ? t('dur_d1') : t('dur_d', { n: d });
   return rh ? ds + t('dur_join') + t('dur_h', { n: rh }) : ds;
 }
-// Operation state: timer runs in transit, stops on delivered or returned.
+// Operation state: timer runs in transit, stops on delivered, returned or cancelled.
+// Coarse on purpose, so the card face always carries Econt's own words as well; a
+// failed or pending delivery ("Неуспешна доставка", "За доставка") is not "delivered".
+const DELIVERED_RE = /(?:^|[^а-яё])(?:доставен|получен)[аио]?(?![а-яё])(?!\s+(?:в|до)\s+(?:офис|склад|автомат))(?!\s+от\s+куриер)|(?:^|[^a-z])delivered(?![a-z])(?!\s+to\s+(?:the\s+)?(?:office|locker))/;
+const NOT_DELIVERED_RE = /неуспеш|не е доставен|недоставен|unsuccess|fail|not delivered|undeliver|attempt/;
 function classify(p) {
   const txt = ((p.status || '') + ' ' + (p.statusEn || '')).toLowerCase();
+  if (/анулир|cancel/.test(txt)) return 'cancelled';
   if (/върнат|върната|return|отказан|refus|reject/.test(txt)) return 'returned';
-  if (p.deliveryTime || /достав|получена|получен|delivered/.test(txt)) return 'delivered';
+  if (!NOT_DELIVERED_RE.test(txt) && (p.deliveryTime || DELIVERED_RE.test(txt))) return 'delivered';
   if (p.sendTime) return 'transit';
   return 'created';
 }
+// Progress bar: created, on the way, finished (green) or stopped (amber: returned, cancelled).
+function stepOf(st) { return st === 'delivered' || st === 'returned' || st === 'cancelled' ? 3 : st === 'transit' ? 2 : 1; }
 // Econt status text in the UI language when Econt sends an English variant.
 const statusText = (p) => ((LANG === 'en' && p.statusEn) ? p.statusEn : p.status) || '';
 // Three-segment progress: created, on the way, finished (green) / returned (amber).
 function trackAttrs(snap) {
   if (!snap) return 'data-step="0"';
   const st = classify(snap);
-  return st === 'returned' ? 'data-step="3" data-ret' : 'data-step="' + (st === 'delivered' ? 3 : st === 'transit' ? 2 : 1) + '"';
+  return 'data-step="' + stepOf(st) + '"' + (st === 'returned' || st === 'cancelled' ? ' data-ret' : '');
 }
 function metaText(snap) {
   if (!snap || !snap.expectedDeliveryDate) return '';
-  const st = classify(snap); if (st === 'delivered' || st === 'returned') return '';
+  const st = classify(snap); if (st === 'delivered' || st === 'returned' || st === 'cancelled') return '';
   const d = fmtDate(snap.expectedDeliveryDate);
   return d ? esc(t('exp_delivery') + ': ' + d) : '';
 }
@@ -1984,20 +2324,28 @@ function startTimers() {
   TIMER_INT = setInterval(() => {
     if (document.hidden) return;
     const now = Date.now();
-    for (const num in TICK) { const tk = TICK[num]; if (tk && tk.el && tk.el.isConnected) tk.el.textContent = t('in_operation', { d: fmtDuration(now - tk.start) }); }
+    for (const num in TICK) { const tk = TICK[num]; if (tk && tk.el && tk.el.isConnected) tk.el.textContent = t(tk.k, { d: fmtDuration(now - tk.start) }); }
     renderUpdated();
   }, 60000);
 }
 function stopTimers() { if (TIMER_INT) { clearInterval(TIMER_INT); TIMER_INT = null; } }
-// The one status line of a row: the state in words with how long it took or has taken.
+// The one status line of a row: Econt's own words for the state ("Пристигнала в офис"),
+// then how long it took or has taken ("изпратена преди 1 ден и 6 ч"). Without a status
+// text from Econt, the state in our words carries the time ("В движение от 1 ден").
 function renderTimer(num, p) {
-  const cell = $q(`.parcel[data-num="${num}"] [data-status]`); if (!cell) return;
-  const st = classify(p), sent = toMs(p.sendTime); delete TICK[num];
+  const card = $q(`.parcel[data-num="${num}"]`); if (!card) return;
+  const cell = card.querySelector('[data-status]'), dur = card.querySelector('[data-dur]');
+  const st = classify(p), sent = toMs(p.sendTime), econt = statusText(p).trim(); delete TICK[num];
   cell.className = 'pstat';
-  if (st === 'delivered') { const dt = toMs(p.deliveryTime); cell.textContent = sent && dt ? t('delivered_in', { d: fmtDuration(dt - sent) }) : t('delivered_ok'); }
-  else if (st === 'returned') { const dt = toMs(p.deliveryTime) || Date.now(); cell.textContent = sent ? t('returned_in', { d: fmtDuration(dt - sent) }) : t('returned_ok'); }
-  else if (st === 'transit' && sent) { cell.textContent = t('in_operation', { d: fmtDuration(Date.now() - sent) }); TICK[num] = { start: sent, el: cell }; }
-  else { cell.textContent = t('awaiting_dispatch'); }
+  let own = '', short = '', tick = null;
+  if (st === 'cancelled') own = t('cancelled_ok');
+  else if (st === 'delivered') { const dt = toMs(p.deliveryTime); if (sent && dt) { own = t('delivered_in', { d: fmtDuration(dt - sent) }); short = t('dur_in', { d: fmtDuration(dt - sent) }); } else own = t('delivered_ok'); }
+  else if (st === 'returned') { const dt = toMs(p.deliveryTime) || Date.now(); if (sent) { own = t('returned_in', { d: fmtDuration(dt - sent) }); short = t('dur_after', { d: fmtDuration(dt - sent) }); } else own = t('returned_ok'); }
+  else if (st === 'transit' && sent) { own = t('in_operation', { d: fmtDuration(Date.now() - sent) }); short = t('dur_sent', { d: fmtDuration(Date.now() - sent) }); tick = econt ? 'dur_sent' : 'in_operation'; }
+  else own = t('awaiting_dispatch');
+  cell.textContent = econt || own;
+  if (dur) dur.textContent = econt ? short : '';
+  if (tick) TICK[num] = { start: sent, el: econt ? dur : cell, k: tick };
 }
 
 function reviewLabel(mode) { return mode === 'review_test' ? t('review_test') : mode === 'review' ? t('review_only') : null; }
@@ -2024,17 +2372,17 @@ const subText = (recipient, office) => [recipient, office].filter(Boolean).join(
 function parcelCardHTML(p) {
   const other = p.mode !== CONFIG.mode;
   const snap = !other && p.snap ? p.snap : null;
-  // The state shows once, as words ("Доставена за 19 ч"); Econt's own status text is
-  // the first line of Детайли. Until a status is known the line says so.
-  const stat = other ? `<span class="pstat" data-status>${esc(t('other_env'))}</span>`
+  // Econt's own status words, then the time in ours ("Доставена за 19 ч"). Until a
+  // status is known the line says so.
+  const stat = (other ? `<span class="pstat" data-status>${esc(t('other_env'))}</span>`
     : snap ? '<span class="pstat" data-status></span>'
-    : `<span class="pstat sk" data-status>${esc(t('loading'))}</span>`;
+    : `<span class="pstat sk" data-status>${esc(t('loading'))}</span>`) + ' <span class="pdur" data-dur></span>';
   const copyLbl = t('copy') + ' ' + p.number;
   return `<div class="parcel" data-num="${esc(p.number)}">
     <div class="parcel-top"><button class="pnum" type="button" data-copy title="${esc(t('copy'))}" aria-label="${esc(copyLbl)}"><span class="parcel-num">${esc(p.number)}</span>${svgi('copy')}</button><span class="parcel-pills" data-pills>${collectedPill(snap)}</span></div>
     <div class="parcel-sub" data-sub>${esc(subText(p.recipient, p.office))}</div>
     <div class="ptrack" data-track ${trackAttrs(snap)} aria-hidden="true"><i></i><i></i><i></i></div>
-    <div class="parcel-line">${stat}<span class="parcel-meta" data-meta>${metaText(snap)}</span></div>
+    <div class="parcel-line"><span class="pline">${stat}</span><span class="parcel-meta" data-meta>${metaText(snap)}</span></div>
     <div class="parcel-row">
       <button class="lnk" type="button" data-reply>${esc(t('parcel_reply'))}</button>
       <span class="spacer"></span>
@@ -2062,12 +2410,12 @@ function updateParcelCard(p, local) {
   pills.innerHTML = p.error ? '' : collectedPill(p);
   const tr = c.querySelector('[data-track]');
   tr.removeAttribute('data-ret'); tr.setAttribute('data-step', '0');
-  if (!p.error) { const st = classify(p); tr.setAttribute('data-step', st === 'delivered' || st === 'returned' ? '3' : st === 'transit' ? '2' : '1'); if (st === 'returned') tr.setAttribute('data-ret', ''); }
+  if (!p.error) { const st = classify(p); tr.setAttribute('data-step', String(stepOf(st))); if (st === 'returned' || st === 'cancelled') tr.setAttribute('data-ret', ''); }
   c.querySelector('[data-meta]').innerHTML = p.error ? '' : metaText(p);
   if (p.recipient || p.office) c.querySelector('[data-sub]').textContent = subText(p.recipient, p.office);
   const pdf = p.pdfURL || local.pdfURL, a = c.querySelector('[data-pdf]');
   if (pdf) { a.href = pdf; a.hidden = false; } else { a.hidden = true; }
-  if (p.error) { const cell = c.querySelector('[data-status]'); delete TICK[p.number]; cell.className = 'pstat'; cell.textContent = t('no_status'); }
+  if (p.error) { const cell = c.querySelector('[data-status]'); delete TICK[p.number]; cell.className = 'pstat'; cell.textContent = t('no_status'); c.querySelector('[data-dur]').textContent = ''; }
   else renderTimer(p.number, p);
   const det = c.querySelector('[data-details]');
   let html = detailRows(p, local).map(([k, v]) => `<div class="drow"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('');
