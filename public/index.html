@@ -615,11 +615,6 @@ try {
   .ld-wb-row dd { margin: 0; font-size: 14px; line-height: 20px; font-weight: 500; }
   .ld-wb-row .ld-amt { font-weight: 600; }
   .ld-wb-row.dim dd { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: var(--g-gray-900); font-weight: 400; }
-  .ld-badge { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px;
-    background: var(--g-gray-200); color: var(--g-gray-1000); font-size: 11px; line-height: 1; font-weight: 500; white-space: nowrap; }
-  .ld-wb-foot { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--g-bg-200); font-size: 13px; line-height: 16px; color: var(--g-gray-900); }
-  .ld-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--g-green-700); flex: none; }
-  .ld-wb-foot .ld-time { margin-left: auto; }
 
   /* What else it does: four short facts, no table. */
   .ld-more { margin-top: 80px; }
@@ -770,10 +765,10 @@ try {
               <div class="ld-wb-row" data-n="3" id="ldRow3"><dt><span class="ld-pin">3</span><span class="ld-wb-l" data-i18n="wb_office">До офис</span></dt><dd lang="bg">Пловдив, Тракия</dd></div>
               <div class="ld-wb-row" data-n="4" id="ldRow4"><dt><span class="ld-pin">4</span><span class="ld-wb-l" data-i18n="wb_cod">Наложен платеж</span></dt><dd class="ld-amt" data-i18n="wb_cod_v">45 €</dd></div>
               <div class="ld-wb-row" data-n="5" id="ldRow5"><dt><span class="ld-pin">5</span><span class="ld-wb-l" data-i18n="wb_review">Преглед</span></dt><dd data-i18n="wb_review_v">Да, преди плащане</dd></div>
-              <div class="ld-wb-row dim"><dt><span aria-hidden="true"></span><span class="ld-wb-l" data-i18n="wb_parcel">Пратка</span></dt><dd><span data-i18n="wb_parcel_v">колет, 1 кг, плаща получателят</span><span class="ld-badge" data-i18n="wb_default">от настройките</span></dd></div>
+              <div class="ld-wb-row dim"><dt><span aria-hidden="true"></span><span class="ld-wb-l" data-i18n="wb_parcel">Пратка</span></dt><dd><span data-i18n="wb_parcel_v">колет, 1 кг, плаща получателят</span></dd></div>
             </dl>
-            <div class="ld-wb-foot"><span class="ld-dot" aria-hidden="true"></span><span data-i18n="wb_status">Създадена в твоя Еконт профил</span><span class="ld-time">14:33</span></div>
           </article>
+          <p class="ld-small" data-i18n="wb_from_settings">Теглото и кой плаща идват от настройките ти.</p>
         </div>
 
         <!-- What goes back to the customer (built from the app's real reply text) -->
