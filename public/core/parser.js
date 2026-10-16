@@ -162,9 +162,91 @@ function normalizePhone(raw) {
   return d;
 }
 
-// Cyrillic-safe word edges (JS \b only knows ASCII letters).
-const NL = '(?<![а-яёa-z])', NR = '(?![а-яёa-z])';
-const OFFICE_WORD_RE = new RegExp(NL + '(?:офис[а-яё]*|office|апс|aps|автомат|еконтомат)' + NR, 'i');
+// ---------- patterns without lookbehind ----------
+// Safari before 16.4 (iOS 15, iOS 16.0 to 16.3, Safari 15 on macOS Catalina) does
+// not know regex lookbehind (a group that opens with "?<=" or "?<!"): one such
+// pattern anywhere in this file is a SyntaxError that stops the whole parser from
+// loading. So no pattern here uses one. A "not right after …" check at the start
+// of a pattern is done in code instead: lb(source, flags, ok) acts as that regex
+// with the lookbehind put back. A match counts only where ok(text, index, match)
+// holds; where it does not, the search goes on from the next position, which is
+// exactly what the engine did when the lookbehind failed. tests/lookbehind-free.js
+// holds every pattern here to its original lookbehind form.
+// The object supports what the parser calls: exec, test (both honour lastIndex
+// for 'g', like a RegExp), String.prototype.replace and match.
+function lb(source, flags, ok) {
+  const global = flags.indexOf('g') >= 0;
+  const re = new RegExp(source, global ? flags : flags + 'g');
+  const self = {
+    lastIndex: 0, global, lookbehind: true,
+    exec(str) {
+      const s = String(str);
+      let from = global ? self.lastIndex : 0;
+      while (from <= s.length) {
+        re.lastIndex = from;
+        const m = re.exec(s);
+        if (!m) break;
+        if (ok(s, m.index, m)) { if (global) self.lastIndex = re.lastIndex; return m; }
+        from = m.index + 1;
+      }
+      if (global) self.lastIndex = 0;
+      return null;
+    },
+    test(str) { return self.exec(str) !== null; },
+  };
+  self[Symbol.match] = (str) => {
+    if (!global) return self.exec(str);
+    const s = String(str), all = [];
+    let m;
+    self.lastIndex = 0;
+    while ((m = self.exec(s))) { all.push(m[0]); if (!m[0].length) self.lastIndex++; }
+    return all.length ? all : null;
+  };
+  // String.prototype.replace(lbObject, replacement): replacement is a function
+  // (match, p1, …, offset, string) or a string with $1…$9, $& and $$.
+  self[Symbol.replace] = (str, rep) => {
+    const s = String(str);
+    let out = '', last = 0, m;
+    self.lastIndex = 0;
+    while ((m = self.exec(s))) {
+      const sub = typeof rep === 'function' ? String(rep(...m, m.index, s))
+        : String(rep).replace(/\$([$&]|[1-9])/g, (x, k) => (k === '$' ? '$' : k === '&' ? m[0] : m[k] == null ? (Number(k) < m.length ? '' : x) : m[k]));
+      out += s.slice(last, m.index) + sub;
+      last = m.index + m[0].length;
+      if (!global) break;
+      if (!m[0].length) self.lastIndex++;
+    }
+    return out + s.slice(last);
+  };
+  // Never used: fail loudly rather than search for the text "[object Object]".
+  self[Symbol.search] = self[Symbol.split] = () => { throw new Error('lb(): search/split are not supported'); };
+  return self;
+}
+// Several patterns, tested together: what one regex "A|B|C" did for test(), when
+// only some of its branches had a lookbehind.
+const anyOf = (...res) => ({ test: (s) => res.some((r) => { r.lastIndex = 0; return r.test(s); }) });
+// The lookbehind checks themselves, at index i of s.
+const notAfter = (cls) => (s, i) => i === 0 || !cls.test(s[i - 1]);
+// "Not right after a letter" (the old [а-яёa-z] lookbehind): with the i flag
+// capitals count as letters too, as they did in the regex.
+const NL_OK = notAfter(/[а-яёa-z]/), NL_OK_I = notAfter(/[а-яёa-z]/i);
+// "Right after one of these words and whitespace" (the old lookbehinds with a word
+// list): the text before i ends with one of the words and then whitespace.
+// `words` is a regex source that ends in a letter and matches at most 15
+// characters, so a 16-character window before the whitespace holds any match.
+function wordsBefore(words, flags) {
+  const re = new RegExp('(?:' + words + ')$', flags);
+  return (s, i) => {
+    let j = i;
+    while (j > 0 && /\s/.test(s[j - 1])) j--;
+    return j < i && re.test(s.slice(Math.max(0, j - 16), j));
+  };
+}
+
+// Cyrillic-safe word edges (JS \b only knows ASCII letters). The left edge is
+// NL_OK (above); NR is a lookahead, which every browser knows.
+const NR = '(?![а-яёa-z])';
+const OFFICE_WORD_RE = lb('(?:офис[а-яё]*|office|апс|aps|автомат|еконтомат)' + NR, 'i', NL_OK_I);
 
 // "Офис или адрес:", "Офис на Еконт или адрес:", "Офис/адрес:", "До офис или до адрес?":
 // a form label or the seller's question offers both; the value after it decides.
@@ -172,17 +254,30 @@ const DT_ALT_RE = new RegExp('(?:до\\s+)?(?:офис[а-яё]*|еконт|econ
   + '|(?:до\\s+)?адрес[а-яё]*\\s*(?:/|\\\\|или|or)\\s*(?:до\\s+|в\\s+)?(?:офис[а-яё]*|еконт|econt)', 'gi');
 // "не до офис", "без офис", "не искам до офис", "нямам офис наблизо": a refused office.
 // Only these shapes: "не знам кой офис" or "няма проблем офис …" refuse nothing.
-const DT_REF_HEAD = NL + '(?:(?:не|без)\\s+(?:(?:искам|желая|ща|трябва|може|е)\\s+)?|(?:нямам|няма)\\s+)(?:(?:до|в|във|на|през)\\s+)?';
-const DT_OFF_REF_RE = new RegExp(DT_REF_HEAD + '(?:офис[а-яё]*|office|апс|aps|автомат)' + NR, 'gi');
-const DT_ADDR_REF_RE = new RegExp(DT_REF_HEAD + '(?:адрес[а-яё]*|врата|вкъщи|дома)' + NR, 'gi');
+// (each starts where NL_OK_I holds)
+const DT_REF_HEAD = '(?:(?:не|без)\\s+(?:(?:искам|желая|ща|трябва|може|е)\\s+)?|(?:нямам|няма)\\s+)(?:(?:до|в|във|на|през)\\s+)?';
+const DT_OFF_REF_SRC = DT_REF_HEAD + '(?:офис[а-яё]*|office|апс|aps|автомат)' + NR;
+const DT_ADDR_REF_SRC = DT_REF_HEAD + '(?:адрес[а-яё]*|врата|вкъщи|дома)' + NR;
+const DT_OFF_REF_RE = lb(DT_OFF_REF_SRC, 'gi', NL_OK_I), DT_OFF_REF_I = lb(DT_OFF_REF_SRC, 'i', NL_OK_I);
+const DT_ADDR_REF_RE = lb(DT_ADDR_REF_SRC, 'gi', NL_OK_I), DT_ADDR_REF_I = lb(DT_ADDR_REF_SRC, 'i', NL_OK_I);
 // The address OF an office ("офис Еконт с адрес бул. …", "до Еконт на адрес ул. …",
 // "до офис на Еконт, който е на адрес …", "адресът на офиса"). Not "с Еконт на адрес"
 // (Econt as the carrier, door delivery), and not "Еконт до адрес".
-const DT_OFFICE_ADDR_RE = new RegExp('(?<!(?:^|[^а-яёa-z])(?:с|със|чрез|по|през)\\s+)' + NL + '(?:офис[а-яё]*|office|апс|aps|автомат|еконт|econt)' + NR
-  + '(?:[^.;!?\\n,/]|,(?=\\s*(?:който|която|което|намиращ|намира|разположен)))' + '{0,40}?' + NL + '(?:с|със|на)\\s+адрес'
-  + '|' + NL + 'адрес(?:ът|а)?\\s+на\\s+офис'
+// (Between the office word and "с/на адрес": 1 to 40 characters, the last of them not
+// a letter. That is the word edge before "с/на", and it can never sit right after the
+// office word, which ends in a letter.)
+const DT_ADDR_GAP = '(?:[^.;!?\\n,/]|,(?=\\s*(?:който|която|което|намиращ|намира|разположен)))';
+const DT_ADDR_GAP_END = '(?:[^.;!?\\n,/а-яёa-z]|,(?=\\s*(?:който|която|което|намиращ|намира|разположен)))';
+const DT_OFFICE_ADDR_RE = anyOf(
+  lb('(?:офис[а-яё]*|office|апс|aps|автомат|еконт|econt)' + NR + DT_ADDR_GAP + '{0,39}?' + DT_ADDR_GAP_END + '(?:с|със|на)\\s+адрес', 'i',
+    // ...and not right after "с/със/чрез/по/през ", the carrier wording
+    ((carrier) => (s, i) => NL_OK_I(s, i) && !carrier(s, i))(wordsBefore('(?:^|[^а-яёa-z])(?:с|със|чрез|по|през)', 'i'))),
+  lb('адрес(?:ът|а)?\\s+на\\s+офис', 'i', NL_OK_I),
   // "Адрес: Еконт Пловдив Тракия" — the address given IS an Econt office
-  + '|' + NL + 'адрес[а-яё]*(?:\\s+за\\s+доставка)?\\s*[:\\-–]\\s*(?:до\\s+|в\\s+)?(?:офис[а-яё]*\\s+(?:на\\s+)?)?(?:еконт|econt)' + NR, 'i');
+  lb('адрес[а-яё]*(?:\\s+за\\s+доставка)?\\s*[:\\-–]\\s*(?:до\\s+|в\\s+)?(?:офис[а-яё]*\\s+(?:на\\s+)?)?(?:еконт|econt)' + NR, 'i', NL_OK_I));
+const HOME_ADDR_RE = anyOf(lb('(?:ж\\.?\\s*к|жк\\s|кв\\.?\\s|бл\\.?\\s*\\d|блок\\s*\\d|вх\\.?\\s|ет\\.?\\s*\\d|етаж|ап\\.?\\s*\\d|апартамент)', '', NL_OK), /\sдо\s+(?:училище|блок|бл\.?)/);
+const BLOCK_ENTRANCE_RE = lb('(?:бл\\.?\\s*\\d|вх\\.?\\s)', '', NL_OK);
+const DOOR_WORD_RE = anyOf(new RegExp('адрес|до\\s*врата|до\\s*мен|до\\s+(?:вкъщи|дома)' + NR), lb('(?:courier|куриер)', '', NL_OK));
 
 function detectDeliveryType(text) {
   let t = text.toLowerCase();
@@ -190,23 +285,23 @@ function detectDeliveryType(text) {
   // "Офис/адрес: Еконт Пловдив Център, ул. Гладстон 12": the value is an office.
   if (altLabel && new RegExp('(?:' + DT_ALT_RE.source + ')\\s*[:\\-–]?\\s*(?:до\\s+|в\\s+)?(?:офис[а-яё]*\\s+(?:на\\s+)?)?(?:еконт|econt)' + NR, 'i').test(t)) return 'office';
   t = t.replace(DT_ALT_RE, ' ');
-  const offRefused = new RegExp(DT_OFF_REF_RE.source, 'i').test(t);
+  const offRefused = DT_OFF_REF_I.test(t);
   t = t.replace(DT_OFF_REF_RE, ' ');
-  const addrRefused = new RegExp(DT_ADDR_REF_RE.source, 'i').test(t);
+  const addrRefused = DT_ADDR_REF_I.test(t);
   t = t.replace(DT_ADDR_REF_RE, ' ');
   const hasOffice = OFFICE_WORD_RE.test(t);
   if (DT_OFFICE_ADDR_RE.test(t)) return 'office';
   // "Адрес на Еконт: <street>" names the Econt office's street. With a home-style
   // address (ж.к., блок/вход/етаж/апартамент, a landmark) it is the customer's own
   // address written under that label, as in the real message that drove e8df982.
-  const homeAddr = new RegExp(NL + '(?:ж\\.?\\s*к|жк\\s|кв\\.?\\s|бл\\.?\\s*\\d|блок\\s*\\d|вх\\.?\\s|ет\\.?\\s*\\d|етаж|ап\\.?\\s*\\d|апартамент)|\\sдо\\s+(?:училище|блок|бл\\.?)').test(t);
+  const homeAddr = HOME_ADDR_RE.test(t);
   if (/адрес(?:ът|а)?\s+на\s+(?:еконт|econt)/.test(t) && !homeAddr && !/до\s*адрес|до\s*врата/.test(t)) return 'office';
   // A concrete street/complex/block next to an address word (or under an
   // "office or address" label, or with the office refused) is a strong "door"
   // signal that wins even if "офис" appears elsewhere (e.g. the seller's own pitch).
-  const street = /(ул\.?\s|бул\.?\s|ж\.?\s*к|жк\s|кв\.?\s|№|\sдо\s+(?:училище|блок|бл\.?))/.test(t) || new RegExp(NL + '(?:бл\\.?\\s*\\d|вх\\.?\\s)').test(t);
+  const street = /(ул\.?\s|бул\.?\s|ж\.?\s*к|жк\s|кв\.?\s|№|\sдо\s+(?:училище|блок|бл\.?))/.test(t) || BLOCK_ENTRANCE_RE.test(t);
   // ("вкъщи"/"дома" only as "до вкъщи"/"до дома": "ще съм вкъщи след 17 ч" is not a door request)
-  const doorWord = new RegExp('адрес|до\\s*врата|до\\s*мен|до\\s+(?:вкъщи|дома)' + NR + '|' + NL + '(?:courier|куриер)').test(t);
+  const doorWord = DOOR_WORD_RE.test(t);
   if (street && (doorWord || altLabel || offRefused)) return 'door';
   // "не до офис" with no other office word: the customer wants it at the door.
   if (offRefused && !hasOffice) return 'door';
@@ -333,17 +428,20 @@ function curOf(s) { s = (s || '').toLowerCase(); return (s.includes('€') || s.
 // ---------- cash on delivery ----------
 const CUR_SRC = '€|евро|evro|euro|eur|лв\\.?|лева|лев|bgn|lv\\.?|leva|lev';
 const CUR_AFTER_RE = new RegExp('^\\s*(' + CUR_SRC + ')' + NR, 'i');
-const CUR_BEFORE_RE = new RegExp(NL + '(' + CUR_SRC + ')\\s*$', 'i');
+const CUR_BEFORE_RE = lb('(' + CUR_SRC + ')\\s*$', 'i', NL_OK_I);
 // 1 200 / 1.200 / 1,200 (thousands) or 45 / 45,50 / 45.50
 const NUM_PLAIN_SRC = '\\d{1,3}(?:\\.\\d{3})+(?:,\\d{1,2})?|\\d{1,3}(?:,\\d{3})+(?:\\.\\d{1,2})?|\\d{1,6}(?:[.,]\\d{1,2})?';
 const NUM_SPACED_SRC = '\\d{1,3}(?:[ \\u00a0\\u202f]\\d{3})+(?:[.,]\\d{1,2})?';
-const NUM_SRC = '(?<![\\d.,])(' + NUM_SPACED_SRC + '|' + NUM_PLAIN_SRC + ')(?!\\d)';
+// (an amount never starts right after a digit, '.' or ',')
+const NUM_SRC = '(' + NUM_SPACED_SRC + '|' + NUM_PLAIN_SRC + ')(?!\\d)';
+const NOT_AFTER_NUM = notAfter(/[\d.,]/);
 const NUM_PLAIN_Y = new RegExp('(?:' + NUM_PLAIN_SRC + ')(?!\\d)', 'y');
 // A space-grouped amount ("1 200 лв") only where an amount starts: at the start of
 // a line, after punctuation, a COD/total keyword, "за"/"е", or a currency. After a
 // word or a number it is two numbers: a size, house/block/quarter number, model or
 // "3 в 1" right before a price ("Младост 1 120 лв", "размер 42 100 лв").
-const GROUP_OK_BEFORE_RE = new RegExp('(?:^|\\n)[ \\t]*$|[:=\\-–—,;(+/]\\s*$|' + NL + '(?:наложен[а-яё]*|платеж[а-яё]*|нп|cod|сума(?:та)?|общо|всичко|тотал|total|цена(?:та)?|стойност|получаване|плащане|е|за|от|€|евро|eur|лв\\.?|лева|bgn)\\s*$', 'i');
+const GROUP_OK_BEFORE_RE = anyOf(new RegExp('(?:^|\\n)[ \\t]*$|[:=\\-–—,;(+/]\\s*$', 'i'),
+  lb('(?:наложен[а-яё]*|платеж[а-яё]*|нп|cod|сума(?:та)?|общо|всичко|тотал|total|цена(?:та)?|стойност|получаване|плащане|е|за|от|€|евро|eur|лв\\.?|лева|bgn)\\s*$', 'i', NL_OK_I));
 const QTY_AFTER_RE = /^\s*(?:бр(?:ой(?:ки|ка)?|оя|\.)?|pcs|чифт[а-яё]*|x|х|\*|×|%)(?![а-яёa-z])/i;
 const UNIT_BEFORE_RE = /(?:^|[^а-яёa-z])(?:по|x|х|\*|×)\s*$/i;
 const UNIT_AFTER_RE = new RegExp('^\\s*(?:(?:' + CUR_SRC + ')' + NR + ')?\\s*(?:/|на|за)\\s*(?:бр|брой|бройка|чифт)', 'i');
@@ -353,7 +451,9 @@ const TOTAL_BEFORE_RE = /(?:=|(?:^|[^а-яёa-z])(?:общо|всичко|тот
 // Money the customer has already paid ("Вече платих 52 лв по Revolut", "Платено 20 лв
 // капаро", "сумата от 52 лв е преведена"): never the amount to collect.
 // ("без капаро", "платена доставка": not a paid amount)
-const PAID_BEFORE_RE = /(?:^|[^а-яёa-z])(?<!(?:без|не|няма)\s+)(?:(?:за)?плат(?:их|ихме|ил|ила|или|ено|ена|ен|ени)|преведох(?:ме)?|преведен[аио]?|преведени|капаро|аванс|депозит|предплат[а-яё]*)(?![а-яёa-z])(?!\s+(?:доставк|транспорт|куриер))[^,.;!?\n\d]{0,25}$/i;
+// (the word starts after a non-letter or at the start, and not right after "без/не/няма ")
+const PAID_BEFORE_RE = lb(/(?:(?:за)?плат(?:их|ихме|ил|ила|или|ено|ена|ен|ени)|преведох(?:ме)?|преведен[аио]?|преведени|капаро|аванс|депозит|предплат[а-яё]*)(?![а-яёa-z])(?!\s+(?:доставк|транспорт|куриер))[^,.;!?\n\d]{0,25}$/.source, 'i',
+  ((neg) => (s, i) => NL_OK_I(s, i) && !neg(s, i))(wordsBefore('без|не|няма', 'i')));
 const PAID_AFTER_RE = new RegExp('^\\s*(?:(?:' + CUR_SRC + ')' + NR + ')?\\s*(?:(?:капаро|аванс|депозит|предплат[а-яё]*)' + NR
   + '|[,(\\-–—]?\\s*(?:(?:са|е|бяха|беше)\\s+)?(?:вече\\s+)?(?:платен[аио]?|платени|преведен[аио]?|преведени|по\\s+(?:revolut|револют|банк[а-яё]*|сметка(?:та)?|iban|paypal))' + NR
   // ("45 лв преведени 5 лв за доставката": the word goes with the amount after it)
@@ -362,9 +462,11 @@ const DELIV_BEFORE_RE = /(?:^|[^а-яёa-z])(?:доставка(?:та)?|кур�
 const DELIV_AFTER_RE = new RegExp('^\\s*(?:(?:' + CUR_SRC + ')' + NR + ')?\\s*(?:за\\s+)?(?:доставка|куриер|транспорт)', 'i');
 // House/block/size/model numbers — never money unless a currency is attached.
 const ADDR_BEFORE_RE = /(?:(?:^|[^а-яёa-z])(?:ул|бул|no|ж\.?к|кв|блок|бл|вх|ап|етаж|ет|размер|р-р|номер|ном|модел|арт)\.?\s*|№\s*|(?:^|[^а-яёa-z])(?:ул|бул|улица|булевард)\.?\s+[^,\d\n]{1,30}|ж\.?\s*к\.?\s+[^,\d\n]{1,25})$/i;
-const KW_SRC = NL + '(?:наложен[а-яё]*(?:\\s+платеж[а-яё]*)?|нал\\.?\\s*платеж[а-яё]*|нп|cod|сума(?:та)?|за\\s+получаване|за\\s+плащане)' + NR;
+// (starts where NL_OK_I holds)
+const KW_SRC = '(?:наложен[а-яё]*(?:\\s+платеж[а-яё]*)?|нал\\.?\\s*платеж[а-яё]*|нп|cod|сума(?:та)?|за\\s+получаване|за\\s+плащане)' + NR;
 // A phone-like digit group that PHONE_RE did not take ("0899 654 32", "0888 123 4567").
-const LOOSE_PHONE_RE = /(?<!\d)(?:(?:\+|00)?359|0)[\s\-./]{0,2}8[\s\-./]{0,2}[7-9](?:[\s\-./]{0,2}\d){5,9}(?!\d)/g;
+const LOOSE_PHONE_RE = lb(/(?:(?:\+|00)?359|0)[\s\-./]{0,2}8[\s\-./]{0,2}[7-9](?:[\s\-./]{0,2}\d){5,9}(?!\d)/.source, 'g', notAfter(/\d/));
+const KW_RE_I = lb(KW_SRC, 'i', NL_OK_I);
 // A clock time ("14:32"). A dotted "12.50" alone on a line is a price: the noise
 // filter only drops a dotted time when "ч"/"h" follows it.
 const TIME_LIKE = /^(?:[01]?\d|2[0-3]):[0-5]\d$/;
@@ -379,10 +481,11 @@ function numVal(s) {
   else t = t.replace(',', '.');
   return parseFloat(t);
 }
+const EUR_WORD_RE = lb('(?:евро|evro|euro|eur)' + NR, 'i', NL_OK_I), BGN_WORD_RE = lb('(?:лв|лева|bgn|lv|leva)' + NR, 'i', NL_OK_I);
 function globalCurrency(s) {
-  if (new RegExp('€|' + NL + '(?:евро|evro|euro|eur)' + NR, 'i').test(s)) return 'EUR';
+  if (s.indexOf('€') >= 0 || EUR_WORD_RE.test(s)) return 'EUR';
   // ("лев"/"lev" only next to an amount: on its own it is also a first name, Лев.)
-  if (new RegExp(NL + '(?:лв|лева|bgn|lv|leva)' + NR, 'i').test(s)) return 'BGN';
+  if (BGN_WORD_RE.test(s)) return 'BGN';
   return null;
 }
 function groupOk(before) {
@@ -393,7 +496,7 @@ function groupOk(before) {
   return !!(w && (CITIES.has(w[1].toLowerCase()) || TOWNS.has(w[1].toLowerCase())) && !ADDR_BEFORE_RE.test(before));
 }
 function codCandidates(text) {
-  const out = []; const re = new RegExp(NUM_SRC, 'g'); let m;
+  const out = []; const re = lb(NUM_SRC, 'g', NOT_AFTER_NUM); let m;
   while ((m = re.exec(text))) {
     let s = m[0];
     const start = m.index;
@@ -470,7 +573,7 @@ function detectCod(text, phoneIndex) {
   let pick = null, negated = false, positiveKw = false;
   // 1. The amount anchored to a COD keyword ("наложен платеж 300"), so an
   //    item/listing price stated earlier ("Цена 250 лв") does not win.
-  const kwRe = new RegExp(KW_SRC, 'gi'); let k;
+  const kwRe = lb(KW_SRC, 'gi', NL_OK_I); let k;
   while ((k = kwRe.exec(clean))) {
     const pre = clean.slice(Math.max(0, k.index - 25), k.index);
     // "без наложен платеж", "не искам НП" — but "не забравяйте наложения платеж" and
@@ -526,15 +629,18 @@ function detectCod(text, phoneIndex) {
 // Detect a review request written in the message: "с преглед" → review,
 // "преглед и тест" / "тест" → review & test. Null when not mentioned, and null
 // when refused ("без преглед", "не искам да има преглед", "преглед и тест: не").
-const RV_W = '(?<![а-яёa-z])', RV_E = '(?![а-яёa-z])';
+// (every RV pattern starts where NL_OK holds: not right after a letter)
+const RV_E = '(?![а-яёa-z])';
 // One mention: "преглед", "тест", or a pair written as one ("преглед и тест",
 // "преглед/тест", "преглед,тест", "преглед и/или тест", "тест и преглед").
 // (not a product: "тест за бременност", "бърз тест", "тест ленти")
 // (nor the seller's own check of the item: "минал тест", "тест ок", "Направих преглед")
 // Latin: "s pregled", "pregled i test".
-const RV_MENTION_RE = new RegExp(RV_W + '(?<!(?:бърз[аи]?|антигенен|антигенни|pcr|covid|ковид|кръвен|домашен|минал[аио]?|мина|премина(?:л[аио]?)?|издържа(?:л[аио]?)?|направих(?:ме)?|пуснах|успешен|успешно)\\s+)'
-  + '(?:(преглед|pregled)(?:\\s*(?:и\\s*/\\s*или|и|или|i|ili|/|,|&|\\+)\\s*(тест|test))?|(тест)(?!\\s+(?:за\\s+(?:бременност|овулация)|ленти|лента|касет)|\\s+(?:ок|ok|окей|мина|премина|успешен)' + RV_E + ')(?:\\s*(?:и|или|/|,|&|\\+)\\s*(преглед))?)' + RV_E, 'g');
-const RV_NEG_RE = new RegExp(RV_W + '(без|не|няма|нямам|нямаме|отказвам|отказваме|отказва|no|without|нито|bez|ne|nqma|nyama)' + RV_E, 'g');
+const RV_NOT_AFTER = wordsBefore('бърз[аи]?|антигенен|антигенни|pcr|covid|ковид|кръвен|домашен|минал[аио]?|мина|премина(?:л[аио]?)?|издържа(?:л[аио]?)?|направих(?:ме)?|пуснах|успешен|успешно', '');
+const RV_MENTION_RE = lb('(?:(преглед|pregled)(?:\\s*(?:и\\s*/\\s*или|и|или|i|ili|/|,|&|\\+)\\s*(тест|test))?|(тест)(?!\\s+(?:за\\s+(?:бременност|овулация)|ленти|лента|касет)|\\s+(?:ок|ok|окей|мина|премина|успешен)' + RV_E + ')(?:\\s*(?:и|или|/|,|&|\\+)\\s*(преглед))?)' + RV_E, 'g',
+  (s, i) => NL_OK(s, i) && !RV_NOT_AFTER(s, i));
+const RV_NEG_RE = lb('(без|не|няма|нямам|нямаме|отказвам|отказваме|отказва|no|without|нито|bez|ne|nqma|nyama)' + RV_E, 'g', NL_OK);
+const RV_BUT_RE = lb('(?:с|със|но|а|s|sas)' + RV_E, '', NL_OK);
 const RV_NEG_AFTER_RE = new RegExp('^\\s*[:\\-–—=)]?\\s*(?:не|no|няма|nope)' + RV_E + '(?!\\s+(?:знам|зная|съм|сме|мога|може|е\\s+ли))', 'i');
 // Is the mention at [st, en) refused? A negation earlier in the same clause, with at
 // most five words and no "с/със" ("без НП с преглед") in between, or a "не" right after
@@ -552,7 +658,7 @@ function reviewRefused(s, st, en) {
   if (/^\s+(?:забрав|пропуск)/.test(between)) return false;          // "не забравяйте … преглед"
   // "Не искам с преглед", "не желая със": the "с" is part of the refused wish
   if (/^(?:не|ne)$/.test(last[1]) && /^\s+(?:искам|искаме|желая|желаем|ща|щем|трябва|е\s+нужн[оа]?|е\s+необходим[оа]?|iskam)\s+(?:с|със|s)\s+$/.test(between)) return true;
-  if (new RegExp(RV_W + '(?:с|със|но|а|s|sas)' + RV_E).test(between)) return false;
+  if (RV_BUT_RE.test(between)) return false;
   if (between.trim().split(/\s+/).filter(Boolean).length > 5) return false;
   if (last[1] === 'без' && /(?:^|[^а-яёa-z])не\s+(?:може|мога|можем|става|бива|искам|иска)\s+$/.test(pre.slice(0, last.index))) return false;
   return true;
@@ -645,14 +751,16 @@ function isNameLine(line) {
   if (toks.some((w) => AMBIG_PLACE.has(bare(w))) && toks.length < 2) return false;
   return toks.length >= 2 || labeled;
 }
-const OFFICE_LINE_RE = new RegExp('еконт|econt|' + NL + '(?:офис[а-яё]*|office|апс|aps|автомат|адрес)' + NR + '|' + NL + '(?:ул|бул|гр|с|кв|бл|вх|общ|обл)\\.|' + NL + 'ж\\.?\\s*к|' + NL + 'жк' + NR, 'i');
-const CUR_NUM_RE = new RegExp('\\d\\s*(?:' + CUR_SRC + ')' + NR + '|' + NL + '(?:€|евро|лв)\\s*\\d', 'i');
+// (the branches after "econt" all start where NL_OK_I holds, so they share one check)
+const OFFICE_LINE_RE = anyOf(/еконт|econt/i,
+  lb('(?:офис[а-яё]*|office|апс|aps|автомат|адрес)' + NR + '|(?:ул|бул|гр|с|кв|бл|вх|общ|обл)\\.|ж\\.?\\s*к|жк' + NR, 'i', NL_OK_I));
+const CUR_NUM_RE = anyOf(new RegExp('\\d\\s*(?:' + CUR_SRC + ')' + NR, 'i'), lb('(?:€|евро|лв)\\s*\\d', 'i', NL_OK_I));
 // What one line of a batch is: N name, O office/address, C money, R review, X other.
 function lineKind(line) {
   const t = String(line).trim();
   if (isNameLine(t)) return 'N';
   if (OFFICE_LINE_RE.test(t) || t.toLowerCase().split(/[^\p{L}]+/u).some((w) => isStrongPlace(w)) || hasPlacePhrase(t.toLowerCase()) || findPostCode(t)) return 'O';
-  if (new RegExp(KW_SRC, 'i').test(t) || CUR_NUM_RE.test(t)) return 'C';
+  if (KW_RE_I.test(t) || CUR_NUM_RE.test(t)) return 'C';
   // A bare amount alone on its line ("45", "120", "45.", "12,50"): what detectCod reads
   // as the COD of the phone above it.
   if (/^\d{2,3}(?:[.,]\d{1,2})?\.?$|^\d[.,]\d\d$/.test(t)) return 'C';
@@ -672,11 +780,13 @@ const nameLineWords = (line) => line.replace(/^(?:име(?:на)?|получат
 // "Изпращам от Пловдив", "пращаме от гр. Русе": the seller's own town, never the
 // customer's office.
 // The words before the town: "изпращам от", "пращаме утре от", "подавам ги от".
-const ORIGIN_HEAD_RE = /(?<![а-яёa-z])(?:изпраща[а-яё]*|праща[а-яё]*|изпрат[а-яё]*|прат[а-яё]*|пуска[а-яё]*|подава[а-яё]*|тръгва[а-яё]*)\s+(?:[а-яё]+\s+){0,2}?от\s/i;
+// (starts where NL_OK_I holds)
+const ORIGIN_HEAD_SRC = /(?:изпраща[а-яё]*|праща[а-яё]*|изпрат[а-яё]*|прат[а-яё]*|пуска[а-яё]*|подава[а-яё]*|тръгва[а-яё]*)\s+(?:[а-яё]+\s+){0,2}?от/.source;
+const ORIGIN_HEAD_RE = lb(ORIGIN_HEAD_SRC + '\\s', 'i', NL_OK_I);
 // ... then an optional office ("от офис Еконт", "от офиса на Еконт"), the town and,
 // after an office word, the office's own name ("от Еконт Бургас Сарафово").
-const ORIGIN_RE = new RegExp(ORIGIN_HEAD_RE.source.slice(0, -2) + '\\s+((?:(?:офис[а-яё]*|office|апс|автомат)\\s+)?(?:(?:на\\s+)?(?:еконт|econt)\\s+)?)'
-  + '(?:гр\\.?\\s*|град\\s+|с\\.\\s*)?([а-яё]+(?:\\s+[а-яё]+){0,2})', 'gi');
+const ORIGIN_RE = lb(ORIGIN_HEAD_SRC + '\\s+((?:(?:офис[а-яё]*|office|апс|автомат)\\s+)?(?:(?:на\\s+)?(?:еконт|econt)\\s+)?)'
+  + '(?:гр\\.?\\s*|град\\s+|с\\.\\s*)?([а-яё]+(?:\\s+[а-яё]+){0,2})', 'gi', NL_OK_I);
 function stripOrigin(s) {
   return String(s).replace(ORIGIN_RE, (m, pre, words) => {
     const w = words.split(/\s+/), b = w.map(bare), office = /\S/.test(pre);
@@ -837,9 +947,9 @@ function isCustomerOffice(o) {
 // Money is never a postcode or an office word: "Варна 1000 лв" must not pick the 1000
 // (София) offices. Drops amounts with a currency next to them and the amount after a
 // COD keyword ("наложен платеж 1500").
-const MONEY_AFTER_RE = new RegExp('(?<![\\d.,])(?:\\d{1,3}(?:[ \\u00a0\\u202f]\\d{3})+|\\d+)(?:[.,]\\d{1,2})?\\s*(?:' + CUR_SRC + ')' + NR, 'gi');
-const MONEY_BEFORE_RE = new RegExp(NL + '(?:€|евро|eur|лв\\.?|bgn)\\s*\\d+(?:[.,]\\d{1,2})?', 'gi');
-const MONEY_KW_RE = new RegExp('(' + KW_SRC + ')\\s*[:\\-–=]?\\s*\\d+(?:[.,]\\d{1,2})?', 'gi');
+const MONEY_AFTER_RE = lb('(?:\\d{1,3}(?:[ \\u00a0\\u202f]\\d{3})+|\\d+)(?:[.,]\\d{1,2})?\\s*(?:' + CUR_SRC + ')' + NR, 'gi', NOT_AFTER_NUM);
+const MONEY_BEFORE_RE = lb('(?:€|евро|eur|лв\\.?|bgn)\\s*\\d+(?:[.,]\\d{1,2})?', 'gi', NL_OK_I);
+const MONEY_KW_RE = lb('(' + KW_SRC + ')\\s*[:\\-–=]?\\s*\\d+(?:[.,]\\d{1,2})?', 'gi', NL_OK_I);
 function stripMoney(s) {
   return String(s || '').replace(MONEY_AFTER_RE, ' ').replace(MONEY_BEFORE_RE, ' ').replace(MONEY_KW_RE, '$1 ');
 }
@@ -943,11 +1053,11 @@ function isAltPhoneLine(line, gap) {
   if (ALT_HINT_RE.test(rest) && !(pm && trailingName(tokB(line.slice(0, pm.index)).toks).words.length >= 2)) return true;
   return gap === 0 && words.every((w) => TRAIL_LABEL.has(w));
 }
-const ALT_HINT_RE = /(?<![а-яё])(?:(?:дъщеря|син|съпруг|съпруга|мъж|жена|майка|баща|сестра|брат|снаха|зет|внук|внучка)\s+ми|дъщерята|сина|синът|съпругата|съпругът|мъжа|мъжът|жената|майката|бащата|сестрата|брата|братът|снахата|ако\s+не\s+(?:вдига|отговаря|се\s+обади|ме\s+намерите)|резервен|друг\s+(?:телефон|номер)|втори\s+(?:телефон|номер))(?![а-яё])/;
+const ALT_HINT_RE = lb(/(?:(?:дъщеря|син|съпруг|съпруга|мъж|жена|майка|баща|сестра|брат|снаха|зет|внук|внучка)\s+ми|дъщерята|сина|синът|съпругата|съпругът|мъжа|мъжът|жената|майката|бащата|сестрата|брата|братът|снахата|ако\s+не\s+(?:вдига|отговаря|се\s+обади|ме\s+намерите)|резервен|друг\s+(?:телефон|номер)|втори\s+(?:телефон|номер))(?![а-яё])/.source, '', notAfter(/[а-яё]/));
 // The seller's own line in a form or signature ("Подател: Иван Колев 0888…",
 // "Магазин Детски Свят, тел. 0899…"): never a parcel, never the recipient.
 const SENDER_LINE_RE = /^\s*(?:(?:подател|изпращач|sender)(?![а-яёa-z])|от\s*[:\-–])/i;
-const SHOP_LINE_RE = /^\s*(?:магазин|shop|store)(?![а-яёa-z])|(?<![а-яёa-z])е?оод(?![а-яёa-z])/i;
+const SHOP_LINE_RE = anyOf(/^\s*(?:магазин|shop|store)(?![а-яёa-z])/i, lb(/е?оод(?![а-яёa-z])/.source, 'i', NL_OK_I));
 function isSenderLine(line) {
   const pm = PHONE_RE.exec(line);
   if (!pm) return false;
@@ -978,6 +1088,9 @@ function nameKey(line) {
 // second customer when the first part is a parcel of its own (a name, and an office or
 // an amount) and the second part names a person. An alternate number ("0888… / 0899…",
 // "Мартин Колев 0888…, Мария Колева 0899… офис Еконт Перник") stays on the line.
+// (a list number "2)" only at the start or after whitespace)
+const SEP_SRC = /[;|,]|\d{1,2}\)\s/.source;
+const SEP_OK = (s, i, m) => !/^\d/.test(m[0]) || i === 0 || /\s/.test(s[i - 1]);
 function splitTwoOnLine(line) {
   const ms = [...line.matchAll(PHONE_RE_G)];
   if (ms.length < 2) return [line];
@@ -986,13 +1099,13 @@ function splitTwoOnLine(line) {
     const segStart = ms[k - 1].index + ms[k - 1][0].length, segEnd = ms[k].index;
     const seg = line.slice(segStart, segEnd);
     // the last separator before the next phone: ',' ';' '|', or a list number "2)"
-    const sepRe = /[;|,]|(?<!\S)\d{1,2}\)\s/g; let sm, cut = -1, cutEnd = -1;
+    const sepRe = lb(SEP_SRC, 'g', SEP_OK); let sm, cut = -1, cutEnd = -1;
     while ((sm = sepRe.exec(seg))) { cut = sm.index; cutEnd = sm.index + sm[0].length; }
     if (cut < 0) continue;
     const at = segStart + cut;
     // (the first part around its own phone only, so a line of many numbers stays linear)
     const piece = line.slice(Math.max(from, k >= 2 ? ms[k - 2].index + ms[k - 2][0].length : 0, ms[k - 1].index - 80), at);
-    if (!lineHasName(piece) || (!lineHasLocation(piece) && !CUR_NUM_RE.test(piece.replace(PHONE_RE_G, ' ')) && !new RegExp(KW_SRC, 'i').test(piece))) continue;
+    if (!lineHasName(piece) || (!lineHasLocation(piece) && !CUR_NUM_RE.test(piece.replace(PHONE_RE_G, ' ')) && !KW_RE_I.test(piece))) continue;
     const after = seg.slice(cutEnd), T = tokB(after);
     const tn = trailingName(T.toks.filter((x) => !isPunct(x) && !TRAIL_LABEL.has(bare(x))), T.brk).words;
     const rest = segEnd + ms[k][0].length;
@@ -1007,9 +1120,9 @@ function splitTwoOnLine(line) {
 }
 // A later chat bubble about the seller's own drop-off ("Подавам ги утре от Еконт
 // Бургас Сарафово", "Моя офис за подаване: …").
-const DROPOFF_RE = /(?<![а-яё])(?:за\s+подаване|подава[а-яё]*|предава[а-яё]*|мо(?:я|ят|ия)\s+офис|наши(?:я|ят)\s+офис)(?![а-яё])/i;
+const DROPOFF_RE = lb(/(?:за\s+подаване|подава[а-яё]*|предава[а-яё]*|мо(?:я|ят|ия)\s+офис|наши(?:я|ят)\s+офис)(?![а-яё])/.source, 'i', notAfter(/[а-яё]/i));
 // A note for every parcel ("Всички с преглед", "и двете с преглед").
-const ALL_PARCELS_RE = /(?<![а-яё])(?:всички(?:те)?|всичките|двете|трите|четирите|всяка|всеки)(?![а-яё])/i;
+const ALL_PARCELS_RE = lb(/(?:всички(?:те)?|всичките|двете|трите|четирите|всяка|всеки)(?![а-яё])/.source, 'i', notAfter(/[а-яё]/i));
 
 // A heading line ("Поръчка 2:", "Пратки Еконт за днес:", "2)", "#3"): it starts the
 // next parcel and is not part of any parcel's layout.
@@ -1197,5 +1310,17 @@ function phoneIndexOf(text) { const m = PHONE_RE.exec(String(text || '')); retur
 
 const isCommonFirstName = (w) => FIRST_NAMES.has(bare(String(w || '')));
 
-return { parseMessage, matchOffices, normalizePhone, tokenize, detectCod, isCustomerOffice, stripNoise, splitBatch, countPhones, findWaybill, stripMoney, namedParcelCount, phoneIndexOf, isCommonFirstName };
+return {
+  parseMessage, matchOffices, normalizePhone, tokenize, detectCod, isCustomerOffice, stripNoise, splitBatch, countPhones, findWaybill, stripMoney, namedParcelCount, phoneIndexOf, isCommonFirstName,
+  // For tests/lookbehind-free.js only: every pattern that used to carry a lookbehind,
+  // as the parser uses it (a factory where the parser builds a fresh one per call).
+  _patterns: {
+    OFFICE_WORD_RE, DT_OFF_REF_RE, DT_OFF_REF_I, DT_ADDR_REF_RE, DT_ADDR_REF_I, DT_OFFICE_ADDR_RE, HOME_ADDR_RE, BLOCK_ENTRANCE_RE,
+    DOOR_WORD_RE, CUR_BEFORE_RE, NUM_RE: () => lb(NUM_SRC, 'g', NOT_AFTER_NUM), GROUP_OK_BEFORE_RE, PAID_BEFORE_RE, LOOSE_PHONE_RE,
+    KW_RE_I, KW_RE_GI: () => lb(KW_SRC, 'gi', NL_OK_I), EUR_WORD_RE, BGN_WORD_RE, RV_MENTION_RE, RV_NEG_RE, RV_BUT_RE, OFFICE_LINE_RE,
+    CUR_NUM_RE, ORIGIN_HEAD_RE, ORIGIN_RE, MONEY_AFTER_RE, MONEY_BEFORE_RE, MONEY_KW_RE, ALT_HINT_RE, SHOP_LINE_RE,
+    SEP_RE: () => lb(SEP_SRC, 'g', SEP_OK), DROPOFF_RE, ALL_PARCELS_RE,
+  },
+  _lb: lb,
+};
 }));
