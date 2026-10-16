@@ -1,65 +1,85 @@
-# Econt shipper — paste → товарителница
+# Econt shipper: paste → товарителница
 
 Paste a customer's Bulgarian message, check the details, tap once, and get a ready
-Econt shipment number (товарителница) — with your usual options. Works on phone or
+Econt shipment number (товарителница) with your usual options. Works on phone or
 desktop as a normal website.
 
 ## How it's built (and why it's safe to host)
 
-The server is a **stateless proxy** — it stores **no credentials and no database**.
-Your Econt login, sender info and default options are saved **in your own browser**,
-and your Econt **password is encrypted with a PIN** you choose. Each request decrypts
-in memory and the server just relays it to Econt over HTTPS. So even if someone finds
-the public URL, they can't touch your Econt account — they'd just get their own empty
-setup screen.
+- **The browser does the work.** Reading the message (name, phone, office, COD,
+  review) and matching the office run in the page itself
+  (`public/core/parser.js`, `public/core/match.js`). The Econt office list is kept
+  in the browser for 6 hours per mode (demo / production), with the old copy used
+  if Econt is down.
+- **The server is a thin, stateless relay** (`relay.js`). It stores **no
+  credentials and no database**. Your Econt login, sender info and default options
+  are saved **in your own browser**, and your Econt **password is encrypted with a
+  PIN** you choose. Each request decrypts it in memory and the relay passes it on
+  to Econt over HTTPS. Someone who finds the public URL only gets their own empty
+  setup screen.
+- The same relay runs on **Cloudflare Workers** (`worker.js`, the main host) and on
+  **Node** (`server.js`, e.g. Render), so either host works.
 
-## Run locally (Windows)
+## Hosting
 
-1. Double-click [`start.bat`](start.bat) → opens `http://localhost:5005`.
-2. First time: the **setup wizard** asks for a PIN → your Econt login (with a
-   **Test login** button) → your sender office → your usual options. Done.
-3. Daily use: paste the message → **Preview →** → check recipient/office/price →
-   **✓ Create shipment number** → copy it / open the label PDF.
+**Cloudflare Workers Free** (recommended: never sleeps, no card): see
+[MIGRATION.md](MIGRATION.md) for the step-by-step setup. Every push to `main` is
+deployed by Workers Builds (`npx wrangler deploy`, config in `wrangler.jsonc`).
+The web app is served as Static Assets; its headers are in `public/_headers`.
 
-## Put it on your phone (deploy free, works with your PC off)
+**Render** (the previous host, still works): New + → Blueprint → connect the repo.
+Render reads [`render.yaml`](render.yaml). The free tier sleeps after inactivity,
+so the first visit after a while takes about 30 s.
 
-Hosted on **Render** (free tier), one time:
+**On your own computer**: `node server.js` (or double-click [`start.bat`](start.bat)
+on Windows) and open `http://localhost:5005`. `npx wrangler dev` runs the
+Cloudflare version locally.
 
-1. Put this folder in a **GitHub repo** (new repo → upload these files).
-2. Go to **[render.com](https://render.com)** → **New +** → **Blueprint** →
-   connect that repo. Render reads [`render.yaml`](render.yaml) and deploys. No
-   settings to fill in (there are no server secrets).
-3. You get an HTTPS link like `https://econt-shipper-xxxx.onrender.com`.
-4. Open that link **on your phone**, run the setup wizard, and add it to your home
-   screen. Anyone you share the link with just runs their own setup — their data
-   stays in their own browser.
-
-> Notes: Render's free tier sleeps after inactivity, so the first open after a while
-> takes ~30s to wake. The chosen region is Frankfurt (closest to Bulgaria).
+Optional environment variables (both hosts): `ECONT_BASE_PRODUCTION`,
+`ECONT_BASE_DEMO` point the relay at another Econt host (the tests use a mock).
 
 ## Demo vs Production
 
-- **Demo** (`iasp-dev` / `1Asp-dev`) creates nothing real — good for trying it out,
-  but has only ~585 test offices.
-- **Production** uses your normal econt.com login (username, exact case) and gives the
-  full office list (~1000+) and real shipments. Every "Create" is billed by Econt.
+- **Demo** (`iasp-dev` / `1Asp-dev`) creates nothing real: good for trying it out,
+  with a smaller test office list.
+- **Production** uses your normal econt.com login (username, exact case), the full
+  office list and real shipments. Every "Create" is billed by Econt.
 
 ## Security notes
 
 - Your Econt password lives only in **your browser**, encrypted with your PIN
-  (PBKDF2 + AES-GCM). It is sent to the server **only** to relay a request to Econt,
-  over HTTPS, and is never stored server-side.
-- The PIN both locks the app on your device and is the key to that encryption — if you
-  forget it, use **Forget this device** and set up again.
-- Treat the COD amount carefully: the app blocks creating a label if COD is on but the
-  amount is blank.
+  (PBKDF2 + AES-GCM). It is sent to the relay **only** to pass a request on to
+  Econt, over HTTPS, and is never stored on the server.
+- The PIN both locks the app on your device and is the key to that encryption. If
+  you forget it, use **Forget this device** and set up again.
+- The app blocks creating a label if COD is on but the amount is blank, asks before
+  a parcel goes out without COD, and never retries a create whose outcome is unclear.
+
+## Tests
+
+`npm install` once, then `bash tests/run-all.sh` (or `npm test`). It starts an
+Econt mock and runs every suite against the Node server and against `wrangler dev`
+(Cloudflare's local runtime, no Cloudflare login needed). Playwright with Chromium
+must be installed globally (`NODE_PATH=$(npm root -g)`).
+
+| Test | What it checks |
+|------|----------------|
+| `tests/parser-golden.js` | 335 messages: parser, office matching and the old server's `/api/parse`, `/api/parse-batch` answers (captured from 724526c) |
+| `tests/e2e/api.js` | every relay route and Econt fault, static headers |
+| `tests/e2e/moved.js` | the golden answers again inside the browser, office cache, limits, Settings |
+| `tests/e2e/ui.js`, `tests/e2e/regress.js` | the whole UI: paste, price, create, guards, batch, parcels |
+| `tests/cpu-profile.js` | CPU per relay route on workerd (Workers Free allows 10 ms) |
 
 ## Files
 
 | File | What it does |
 |------|--------------|
-| `server.js` | Stateless proxy + office ranking (no dependencies) |
+| `relay.js` | The relay: one Fetch API handler for every `/api/*` route |
+| `worker.js` | Cloudflare Workers entry (static files + relay) |
+| `server.js` | Node server: static files + the same relay |
 | `econt.js` | Econt API calls + builds the ShippingLabel payload |
-| `parser.js` | Parses the pasted message + ranks office matches |
-| `public/` | The web app: setup wizard, PIN lock, paste→create UI |
-| `render.yaml` | One-click Render deploy config |
+| `public/core/` | Message parser and office matching, run in the browser |
+| `public/` | The web app: setup wizard, PIN lock, paste → create UI |
+| `wrangler.jsonc`, `public/_headers` | Cloudflare config and static file headers |
+| `render.yaml` | Render config |
+| `tests/` | Econt mock, golden data, end-to-end suites, `run-all.sh` |

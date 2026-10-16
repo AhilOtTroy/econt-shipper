@@ -10,8 +10,9 @@
 // apart, so each mode has its own office list and counters.
 //
 // Control endpoints (JSON):
-//   GET  /__state     counters (creates, previews, tracks, profiles, offices per mode)
-//                     and every created label ({ number, phone, officeCode, label, mode })
+//   GET  /__state     counters (creates, previews, tracks, profiles, offices per mode),
+//                     every created label ({ number, phone, officeCode, label, mode }) and
+//                     the Accept-Encoding of the last office-list request
 //   POST /__control   { faults: { <op>: { mode, n, ms } }, bigOffices, extraOffices, reset }
 //                     ops: profile | offices | calculate | create | track | any
 //                     modes: 502 (gateway page, nothing done), 502after (done, then a
@@ -21,6 +22,8 @@
 //                     n = how many requests the fault applies to (default 1).
 //                     Shorthands: { lostReply: n }, { slowCreate: ms }.
 //   POST /__reset     counters, labels and faults back to the start
+//
+// The office list is gzipped when the request accepts gzip, like a real host.
 //
 // Run alone: node tests/mock-econt.js [port]   (default 5301)
 
