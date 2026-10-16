@@ -144,7 +144,7 @@ for r in "${RESULTS[@]}"; do
   printf '  %-15s %-8s %6s %6s %6s\n' "$s" "$rt" "$p" "$f" "$sec"
   TP=$((TP + p)); TF=$((TF + f))
 done
-if [ -f "$LOGS/cpu.log" ]; then echo; sed -n '/^CPU per request/,/^PASS\|^FAIL/p' "$LOGS/cpu.log" | sed 's/^/  /'; fi
+if [ -f "$LOGS/cpu.log" ]; then echo; sed -n '/^CPU per request/,/^RESULT/p' "$LOGS/cpu.log" | grep -v '^RESULT' | sed 's/^/  /'; fi
 echo
 if [ "$TF" = 0 ]; then FAILED=0; echo "ALL PASS: $TP checks"; else FAILED=1; echo "FAILED: $TF of $((TP + TF)) checks (logs kept in $LOGS)"; fi
 exit $FAILED
