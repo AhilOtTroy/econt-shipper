@@ -24,14 +24,19 @@ const { parseMessage, matchOffices, splitBatch, stripNoise, findWaybill, stripMo
 const LIMITS = {
   BATCH_MAX_TEXT: 80000,    // characters (100 parcels with chat noise fit easily)
   BATCH_MAX_ROWS: 100,
-  BATCH_BUDGET_MS: 10000,   // matching time for one paste; later rows get no office
-  BATCH_WALL_MS: 30000,     // wall clock for one paste
+  // Matching time for one paste; later rows get no office. On the server this was
+  // 10 s of server time (and 30 s of wall clock). It runs on the seller's device
+  // now: only the time spent working counts (a page the phone or a hidden tab put
+  // to sleep mid-read loses nothing), each row counts at most ROW_MAX_MS (a pause
+  // inside a row is not work), and a phone gets the time a server needed many times over.
+  BATCH_BUDGET_MS: 60000,
+  ROW_MAX_MS: 1000,
   PARSE_MAX_TEXT: 20000,    // characters of a single message
   CHUNK_PARSE_MAX: 8000,    // characters of one batch row handed to the parser
   QUERY_MAX: 400,           // characters of a location phrase handed to the matcher
   SEARCH_MAX: 200,          // characters of an office-search query
 };
-const { BATCH_MAX_TEXT, BATCH_MAX_ROWS, BATCH_BUDGET_MS, BATCH_WALL_MS, PARSE_MAX_TEXT, CHUNK_PARSE_MAX, QUERY_MAX, SEARCH_MAX } = LIMITS;
+const { BATCH_MAX_TEXT, BATCH_MAX_ROWS, BATCH_BUDGET_MS, ROW_MAX_MS, PARSE_MAX_TEXT, CHUNK_PARSE_MAX, QUERY_MAX, SEARCH_MAX } = LIMITS;
 
 // The messages these steps can give, in the app's two languages (the same words
 // the server used to send).
@@ -295,7 +300,6 @@ async function parseBatch(rawText, opts) {
     if (e && e.transient) return { ok: false, error: errText(e), transient: true, stale: !!e.stale };
     officesError = errText(e);
   }
-  const started = now();
   let spent = 0, skipped = false;
   const rows = [];
   for (let i = 0; i < chunks.length; i++) {
@@ -307,7 +311,7 @@ async function parseBatch(rawText, opts) {
     const trackNum = findWaybill(chunk);
     const row = { chunk, parsed, candidates: [], trackNum };
     if (offices && offices.length && parsed.deliveryType === 'office') {
-      if (spent > BATCH_BUDGET_MS || t0 - started > BATCH_WALL_MS) skipped = true;
+      if (spent > BATCH_BUDGET_MS) skipped = true;
       else {
         const q = capQuery(parsed.locationText || '', QUERY_MAX);
         let cands = q ? fastMatchOffices(q, offices) : [];
@@ -319,7 +323,8 @@ async function parseBatch(rawText, opts) {
         } else row.candidates = afterPhoneOfficeGuess(chunk, parsed, offices);
       }
     }
-    spent += now() - t0;
+    // (the time between rows, where the page yields or sleeps, never counts)
+    spent += Math.min(Math.max(now() - t0, 0), ROW_MAX_MS);
     rows.push(row);
   }
   if (skipped && !officesError) officesError = message(lang, 'batch_slow');

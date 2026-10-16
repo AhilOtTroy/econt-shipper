@@ -124,12 +124,23 @@ async function groupAsync(name, items, fn) {
   let calls = 0;
   const t4 = await M.parseBatch(Array.from({ length: 10 }, (_, i) => 'Клиент ' + i + ' 0888' + String(100000 + i).slice(-6) + ' Варна Чайка').join('\n'), { lang: 'bg', loadOffices: load(PROD), alive: () => ++calls < 4 });
   ok('superseded batch stops early', t4.ok === false && t4.stale === true && calls === 4, JSON.stringify(t4) + ' calls=' + calls);
-  // The time budget: rows after it get no office and the paste says so.
+  // The time budget: rows after it get no office and the paste says so. Only the
+  // time spent working on rows counts: 900 ms a row reaches 60 s after 67 rows.
+  const rowsOf = (n) => Array.from({ length: n }, (_, i) => 'Клиент ' + i + ' 0888' + String(100000 + i).slice(-6) + ' Варна Чайка').join('\n');
   let clock = 0;
-  const t5 = await M.parseBatch(Array.from({ length: 5 }, (_, i) => 'Клиент ' + i + ' 0888' + String(100000 + i).slice(-6) + ' Варна Чайка').join('\n'), {
-    lang: 'en', loadOffices: load(PROD), now: () => (clock += 6000),
-  });
-  ok('budget exceeded: later rows get no office + message', t5.ok && t5.officesError === M.MESSAGES.en.batch_slow && t5.rows[0].candidates.length > 0 && t5.rows[4].candidates.length === 0, t5.officesError);
+  const t5 = await M.parseBatch(rowsOf(70), { lang: 'en', loadOffices: load(PROD), now: () => (clock += 900) });
+  ok('budget exceeded: later rows get no office + message', t5.ok && t5.officesError === M.MESSAGES.en.batch_slow && t5.rows[66].candidates.length > 0 && t5.rows[67].candidates.length === 0 && t5.rows[69].candidates.length === 0, t5.officesError);
+  // A page put to sleep mid-read (phone screen locked, app switched, hidden tab):
+  // the clock jumps while the read waits between rows. Before, a 30 s wall clock
+  // then left every later row without an office; now nothing is lost.
+  clock = 0;
+  const t6 = await M.parseBatch(rowsOf(40), { lang: 'bg', loadOffices: load(PROD), now: () => clock, yieldRow: async () => { clock += 31000; } });
+  ok('page asleep between rows: every row still matched', t6.ok && !t6.officesError && t6.rows.every((r) => r.candidates.length && r.candidates[0].code === t6.rows[0].candidates[0].code), t6.officesError);
+  // ...or asleep in the middle of a row: that row counts at most ROW_MAX_MS.
+  clock = 0; let nowCalls = 0;
+  const t7 = await M.parseBatch(rowsOf(40), { lang: 'bg', loadOffices: load(PROD), now: () => { nowCalls++; if (nowCalls % 2 === 0) clock += 10 * 60 * 1000; return clock; } });
+  ok('page asleep inside rows: every row still matched', t7.ok && !t7.officesError && t7.rows.every((r) => r.candidates.length), t7.officesError);
+  ok('budget limits: 60 s of work, 1 s a row at most', M.LIMITS.BATCH_BUDGET_MS === 60000 && M.LIMITS.ROW_MAX_MS === 1000 && !('BATCH_WALL_MS' in M.LIMITS));
   // Root parser.js is the same module.
   ok('root parser.js re-exports public/core/parser.js', require(path.join(ROOT, 'parser.js')) === P);
   // The relay's messages for a wrong/missing login are word for word the browser's.
