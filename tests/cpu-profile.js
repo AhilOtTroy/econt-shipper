@@ -22,6 +22,7 @@ const APP = (process.env.APP_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
 const MOCK = (process.env.MOCK_URL || 'http://127.0.0.1:5301').replace(/\/$/, '');
 const WPID = Number(process.env.WRANGLER_PID || 0);
 const LIMIT_MS = 5;   // well under Cloudflare's 10 ms
+const started = Date.now();
 
 const CREDS = { mode: 'production', username: 'cpu', password: 'cpu-pass' };
 const SENDER = { name: 'Иван', phone: '0878916695', officeCode: '1111' };
@@ -157,6 +158,6 @@ async function measureNode(r, n) {
   console.log(lines.join('\n'));
   const ok = !haveWorkerd || worst < LIMIT_MS;
   console.log((ok ? 'PASS' : 'FAIL') + ' every relay route under ' + LIMIT_MS + ' ms CPU on workerd :: worst ' + worst.toFixed(2) + ' ms');
-  console.log('RESULT suite=cpu runtime=' + (haveWorkerd ? 'workerd' : 'node') + ' pass=' + (ok ? 1 : 0) + ' fail=' + (ok ? 0 : 1));
+  console.log('RESULT suite=cpu runtime=' + (haveWorkerd ? 'workerd' : 'node') + ' pass=' + (ok ? 1 : 0) + ' fail=' + (ok ? 0 : 1) + ' secs=' + Math.round((Date.now() - started) / 1000));
   process.exit(ok ? 0 : 1);
 })().catch((e) => { console.error('CRASH', e); process.exit(1); });

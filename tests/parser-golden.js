@@ -16,6 +16,7 @@ const { edgeCases } = require('./golden/edge-cases');
 const G = (f) => require(path.join(__dirname, 'golden', f));
 
 const results = [];
+const started = Date.now();
 const ok = (name, cond, extra) => results.push((cond ? 'PASS ' : 'FAIL ') + name + (extra ? ' :: ' + extra : ''));
 const json = (v) => JSON.parse(JSON.stringify(v === undefined ? null : v));
 
@@ -142,6 +143,6 @@ async function groupAsync(name, items, fn) {
 
   console.log(results.join('\n'));
   const fail = results.filter((r) => r.startsWith('FAIL')).length;
-  console.log('RESULT suite=parser-golden runtime=node pass=' + (results.length - fail) + ' fail=' + fail);
+  console.log('RESULT suite=parser-golden runtime=node pass=' + (results.length - fail) + ' fail=' + fail + ' secs=' + Math.round((Date.now() - started) / 1000));
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.log(results.join('\n')); console.error('CRASH', e); process.exit(1); });
