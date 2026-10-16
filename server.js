@@ -131,6 +131,12 @@ function serveStatic(req, res, url) {
   } catch (e) { failRequest(res, e); } });
 }
 
+function sendJson(res, status, obj, headers) {
+  const body = Buffer.from(JSON.stringify(obj), 'utf8');
+  res.writeHead(status, Object.assign({ 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': body.length }, headers || {}));
+  res.end(body);
+}
+
 // Last-resort error reply. Never throws: the request may already be half-sent
 // or the client gone.
 function failRequest(res, e) {

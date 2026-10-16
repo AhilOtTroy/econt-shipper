@@ -25,6 +25,7 @@
 // Run alone: node tests/mock-econt.js [port]   (default 5301)
 
 const http = require('http');
+const zlib = require('zlib');
 const { productionOffices, demoOffices, bigOffices } = require('./fixtures/offices');
 
 const BAD_PASSWORD = 'wrong';
@@ -35,6 +36,7 @@ function freshState() {
     creates: 0, previews: 0, validates: 0, tracks: 0, profiles: 0,
     offices: { production: 0, demo: 0 },
     createdLabels: [], lastLabel: null, lastTrack: null,
+    officesAcceptEncoding: null, // what the last getOffices request accepted (the relay asks for identity)
     nextNum: 1051602900001,
   };
 }
@@ -235,6 +237,12 @@ async function withFault(req, res, op, work) {
     setTimeout(() => req.socket.destroy(), 30);
     return;
   }
+  if (out.gzip) {
+    // Like a real host: compress a big reply when the client accepts gzip.
+    const body = zlib.gzipSync(Buffer.from(JSON.stringify(out.obj), 'utf8'));
+    res.writeHead(out.status, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Encoding': 'gzip', 'Content-Length': body.length });
+    return res.end(body);
+  }
   send(res, out.status, out.obj);
 }
 
@@ -253,9 +261,10 @@ async function handleEcont(req, res, mode, service) {
   if (service === 'Nomenclatures/NomenclaturesService.getOffices.json') {
     return withFault(req, res, 'offices', async () => {
       STATE.offices[mode]++;
+      STATE.officesAcceptEncoding = req.headers['accept-encoding'] || null;
       if (!authOk) { authFailure(res); return null; }
       if (body.showLC !== false || body.showCargoReceptions !== false) { econtError(res, 400, 'Очакват се showLC и showCargoReceptions = false'); return null; }
-      return { status: 200, obj: { offices: officeList(mode) } };
+      return { status: 200, obj: { offices: officeList(mode) }, gzip: /\bgzip\b/.test(req.headers['accept-encoding'] || '') };
     });
   }
   if (service === 'Shipments/LabelService.createLabel.json') {

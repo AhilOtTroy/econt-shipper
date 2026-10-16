@@ -37,6 +37,7 @@ async function econtFetch(creds, path, body, opts) {
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Authorization': basicAuth(creds.username, creds.password),
+        ...((opts && opts.headers) || {}),
       },
       body: JSON.stringify(body),
       signal: timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined,
@@ -96,8 +97,11 @@ function getOffices(creds, countryCode, opts) {
 }
 // The same list as a raw Response with its ~4 MB body unread, so a relay can pass
 // it through without parsing it. An HTTP error is thrown with its body read.
+// Asked for uncompressed: the relay then never has to unpack it (on Cloudflare the
+// edge compresses the reply for the browser, outside the Worker's CPU time; the
+// Node server gzips it itself).
 async function getOfficesRaw(creds, countryCode, opts) {
-  const res = await econtFetch(creds, OFFICES_PATH, officesBody(countryCode), opts);
+  const res = await econtFetch(creds, OFFICES_PATH, officesBody(countryCode), Object.assign({}, opts, { headers: { 'Accept-Encoding': 'identity' } }));
   if (!res.ok) throw await httpError(res, baseUrl(creds, opts) + OFFICES_PATH);
   return res;
 }
