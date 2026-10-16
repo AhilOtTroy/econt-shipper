@@ -232,6 +232,26 @@ async function apiCalls(p, fn) {
     ok('no page errors (locker)', p.errs.length === 0, p.errs.join(' | '));
     await p.context().close(); }
 
+  // ---------- 6. tracking many parcels: 40 per relay call, all or nothing ----------
+  await mock.reset();
+  { const p = await fresh(b, { cod: false });
+    await p.evaluate(() => saveParcels(Array.from({ length: 95 }, (_, i) => ({ number: String(1051602800000 + i), recipient: 'Клиент ' + i, createdAt: Date.now() - i * 60000, mode: 'production' }))));
+    const t0 = (await mock.state()).tracks;
+    await p.click('#navParcels');
+    await p.waitForFunction(() => loadParcels().every((x) => x.snapAt), null, { timeout: 15000 }).catch(() => {});
+    const st = await mock.state();
+    const snaps = await p.evaluate(() => loadParcels().filter((x) => x.snapAt).length);
+    ok('95 parcels tracked in 3 relay calls of at most 40', st.tracks === t0 + 3 && snaps === 95 && st.lastTrack.length <= 40, JSON.stringify({ calls: st.tracks - t0, snaps, last: st.lastTrack.length }));
+    ok('every card rendered', (await p.$$('.parcel')).length === 95);
+    // One part failing fails the refresh as a whole, with Econt's words.
+    await mock.control({ faults: { track: { mode: '502', n: 1 } } });
+    await p.click('#refreshParcelsBtn');
+    await p.waitForFunction(() => $('parcelsUpdated').dataset.failed === '1', null, { timeout: 10000 }).catch(() => {});
+    ok('a failed part fails the refresh', /Econt HTTP 502/.test(await p.textContent('#parcelsUpdated')), await p.textContent('#parcelsUpdated'));
+    await mock.control({ clearFaults: true });
+    ok('no page errors (tracking)', p.errs.length === 0, p.errs.join(' | '));
+    await p.context().close(); }
+
   await b.close();
   finish();
 })().catch((e) => finish(e));
