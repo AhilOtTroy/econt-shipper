@@ -28,7 +28,7 @@ function suite(name) {
   const ok = (label, cond, extra) => {
     const line = (cond ? 'PASS ' : 'FAIL ') + label + (extra ? ' :: ' + String(extra).replace(/\s+/g, ' ').slice(0, 300) : '');
     results.push(line);
-    if (process.env.E2E_VERBOSE) console.log(line);
+    if (process.env.E2E_VERBOSE) console.log('[' + ((Date.now() - started) / 1000).toFixed(1) + 's] ' + line);
     return !!cond;
   };
   const finish = (crash) => {
