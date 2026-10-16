@@ -22,6 +22,16 @@ const PORT = process.env.PORT || 5005;
 const officeCache = { demo: null, production: null };
 const OFFICE_TTL_MS = 6 * 3600 * 1000;
 
+// Econt's office objects are large (working hours, phones, coordinates, ~4 MB
+// for the whole list). Keep only what matching and the office labels read:
+// parser.js officeHaystack/isCustomerOffice and matchOffices' result shape.
+function trimOffice(o) {
+  const a = (o && o.address) || {}, c = a.city || {};
+  return {
+    code: o && o.code, name: o && o.name, nameEn: o && o.nameEn,
+    address: { fullAddress: a.fullAddress, quarter: a.quarter, street: a.street, city: { name: c.name, postCode: c.postCode } },
+  };
+}
 async function loadOffices(creds, force) {
   const key = creds.mode === 'production' ? 'production' : 'demo';
   const c = officeCache[key];
@@ -29,7 +39,7 @@ async function loadOffices(creds, force) {
   if (!force && fresh) return c.offices;
   try {
     const data = await econt.getOffices(creds, 'BGR');
-    const offices = data.offices || [];
+    const offices = (data.offices || []).map(trimOffice);
     officeCache[key] = { offices, at: Date.now(), prevCount: c ? c.offices.length : 0 };
     return offices;
   } catch (e) {
@@ -700,37 +710,56 @@ async function handleApi(req, res, url) {
 }
 
 // ---------- static ----------
+// Static files change only on deploy: keep each file's bytes, ETag and gzip in
+// memory, keyed by path and re-read only when its mtime/size changes.
+const STATIC_CACHE = new Map();
+function staticEntry(full, ext, cb) {
+  fs.stat(full, (err, st) => {
+    if (err || !st.isFile()) return cb(err || new Error('not a file'));
+    const hit = STATIC_CACHE.get(full);
+    if (hit && hit.mtimeMs === st.mtimeMs && hit.size === st.size) return cb(null, hit);
+    fs.readFile(full, (err2, data) => {
+      if (err2) return cb(err2);
+      const type = ext === '.html' ? 'text/html; charset=utf-8'
+        : ext === '.js' ? 'text/javascript; charset=utf-8'
+        : ext === '.css' ? 'text/css; charset=utf-8'
+        : ext === '.webmanifest' ? 'application/manifest+json'
+        : ext === '.woff2' ? 'font/woff2'
+        : ext === '.txt' ? 'text/plain; charset=utf-8'
+        : 'application/octet-stream';
+      const compressible = /^(text\/|application\/manifest)/.test(type);
+      const entry = {
+        mtimeMs: st.mtimeMs, size: st.size, data, type,
+        etag: '"' + crypto.createHash('sha1').update(data).digest('base64').slice(0, 22) + '"',
+        gz: compressible ? zlib.gzipSync(data) : null,
+      };
+      STATIC_CACHE.set(full, entry);
+      cb(null, entry);
+    });
+  });
+}
 function serveStatic(req, res, url) {
   let file = url.pathname === '/' ? '/index.html' : url.pathname;
   const full = path.join(ROOT, 'public', path.normalize(file).replace(/^([/\\])+/, ''));
   if (!full.startsWith(path.join(ROOT, 'public'))) { res.writeHead(403); return res.end(); }
-  fs.readFile(full, (err, data) => { try {
+  const ext = path.extname(full).toLowerCase();
+  staticEntry(full, ext, (err, f) => { try {
     if (err) { res.writeHead(404); return res.end('Not found'); }
-    const ext = path.extname(full).toLowerCase();
-    const type = ext === '.html' ? 'text/html; charset=utf-8'
-      : ext === '.js' ? 'text/javascript; charset=utf-8'
-      : ext === '.css' ? 'text/css; charset=utf-8'
-      : ext === '.webmanifest' ? 'application/manifest+json'
-      : ext === '.woff2' ? 'font/woff2'
-      : ext === '.txt' ? 'text/plain; charset=utf-8'
-      : 'application/octet-stream';
     // Content-hash ETag + no-cache: the browser must revalidate every load, so a
     // new deploy is picked up immediately (no stale app.js), but unchanged files
     // still return a cheap 304 instead of re-downloading.
-    const etag = '"' + crypto.createHash('sha1').update(data).digest('base64').slice(0, 22) + '"';
     // Fonts never change under the same file name: let the browser keep them.
     const cache = ext === '.woff2' ? 'public, max-age=31536000, immutable' : 'no-cache';
-    if (req.headers['if-none-match'] === etag) { res.writeHead(304, { ETag: etag, 'Cache-Control': cache }); return res.end(); }
-    // Gzip text assets (~70% smaller) when the client accepts it.
-    const compressible = /^(text\/|application\/manifest)/.test(type);
-    const wantsGzip = compressible && /\bgzip\b/.test(req.headers['accept-encoding'] || '');
-    const body = wantsGzip ? zlib.gzipSync(data) : data;
+    if (req.headers['if-none-match'] === f.etag) { res.writeHead(304, { ETag: f.etag, 'Cache-Control': cache }); return res.end(); }
+    // Gzip text assets (~70% smaller) when the client accepts it (compressed once, above).
+    const wantsGzip = !!f.gz && /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+    const body = wantsGzip ? f.gz : f.data;
     // Safe hardening headers (do not restrict script/style/connect, so OCR and inline styles keep working).
     const headers = {
-      'Content-Type': type,
+      'Content-Type': f.type,
       'Content-Length': body.length,
       'Cache-Control': cache,
-      'ETag': etag,
+      'ETag': f.etag,
       'Vary': 'Accept-Encoding',
       'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'no-referrer',
