@@ -24,18 +24,8 @@ Free не заспива, не иска карта и е безплатен. П�
 
 ## Стъпка 1. Промените да влязат в main
 
-Промените са в клон `claude/econt-logo-clickable-sgxzf1` в GitHub. Cloudflare
-ще чете клона `main`, затова първо ги слей в `main`:
-
-1. Отвори https://github.com/AhilOtTroy/econt-shipper и влез в профила си.
-2. Натисни **Pull requests**, после **New pull request**.
-3. Горе вляво остави **base: main**, а вдясно избери
-   **compare: claude/econt-logo-clickable-sgxzf1**.
-4. Натисни **Create pull request**, после пак **Create pull request**.
-5. Натисни **Merge pull request** и **Confirm merge**.
-
-Render сам ще качи новата версия след 2 до 3 минути и сайтът там продължава да
-работи както досега.
+Готово. Промените вече са в клона `main` в GitHub, а Render работи с новата
+версия. Продължи направо със стъпка 2.
 
 ## Стъпка 2. Безплатен профил в Cloudflare
 
@@ -104,8 +94,8 @@ Render, докато го има).
 - **Build failed** с думата *name*: провери, че името на проекта е точно
   `econt-shipper` (Settings → Build → проектът трябва да съвпада с името в
   `wrangler.jsonc`).
-- **Build failed** с *wrangler.jsonc not found*: стъпка 1 не е минала. Провери,
-  че промените са слети в `main`.
+- **Build failed** с *wrangler.jsonc not found*: провери, че в Cloudflare клонът
+  (Production branch) е `main`.
 - Страницата се отваря, но „Входът не работи“: същото е като в Render. Провери
   потребителското име и паролата за e-econt.com (главни и малки букви).
 
@@ -135,16 +125,8 @@ About 15 minutes. A phone works, the MacBook is easier.
 
 ## Step 1. Get the changes into main
 
-The changes are on the GitHub branch `claude/econt-logo-clickable-sgxzf1`.
-Cloudflare will read `main`, so merge them first:
-
-1. Open https://github.com/AhilOtTroy/econt-shipper and sign in.
-2. **Pull requests** → **New pull request**.
-3. Keep **base: main** and choose **compare: claude/econt-logo-clickable-sgxzf1**.
-4. **Create pull request**, then **Create pull request** again.
-5. **Merge pull request** → **Confirm merge**.
-
-Render deploys the new version by itself in 2 to 3 minutes and keeps working.
+Done. The changes are already on the GitHub branch `main`, and Render runs the
+new version. Go straight to step 2.
 
 ## Step 2. A free Cloudflare account
 
@@ -210,7 +192,7 @@ Once the new address has worked well for a few days:
 
 - **Build failed** mentioning the *name*: the project name must be exactly
   `econt-shipper`, the name in `wrangler.jsonc`.
-- **Build failed** with *wrangler.jsonc not found*: step 1 did not happen. Check
-  that the changes were merged into `main`.
+- **Build failed** with *wrangler.jsonc not found*: check that the Production
+  branch in Cloudflare is `main`.
 - The page opens but the login fails: same as on Render. Check your e-econt.com
   username and password (upper and lower case matter).
