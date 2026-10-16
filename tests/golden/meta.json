@@ -1,0 +1,11 @@
+{
+ "commit": "724526c",
+ "capturedFrom": "git show 724526c:server.js + parser.js + econt.js with tests/mock-econt.js",
+ "counts": {
+  "parser": 335,
+  "parse": 402,
+  "batch": 402,
+  "offices": 18,
+  "edge": 25
+ }
+}
