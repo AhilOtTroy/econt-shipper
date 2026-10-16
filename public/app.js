@@ -618,7 +618,134 @@ const api = async (path, body, opts) => {
 };
 // Fire-and-forget wake-up; carries no credentials.
 const ping = () => fetch('/api/ping', { method: 'POST' }).then((r) => { if (r.ok) LAST_OK = Date.now(); }).catch(() => {});
-const warm = () => { if (SESSION.password) api('/api/warm', { creds: creds() }); };
+
+// ===================== offices, kept in the browser =====================
+// Messages are read and offices matched right here (core/parser.js, core/match.js),
+// so the server never spends CPU on it. The Econt office list comes through the
+// relay as Econt sends it, is trimmed to what matching reads and kept per mode
+// (demo / production) in localStorage for 6 hours. If it cannot be refreshed, the
+// copy already here is used: stale beats broken.
+const OFFICE_TTL_MS = 6 * 3600 * 1000;
+const OKEY = 'econt_offices_';
+const OFFICES = { demo: null, production: null };   // { offices, at, prevCount }
+const OFFICE_LOADS = {};                             // mode -> the list being fetched
+const officeKey = (c) => (c && c.mode === 'production' ? 'production' : 'demo');
+const viaJson = (v) => JSON.parse(JSON.stringify(v));
+function officeEntry(key) {
+  if (!OFFICES[key]) {
+    try {
+      const s = JSON.parse(localStorage.getItem(OKEY + key));
+      if (s && Array.isArray(s.offices) && Number(s.at) > 0) OFFICES[key] = { offices: s.offices, at: Number(s.at), prevCount: Number(s.prevCount) || 0 };
+    } catch {}
+  }
+  return OFFICES[key];
+}
+const officeError = (message, extra) => Object.assign(new Error(message), extra || {});
+async function fetchOfficeList(c, key, opts) {
+  const r = await api('/api/offices/list', { creds: c }, opts);
+  // { ok:false } is the relay (an Econt error) or api() (server not reachable);
+  // anything else is Econt's own reply, { offices: [...] }.
+  if (!r || r.ok === false) throw officeError((r && r.error) || t('net_down'), { transient: !!(r && r.transient), stale: !!(r && r.stale) });
+  const prev = officeEntry(key);
+  const entry = { offices: (Array.isArray(r.offices) ? r.offices : []).map(EcontMatch.trimOffice), at: Date.now(), prevCount: prev ? prev.offices.length : 0 };
+  OFFICES[key] = entry;
+  try { localStorage.setItem(OKEY + key, JSON.stringify(entry)); } catch {}   // full storage: kept in memory only
+  return entry.offices;
+}
+// The office list for this login's mode: the kept copy while it is fresh, else a new
+// one (force = always a new one). opts are api() options (retry, alive, onWait).
+async function loadOffices(c, force, opts) {
+  if (!c || !c.username || !c.password) throw officeError(EcontMatch.message(LANG, 'missing_creds'));
+  const key = officeKey(c);
+  const e = officeEntry(key);
+  if (!force && e && e.offices.length && Date.now() - e.at < OFFICE_TTL_MS) return e.offices;
+  try {
+    const shared = !force && OFFICE_LOADS[key];
+    if (shared) {
+      // Join a fetch already on its way; if it failed for its own caller (superseded,
+      // or it did not retry and this caller does), fetch again.
+      try { return await shared; } catch (err) { if (!err.stale && !(opts && opts.retry)) throw err; }
+    }
+    const p = fetchOfficeList(c, key, opts);
+    OFFICE_LOADS[key] = p;
+    const done = () => { if (OFFICE_LOADS[key] === p) delete OFFICE_LOADS[key]; };
+    p.then(done, done);
+    return await p;
+  } catch (err) {
+    const s = officeEntry(key);
+    if (s && s.offices.length) return s.offices;
+    throw err;
+  }
+}
+// How many offices the kept list has and how old it is (Settings).
+function officeStatus(key) {
+  const c = officeEntry(key);
+  if (!c) return null;
+  return { count: c.offices.length, ageMinutes: Math.round((Date.now() - c.at) / 60000), added: c.prevCount ? c.offices.length - c.prevCount : 0 };
+}
+async function searchOfficesLocal(c, q, opts) {
+  try { return { ok: true, candidates: viaJson(EcontMatch.searchOffices(q, await loadOffices(c, false, opts))) }; }
+  catch (e) { return { ok: false, error: e.message, stale: !!e.stale }; }
+}
+
+// ---------- logins Econt has accepted ----------
+// A batch paste matches offices only for a login Econt accepts: a rejected one gets
+// "wrong password" on its rows instead of creates that would all fail. Remembered
+// in memory only (a SHA-256 of mode, username and password, never the password).
+// true = accepted, false = rejected, null = could not tell (never locks anyone out).
+const CRED_SEEN = new Map(), CRED_INFLIGHT = new Map();
+const credTtl = (ok) => (ok === true ? 12 * 3600 * 1000 : 60 * 1000);
+async function credKey(c) {
+  const d = await crypto.subtle.digest('SHA-256', tenc.encode([c.mode, String(c.username), String(c.password)].join('\0')));
+  return b64(d);
+}
+async function rememberCreds(c, ok) { try { CRED_SEEN.set(await credKey(c), { ok, at: Date.now() }); } catch {} }
+function verifyByKey(c, k) {
+  const hit = CRED_SEEN.get(k);
+  if (hit && Date.now() - hit.at < credTtl(hit.ok)) return Promise.resolve(hit.ok);
+  const f = CRED_INFLIGHT.get(k);
+  if (f) return f.p;
+  const p = api('/api/test', { creds: c })
+    .then((r) => { const ok = r.ok ? true : r.code === 'bad_login' ? false : null; CRED_SEEN.set(k, { ok, at: Date.now() }); return ok; })
+    .catch(() => null)
+    .finally(() => CRED_INFLIGHT.delete(k));
+  CRED_INFLIGHT.set(k, { p, slow: false });
+  return p;
+}
+async function verifyCreds(c) { return verifyByKey(c, await credKey(c)); }
+// With a bounded wait: when a check for this login has already made one paste wait
+// the full time, later pastes do not wait on it again ("could not tell").
+async function verifyCredsBounded(c, waitMs) {
+  const k = await credKey(c);
+  const p = verifyByKey(c, k);
+  const f = CRED_INFLIGHT.get(k);
+  if (f && f.slow) return null;
+  const TIMEOUT = {};
+  const v = await Promise.race([p, sleep(waitMs).then(() => TIMEOUT)]);
+  if (v !== TIMEOUT) return v;
+  if (f) f.slow = true;
+  return null;
+}
+// Login check (setup and Settings): Econt's answer, plus how many offices the list has.
+async function testLogin(c) {
+  const r = await api('/api/test', { creds: c });
+  if (r.ok) {
+    rememberCreds(c, true);
+    let n = 0;
+    try { n = (await loadOffices(c)).length; } catch {}
+    r.officeCount = n;
+  }
+  return r;
+}
+// When the app opens: wake the server, and get the office list and the login check
+// going in the background, so the first paste does not wait for them.
+const warm = () => {
+  ping();
+  if (!SESSION.password) return;
+  const c = creds();
+  loadOffices(c).catch(() => {});
+  verifyCreds(c).catch(() => {});
+};
 document.addEventListener('visibilitychange', () => {
   if (document.hidden || Date.now() - LAST_OK < 10 * 60 * 1000) return;
   if (SESSION.password) warm(); else ping();
@@ -657,7 +784,7 @@ async function fillOfficeSelect(sel, q, credsObj) {
   const seq = PARSE_SEQ, live = () => sel !== $('pOffice') || (seq === PARSE_SEQ && !createBusy());
   if (sel === $('pOffice') && createBusy()) return false;
   sel.classList.remove('hide'); sel.innerHTML = `<option value="">${t('searching')}</option>`;
-  const r = await api('/api/offices', { creds: credsObj, q }, { retry: true, alive: live });
+  const r = await searchOfficesLocal(credsObj, q, { retry: true, alive: live });
   if (!live()) return false;
   if (!r.ok) { sel.innerHTML = `<option value="">${esc(r.error)}</option>`; return true; }   // changed: caller refreshes
   sel.innerHTML = '';
@@ -674,7 +801,7 @@ $('suTestBtn').onclick = async () => {
   if (!c.username || !c.password) { $('suTestMsg').className = 'err'; $('suTestMsg').textContent = t('need_creds'); return; }
   $('suTestMsg').className = 'muted'; $('suTestMsg').textContent = t('testing');
   const seq = ++WIZ_TEST_SEQ;
-  const r = await api('/api/test', { creds: c });
+  const r = await testLogin(c);
   // A reply for credentials that were changed meanwhile says nothing about the new ones.
   const now = wizardCreds();
   if (seq !== WIZ_TEST_SEQ || now.mode !== c.mode || now.username !== c.username || now.password !== c.password) return;
@@ -843,7 +970,7 @@ async function cfgTestLogin(btn) {
   const c = cfgCreds(), m = $('cfgTestMsg');
   if (!c.username || !c.password) { m.className = 'err'; m.textContent = t('need_creds'); return false; }
   m.className = 'muted'; m.textContent = t('testing'); btnBusy(btn, true);
-  const r = await api('/api/test', { creds: c });
+  const r = await testLogin(c);
   btnBusy(btn, false);
   m.className = r.ok ? 'good' : 'err';
   m.textContent = r.ok ? t('login_ok', { n: r.officeCount }) : r.error;
@@ -874,7 +1001,13 @@ $('cfgSenderOffice').addEventListener('input', () => { $('cfgOfficeName').textCo
 $('refreshOfficesBtn').onclick = async (ev) => {
   const st = $('officeStatus');
   btnBusy(ev.currentTarget, true); st.textContent = t('refreshing');
-  const r = await api('/api/offices/refresh', { creds: creds() });
+  const c = creds();
+  let r;
+  try {
+    const offices = await loadOffices(c, true);
+    const s = officeStatus(officeKey(c));
+    r = { ok: true, count: offices.length, added: (s && s.added) || 0 };
+  } catch (e) { r = { ok: false, error: e.message }; }
   btnBusy(ev.currentTarget, false);
   st.textContent = r.ok
     ? t('offices_loaded', { n: r.count }) + (r.added > 0 ? ' ' + t('offices_added', { d: r.added }) : '')
@@ -947,9 +1080,11 @@ $('cfgPayoutBtn').onclick = async (ev) => {
   const btn = ev.currentTarget;
   btnBusy(btn, true);
   PAYOUT_MSG = { k: 'loading' }; renderPayoutMsg();
-  const r = await api('/api/payouts', { creds: cfgCreds() });
+  const pc = cfgCreds();
+  const r = await api('/api/payouts', { creds: pc });
   btnBusy(btn, false);
   if (!r.ok) { PAYOUT_MSG = { err: r.error }; renderPayoutMsg(); return; }
+  rememberCreds(pc, true);
   PAYOUTS = r.options || [];
   renderPayoutSelect(PAYOUTS, $('cfgPayout').value || (CONFIG.defaults.cod && CONFIG.defaults.cod.payOptionNum) || '');
   const banks = PAYOUTS.filter((o) => o.method === 'bank').length;
@@ -978,8 +1113,10 @@ function gatherReturnTo() {
 
 // ---------- office list freshness ----------
 async function fetchOfficeStatus() {
-  const r = await api('/api/offices/status', { creds: creds() });
-  if (!r.ok) return;
+  const c = creds();
+  try { await loadOffices(c); } catch { return; }   // fills or auto-renews the kept list (6 h)
+  const r = officeStatus(officeKey(c));
+  if (!r) return;
   const m = Math.max(0, Math.floor(Number(r.ageMinutes) || 0));
   let msg = m < 1 ? t('offices_status_now', { n: r.count }) : m < 60 ? t('offices_status', { n: r.count, m }) : t('offices_status_h', { n: r.count, h: Math.floor(m / 60) });
   if (r.added > 0) msg += ' ' + t('offices_added', { d: r.added });
@@ -1032,6 +1169,30 @@ const parseRetry = (seq) => ({
   retry: true, alive: () => seq === PARSE_SEQ,
   onWait: () => { if (seq === PARSE_SEQ) { $('parseErr').className = 'muted'; $('parseErr').textContent = t('wake_wait'); } },
 });
+// Reading a message (core/match.js, what /api/parse and /api/parse-batch did on the
+// server): only the office list may need the network, with the same retry and
+// "waking up" message a server parse had. The answer goes through JSON, so it is
+// exactly the shape the server used to send.
+function parseLocal(text, seq) {
+  const c = creds();
+  return EcontMatch.parseSingle(text, { lang: LANG, loadOffices: () => loadOffices(c, false, parseRetry(seq)) }).then(viaJson);
+}
+// A long paste is read in slices, so the page stays responsive while it works.
+let _rowYield = 0;
+async function yieldRow() {
+  if (performance.now() - _rowYield < 12) return;
+  await new Promise((r) => setTimeout(r, 0));
+  _rowYield = performance.now();
+}
+function parseBatchLocal(text, seq) {
+  const c = creds();
+  return EcontMatch.parseBatch(text, {
+    lang: LANG,
+    loadOffices: () => loadOffices(c, false, parseRetry(seq)),
+    verify: () => verifyCredsBounded(c, 5000),
+    yieldRow, alive: () => seq === PARSE_SEQ,
+  }).then(viaJson);
+}
 // Returns true only when THIS call filled the editor (or the batch), so callers
 // that post-edit the result (batch Open, OCR) never touch a newer message.
 async function doParse(ev, opts) {
@@ -1054,21 +1215,21 @@ async function doParse(ev, opts) {
   if (!(opts && opts.keepBatchEdit)) { BATCH_EDIT = -1; showBatchBackBtns(); }
   parseBusy(true);
   try {
-    const r = await api('/api/parse', { text, creds: creds() }, parseRetry(seq));
+    const r = await parseLocal(text, seq);
     if (seq !== PARSE_SEQ) return false;
     if (createBusy()) { $('parseErr').className = 'muted'; $('parseErr').textContent = t('parse_again'); return false; }
     $('parseErr').className = 'err'; $('parseErr').textContent = '';
     if (!r.ok) {
-      // The server found several parcels the browser did not count: open them as a
+      // The reader found several parcels the phone count did not: open them as a
       // list instead of showing one and dropping the rest. A batch Open (forceSingle)
-      // or a list that was already tried shows the server's message.
+      // or a list that was already tried shows the reader's message.
       if (r.code === 'multi_parcel' && !forceSingle && !triedBatch) {
         const handled = await doBatchParse(text, seq);
         if (seq !== PARSE_SEQ) return false;
         if (handled) return handled === 'applied';
         $('parseErr').className = 'err';
       }
-      // Too long, several parcels, or any other refusal: the server's own words.
+      // Too long, several parcels, a server that cannot be reached: its own words.
       $('parseErr').textContent = r.error || t('parse_failed'); return false;
     }
     const p = r.parsed;
@@ -1452,6 +1613,7 @@ async function doCreate() {
       $('previewErr').textContent = t('econt_prefix') + r.error + (r.code === 'bad_login' ? '\n' + t('fix_login_hint') : ''); return;
     }
     created = true;
+    rememberCreds(creds(), true);
     clearUnsure(o.phone);
     const st = r.response.label || r.response;
     const num = st.shipmentNumber || t('no_number');
@@ -1656,11 +1818,11 @@ function batchRowHTML(row, i) {
 async function doBatchParse(text, seq) {
   parseBusy(true);
   try {
-    const r = await api('/api/parse-batch', { text, creds: creds() }, parseRetry(seq));
+    const r = await parseBatchLocal(text, seq);
     if (seq !== PARSE_SEQ) return true;
     if (createBusy()) { $('parseErr').className = 'muted'; $('parseErr').textContent = t('parse_again'); return true; }
     $('parseErr').className = 'err'; $('parseErr').textContent = '';
-    // Too big a paste (batch_too_big) and any other refusal: the server's own message.
+    // Too big a paste (batch_too_big) and any other refusal: its own message.
     if (!r.ok) { $('parseErr').textContent = r.error || t('parse_failed'); return true; }
     if (!r.rows || r.rows.length < 2) return false; // one parcel → normal editor
     BATCH = (r.rows || []).map((row) => {
@@ -1975,7 +2137,7 @@ $('batchCreateBtn').onclick = async () => {
         const dropped = !!r.reviewIgnored && o.reviewMode !== 'none', reviewMode = r.reviewIgnored ? 'none' : o.reviewMode;
         const info = { cod: o.cod.enabled ? o.cod.amount : 0, currency: o.cod.currency, reviewMode };
         addParcel({ number: st.shipmentNumber, recipient: o.recipientName, phone: o.phone, phone9: normPhone9(o.phone), dest: destKey(o), office: o.officeCode || (o.address && o.address.city) || '', weight: o.weight, description: o.description, cod: info.cod, currency: o.cod.currency, reviewMode, createdAt: Date.now(), pdfURL: st.pdfURL, mode: CONFIG.mode });
-        clearUnsure(o.phone);
+        clearUnsure(o.phone); rememberCreds(creds(), true);
         row.done = true; row.num = st.shipmentNumber; row.replyInfo = info; ok++; set(dropped ? 'st_ok_norev' : 'st_ok', { num: st.shipmentNumber }, 'var(--go-d)');
       } else if (r.transient || r.unsure) {
         // Unknown outcome: untick and remember, so neither a re-run nor the editor
@@ -2487,6 +2649,27 @@ $('parcelList').addEventListener('click', (e) => {
     b.setAttribute('aria-expanded', String(open));
   }
 });
+// Econt's statuses for many parcels, asked for 40 at a time (three calls at once):
+// one call for the whole list could take the relay over the CPU a free Cloudflare
+// request may use. All or nothing, like a single call: any failed part fails it.
+const TRACK_CHUNK = 40;
+async function trackParcels(nums, opts) {
+  const parts = [];
+  for (let i = 0; i < nums.length; i += TRACK_CHUNK) parts.push(nums.slice(i, i + TRACK_CHUNK));
+  const out = new Array(parts.length);
+  let next = 0;
+  const lane = async () => {
+    while (next < parts.length) {
+      const k = next++;
+      out[k] = await api('/api/track', { creds: creds(), shipmentNumbers: parts[k] }, opts);
+      if (!out[k].ok) { next = parts.length; return; }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(3, parts.length) }, lane));
+  const bad = out.find((r) => r && !r.ok);
+  if (bad) return bad;
+  return { ok: true, parcels: out.flatMap((r) => (r && r.parcels) || []) };
+}
 // Live status for the current environment. Saves a small snapshot per parcel so
 // the next visit paints instantly. onlyNums = refresh just those (a new card).
 async function refreshParcels(onlyNums) {
@@ -2495,7 +2678,7 @@ async function refreshParcels(onlyNums) {
   const btn = $('refreshParcelsBtn'); if (!onlyNums) btnBusy(btn, true);
   const upd = $('parcelsUpdated');
   try {
-    const r = await api('/api/track', { creds: creds(), shipmentNumbers: nums }, { retry: true, alive: () => !$('tab-parcels').classList.contains('hide') });
+    const r = await trackParcels(nums, { retry: true, alive: () => !$('tab-parcels').classList.contains('hide') });
     if (!r.ok) {
       if (r.stale) return;
       upd.dataset.failed = '1';

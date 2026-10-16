@@ -2,27 +2,41 @@
 
 // Stateless client for the Econt Delivery (e-Econt) JSON API + label builder.
 // Every call takes a `creds` object { mode, username, password } supplied by the
-// caller — nothing is stored here. Auth is HTTP Basic.
+// caller; nothing is stored here. Auth is HTTP Basic.
+//
+// Runs on Node 18+ and on Cloudflare Workers alike: only fetch, TextEncoder, btoa
+// and AbortSignal, no Node built-ins. The base URLs can be overridden (tests point
+// them at a mock) through opts.bases = { production, demo }, filled from the
+// ECONT_BASE_PRODUCTION / ECONT_BASE_DEMO environment variables by the caller.
 
-function baseUrl(creds) {
-  return creds.mode === 'production'
-    ? 'https://ee.econt.com/services'
-    : 'http://demo.econt.com/ee/services';
+const DEFAULT_BASES = { production: 'https://ee.econt.com', demo: 'http://demo.econt.com/ee' };
+
+// "https://ee.econt.com" or "https://ee.econt.com/services" both mean the same base.
+function baseUrl(creds, opts) {
+  const key = creds && creds.mode === 'production' ? 'production' : 'demo';
+  const b = String((opts && opts.bases && opts.bases[key]) || DEFAULT_BASES[key]).replace(/\/+$/, '');
+  return /\/services$/.test(b) ? b : b + '/services';
 }
 
-// opts.timeoutMs: give up (as a network failure) when Econt has not answered in
-// time. Never used for createLabel: a create cut short may still have made a waybill.
-async function callEcont(creds, path, body, opts) {
-  const url = baseUrl(creds) + path;
-  const auth = Buffer.from(`${creds.username}:${creds.password}`).toString('base64');
+// HTTP Basic value for a login, UTF-8 safe (btoa alone only takes Latin-1).
+function basicAuth(username, password) {
+  const bytes = new TextEncoder().encode(`${username}:${password}`);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return 'Basic ' + btoa(bin);
+}
+
+// The request itself. Resolves with the fetch Response (body unread); a failure to
+// connect is thrown as { kind: 'network' }.
+async function econtFetch(creds, path, body, opts) {
+  const url = baseUrl(creds, opts) + path;
   const timeoutMs = opts && opts.timeoutMs;
-  let res;
   try {
-    res = await fetch(url, {
+    return await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': 'Basic ' + auth,
+        'Authorization': basicAuth(creds.username, creds.password),
       },
       body: JSON.stringify(body),
       signal: timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined,
@@ -32,6 +46,31 @@ async function callEcont(creds, path, body, opts) {
     err.kind = 'network';
     throw err;
   }
+}
+
+// An HTTP error from Econt with its (small) body read: { kind: 'http', status, body }.
+async function httpError(res, url) {
+  let text = '';
+  try { text = await res.text(); } catch (e) {
+    const err = new Error('Econt reply cut off (' + url + '): ' + e.message);
+    err.kind = 'network';
+    throw err;
+  }
+  let json;
+  try { json = text ? JSON.parse(text) : {}; } catch { json = { raw: text }; }
+  const err = new Error('Econt returned HTTP ' + res.status);
+  err.kind = 'http';
+  err.status = res.status;
+  err.body = json;
+  return err;
+}
+
+// opts.timeoutMs: give up (as a network failure) when Econt has not answered in
+// time. Never used for createLabel: a create cut short may still have made a waybill.
+async function callEcont(creds, path, body, opts) {
+  const res = await econtFetch(creds, path, body, opts);
+  const url = baseUrl(creds, opts) + path;
+  if (!res.ok) throw await httpError(res, url);
   // The body read can fail too (socket cut mid-reply): same as a network loss,
   // and for a create it means the waybill may exist.
   let text;
@@ -42,43 +81,42 @@ async function callEcont(creds, path, body, opts) {
   }
   let json;
   try { json = text ? JSON.parse(text) : {}; } catch { json = { raw: text }; }
-  if (!res.ok) {
-    const err = new Error('Econt returned HTTP ' + res.status);
-    err.kind = 'http';
-    err.status = res.status;
-    err.body = json;
-    throw err;
-  }
   return json;
 }
 
-// Customer-facing offices only. `showLC` adds Локални Логистични Центрове (ЛЛЦ) —
+const OFFICES_PATH = '/Nomenclatures/NomenclaturesService.getOffices.json';
+const officesBody = (countryCode) => ({ countryCode: countryCode || 'BGR', showCargoReceptions: false, showLC: false });
+
+// Customer-facing offices only. `showLC` adds Локални Логистични Центрове (ЛЛЦ):
 // sorting hubs that are "active" on Econt's map but are NOT valid delivery
 // destinations for a normal parcel; picking one fails createLabel with
 // "Невалиден обслужващ офис". Cargo receptions are freight points, same story.
-function getOffices(creds, countryCode) {
-  return callEcont(creds, '/Nomenclatures/NomenclaturesService.getOffices.json', {
-    countryCode: countryCode || 'BGR',
-    showCargoReceptions: false,
-    showLC: false,
-  });
+function getOffices(creds, countryCode, opts) {
+  return callEcont(creds, OFFICES_PATH, officesBody(countryCode), opts);
+}
+// The same list as a raw Response with its ~4 MB body unread, so a relay can pass
+// it through without parsing it. An HTTP error is thrown with its body read.
+async function getOfficesRaw(creds, countryCode, opts) {
+  const res = await econtFetch(creds, OFFICES_PATH, officesBody(countryCode), opts);
+  if (!res.ok) throw await httpError(res, baseUrl(creds, opts) + OFFICES_PATH);
+  return res;
 }
 
 // mode: 'validate' | 'calculate' | 'create'
-function createLabel(creds, label, mode) {
-  return callEcont(creds, '/Shipments/LabelService.createLabel.json', { label, mode });
+function createLabel(creds, label, mode, opts) {
+  return callEcont(creds, '/Shipments/LabelService.createLabel.json', { label, mode }, opts);
 }
 
 // Live status/tracking for a list of shipment numbers.
-function getShipmentStatuses(creds, shipmentNumbers) {
-  return callEcont(creds, '/Shipments/ShipmentService.getShipmentStatuses.json', { shipmentNumbers });
+function getShipmentStatuses(creds, shipmentNumbers, opts) {
+  return callEcont(creds, '/Shipments/ShipmentService.getShipmentStatuses.json', { shipmentNumbers }, opts);
 }
 
 // The client's own profile(s). Carries `cdPayOptions[]` — the COD payout
 // agreements (споразумения) registered on the account. A bank agreement holds
 // the IBAN/BIC; a label references one by its `num`, never by raw IBAN.
 function getClientProfiles(creds, opts) {
-  return callEcont(creds, '/Profile/ProfileService.getClientProfiles.json', {}, { timeoutMs: (opts && opts.timeoutMs) || 20000 });
+  return callEcont(creds, '/Profile/ProfileService.getClientProfiles.json', {}, Object.assign({}, opts, { timeoutMs: (opts && opts.timeoutMs) || 20000 }));
 }
 
 function toAddress(a) {
@@ -176,4 +214,4 @@ function buildLabel(sender, defaults, o) {
   return label;
 }
 
-module.exports = { callEcont, getOffices, createLabel, getShipmentStatuses, getClientProfiles, buildLabel, baseUrl };
+module.exports = { callEcont, getOffices, getOfficesRaw, createLabel, getShipmentStatuses, getClientProfiles, buildLabel, baseUrl, basicAuth, DEFAULT_BASES };

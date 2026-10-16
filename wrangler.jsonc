@@ -1,0 +1,19 @@
+// Cloudflare Workers configuration (Workers Free plan: no card needed).
+// Deployed by Workers Builds with `npx wrangler deploy` on every push to main.
+// See MIGRATION.md for the step-by-step setup.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "econt-shipper",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // The web app itself: served straight from Cloudflare's edge, free and unlimited.
+  // Security and cache headers for these files are in public/_headers.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

@@ -1,13 +1,20 @@
 {
   "name": "econt-shipper",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "Paste a Bulgarian shipping message and create an Econt shipment number (товарителница). Stateless: no secrets stored on the server.",
+  "description": "Paste a Bulgarian shipping message and create an Econt shipment number (товарителница). Stateless: no secrets stored on the server. Runs on Cloudflare Workers (worker.js) or Node (server.js).",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev:worker": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "bash tests/run-all.sh",
+    "test:golden": "node tests/parser-golden.js"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "wrangler": "4.151.1"
   }
 }

@@ -120,8 +120,8 @@ function bigOffices(n) {
     const r = PRODUCTION[i % PRODUCTION.length];
     const o = officeObject([String(10000 + i), r[1] + ' ' + i, r[2] + ' ' + i, r[3], r[4], r[5], r[6], r[7], String(i), r[9] === 'hub' ? '' : r[9]], i);
     // Real office objects carry long working-hour tables; pad to a realistic size.
-    o.workingTimeSchedule = o.workingTimeSchedule.concat(o.workingTimeSchedule, o.workingTimeSchedule);
-    o.address.city.servingOffices = Array.from({ length: 12 }, (_, k) => ({ officeCode: String(1000 + k), servingType: k % 2 ? 'to_door' : 'from_office' }));
+    o.workingTimeSchedule = o.workingTimeSchedule.concat(o.workingTimeSchedule, o.workingTimeSchedule, o.workingTimeSchedule, o.workingTimeSchedule);
+    o.address.city.servingOffices = Array.from({ length: 24 }, (_, k) => ({ officeCode: String(1000 + k), servingType: k % 2 ? 'to_door' : 'from_office' }));
     out.push(o);
   }
   return out;
