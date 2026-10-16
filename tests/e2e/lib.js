@@ -31,12 +31,15 @@ function suite(name) {
     if (process.env.E2E_VERBOSE) console.log('[' + ((Date.now() - started) / 1000).toFixed(1) + 's] ' + line);
     return !!cond;
   };
-  const finish = (crash) => {
+  const finish = async (crash) => {
     if (!process.env.E2E_VERBOSE) console.log(results.join('\n'));
     if (crash) { console.error('CRASH', crash); results.push('FAIL crashed: ' + ((crash && crash.message) || crash)); }
     const fail = results.filter((r) => r.startsWith('FAIL')).length;
     console.log(`RESULT suite=${name} runtime=${RUNTIME} pass=${results.length - fail} fail=${fail} secs=${Math.round((Date.now() - started) / 1000)}`);
-    process.exitCode = fail ? 1 : 0;
+    // A crash leaves the browser open, which would keep this process (and the test
+    // run) waiting forever: close what this suite launched, then exit.
+    await Promise.all(LAUNCHED.splice(0).map((b) => b.close().catch(() => {})));
+    process.exit(fail ? 1 : 0);
   };
   return { ok, finish, results };
 }
@@ -76,8 +79,11 @@ function playwright() {
     throw new Error('Playwright not found. Run with NODE_PATH=$(npm root -g) (global playwright install).');
   }
 }
+const LAUNCHED = [];
 async function launch() {
-  return playwright().chromium.launch();
+  const b = await playwright().chromium.launch();
+  LAUNCHED.push(b);
+  return b;
 }
 
 const SENDER = { name: 'Иван', phone: '0878916695', officeCode: '1111' };
@@ -106,9 +112,15 @@ async function fresh(b, o) {
   p.on('pageerror', (e) => p.errs.push(e.message));
   p.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) p.errs.push('console: ' + m.text()); });
   if (o.lang) await p.addInitScript((l) => localStorage.setItem('econt_lang', l), o.lang);
+  // o.init: scripts that run in the page before any of its own (string or function).
+  for (const s of [].concat(o.init || [])) await p.addInitScript(s);
+  // o.routes: { '/path': body } served instead of the app's file (e.g. an older app.js).
+  for (const [route, body] of Object.entries(o.routes || {})) {
+    await ctx.route((u) => u.pathname === route, (r) => r.fulfill({ status: 200, contentType: /\.js$/.test(route) ? 'text/javascript; charset=utf-8' : 'text/html; charset=utf-8', body }));
+  }
   p.faults = await appFaults(ctx);
   await p.goto(APP + '/');
-  await p.waitForFunction(() => typeof enterApp === 'function' && !!window.EcontMatch);
+  await p.waitForFunction(o.ready || (() => typeof enterApp === 'function' && !!window.EcontMatch), null, { timeout: 15000 });
   if (o.seed !== false) await seed(p, o);
   return p;
 }

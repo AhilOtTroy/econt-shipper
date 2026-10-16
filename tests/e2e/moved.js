@@ -15,6 +15,7 @@
 //   APP_URL=... MOCK_URL=... NODE_PATH=$(npm root -g) node tests/e2e/moved.js
 
 const path = require('path');
+const { execFileSync } = require('child_process');
 const { suite, mock, launch, account, fresh, parse } = require('./lib');
 const { edgeCases } = require('../golden/edge-cases');
 
@@ -232,7 +233,7 @@ async function apiCalls(p, fn) {
     ok('no page errors (locker)', p.errs.length === 0, p.errs.join(' | '));
     await p.context().close(); }
 
-  // ---------- 6. tracking many parcels: 40 per relay call, all or nothing ----------
+  // ---------- 6. tracking many parcels: 10 per relay call, all or nothing ----------
   await mock.reset();
   { const p = await fresh(b, { cod: false });
     await p.evaluate(() => saveParcels(Array.from({ length: 95 }, (_, i) => ({ number: String(1051602800000 + i), recipient: 'Клиент ' + i, createdAt: Date.now() - i * 60000, mode: 'production' }))));
@@ -241,16 +242,156 @@ async function apiCalls(p, fn) {
     await p.waitForFunction(() => loadParcels().every((x) => x.snapAt), null, { timeout: 15000 }).catch(() => {});
     const st = await mock.state();
     const snaps = await p.evaluate(() => loadParcels().filter((x) => x.snapAt).length);
-    ok('95 parcels tracked in 3 relay calls of at most 40', st.tracks === t0 + 3 && snaps === 95 && st.lastTrack.length <= 40, JSON.stringify({ calls: st.tracks - t0, snaps, last: st.lastTrack.length }));
+    // (an Econt reply is about 15 KB per parcel; 10 keep a fresh Worker's relay call
+    // well inside Cloudflare's free CPU limit, see tests/cpu-profile.js)
+    ok('95 parcels tracked in 10 relay calls of at most 10', st.tracks === t0 + 10 && snaps === 95 && st.lastTrack.length <= 10, JSON.stringify({ calls: st.tracks - t0, snaps, last: st.lastTrack.length }));
     ok('every card rendered', (await p.$$('.parcel')).length === 95);
     // One part failing fails the refresh as a whole, with Econt's words.
     await mock.control({ faults: { track: { mode: '502', n: 1 } } });
     await p.click('#refreshParcelsBtn');
     await p.waitForFunction(() => $('parcelsUpdated').dataset.failed === '1', null, { timeout: 10000 }).catch(() => {});
     ok('a failed part fails the refresh', /Econt HTTP 502/.test(await p.textContent('#parcelsUpdated')), await p.textContent('#parcelsUpdated'));
+    // Econt cuts a reply mid-body (the relay passes it through as it streams in):
+    // the refresh fails at once with that reason, no "server waking up" retries.
+    await mock.control({ faults: { track: { mode: 'cut', n: 99 } } });
+    await p.evaluate(() => { delete $('parcelsUpdated').dataset.failed; $('parcelsUpdated').textContent = ''; });
+    const tc = Date.now();
+    await p.click('#refreshParcelsBtn');
+    await p.waitForFunction(() => $('parcelsUpdated').dataset.failed === '1', null, { timeout: 10000 }).catch(() => {});
+    ok('a cut tracking reply: fails at once and says why', /Еконт прекъсна отговора\. Опитай пак след малко\./.test(await p.textContent('#parcelsUpdated')) && Date.now() - tc < 4000,
+      (Date.now() - tc) + ' ms ' + await p.textContent('#parcelsUpdated'));
     await mock.control({ clearFaults: true });
+    // The cards read Econt's statuses in the browser: English texts after a switch.
+    await p.click('#langEn'); await p.waitForTimeout(100);
+    await p.click('#refreshParcelsBtn');
+    await p.waitForFunction(() => !$('parcelsUpdated').dataset.failed && !$('refreshParcelsBtn').disabled, null, { timeout: 10000 }).catch(() => {});
+    const card = await p.evaluate(() => { const c = document.querySelector('.parcel'); c.querySelector('[data-toggle]').click(); return c.textContent; });
+    ok('tracking events read in the browser, in English', /Passing through a hub/.test(card) && !/Преминава през логистичен център/.test(card), card.slice(0, 200));
+    await p.click('#langBg'); await p.waitForTimeout(100);
     ok('no page errors (tracking)', p.errs.length === 0, p.errs.join(' | '));
     await p.context().close(); }
+
+  // ---------- 7. a browser without regex lookbehind (Safari before 16.4) ----------
+  // Old Safari cannot compile a lookbehind: one in core/parser.js stopped it from
+  // loading, and nothing could be read. Here the page's RegExp refuses lookbehind
+  // the same way (literals with one are kept out by tests/lookbehind-free.js).
+  await mock.reset();
+  { const strictRegExp = () => {
+      const R = RegExp;
+      const S = function RegExp(src, flags) {
+        const s = src instanceof R ? src.source : String(src);
+        if (/\(\?<[=!]/.test(s)) throw new SyntaxError('Invalid regular expression: /' + s + '/: Invalid group specifier name');
+        return new R(src, flags);
+      };
+      S.prototype = R.prototype;
+      window.RegExp = S;
+    };
+    const p = await fresh(b, { cod: false, init: strictRegExp, ready: () => typeof enterApp === 'function' });
+    const strict = await p.evaluate(() => { try { new RegExp('(?' + '<!a)b'); return false; } catch (e) { return /group specifier/.test(e.message); } });
+    ok('no-lookbehind browser: the page refuses lookbehind', strict);
+    ok('no-lookbehind browser: core/parser.js and core/match.js load', await p.evaluate(() => !!window.EcontParser && !!window.EcontMatch), p.errs.join(' | '));
+    await parse(p, 'Мария Петрова 0888123456 Пловдив Тракия 45 лв');
+    const single = await p.waitForSelector('#preview:not(.hide)', { timeout: 8000 }).then(() => true, () => false);
+    ok('no-lookbehind browser: a message is read', single && (await p.inputValue('#pName')) === 'Мария Петрова' && (await p.inputValue('#pOffice')) === '2223', single ? (await p.inputValue('#pName')) + ' ' + (await p.inputValue('#pOffice')) : await p.textContent('#parseErr'));
+    await p.click('#clearBtn');
+    await parse(p, 'Петър Колев 0888777666 Варна офис Чайка 10 лв\n\nАна Димитрова 0899555444 Бургас Сарафово 20 лв');
+    const batch = await p.waitForSelector('#batch:not(.hide)', { timeout: 8000 }).then(() => true, () => false);
+    ok('no-lookbehind browser: a batch is read', batch && (await p.$$('.brow')).length === 2);
+    await p.click('#clearBtn');
+    await p.click('#settingsBtn');
+    await p.fill('#cfgSenderSearch', 'Чайка'); await p.click('#cfgSenderSearchBtn');
+    await p.waitForFunction(() => $('cfgSenderOfficeSel').options.length > 0 && $('cfgSenderOfficeSel').options[0].value !== '', null, { timeout: 5000 }).catch(() => {});
+    ok('no-lookbehind browser: office search works', (await p.inputValue('#cfgSenderOfficeSel')) === '3333', await p.$eval('#cfgSenderOfficeSel', (s) => [...s.options].map((o) => o.textContent).join(' | ')));
+    ok('no-lookbehind browser: no page errors', p.errs.length === 0, p.errs.join(' | '));
+    await p.context().close(); }
+
+  // ---------- 8. a batch read while the page sleeps ----------
+  // A phone locks its screen or switches apps, or the tab is hidden, while a long
+  // paste is being read: the clock jumps between rows. The 30 s wall clock the
+  // server used would then leave every later row without an office.
+  await mock.reset();
+  { const p = await fresh(b, { cod: false });
+    await p.waitForFunction(() => !!localStorage.getItem('econt_offices_production'), null, { timeout: 10000 });
+    await p.evaluate(() => {
+      const realNow = Date.now.bind(Date), st = window.setTimeout;
+      let off = 0;
+      window.__slept = 0;
+      Date.now = () => realNow() + off;
+      // Every yield between rows "sleeps" 31 s while __sleepy is set.
+      window.setTimeout = function (fn, ms, ...a) { if (!ms && window.__sleepy) { off += 31000; window.__slept++; } return st.call(window, fn, ms, ...a); };
+    });
+    await p.evaluate(() => { window.__sleepy = true; });
+    await parse(p, Array.from({ length: 100 }, (_, i) => 'Клиент ' + i + ' 0888' + String(100000 + i).slice(-6) + ' Варна Чайка 10 лв').join('\n'));
+    await p.waitForSelector('#batch:not(.hide)', { timeout: 20000 });
+    const slept = await p.evaluate(() => { window.__sleepy = false; return window.__slept; });
+    const offices = await p.$$eval('.brow select[data-f="office"]', (els) => els.map((e) => e.value));
+    ok('page asleep during a 100-row read: every row keeps its office', slept > 0 && offices.length === 100 && offices.every((v) => v === '3333') && (await p.textContent('#batchErr')) === '',
+      JSON.stringify({ slept, rows: offices.length, matched: offices.filter((v) => v === '3333').length, err: await p.textContent('#batchErr') }));
+    ok('no page errors (asleep)', p.errs.length === 0, p.errs.join(' | '));
+    await p.context().close(); }
+
+  // ---------- 9. Settings refresh tells the truth, and can be pressed again ----------
+  // The kept copy stands in for a list Econt cannot give (section 3), but when the
+  // app's own server cannot be reached the refresh says so, as it did before.
+  await mock.reset();
+  { const p = await fresh(b, { cod: false });
+    await p.waitForFunction(() => !!localStorage.getItem('econt_offices_production'), null, { timeout: 10000 });
+    await p.click('#settingsBtn');
+    await p.waitForFunction(() => /активни офиса/.test($('officeStatus').textContent), null, { timeout: 8000 });
+    const press = async () => {
+      // (a button left stuck by the press before is freed here, so every check below
+      // still runs; the `idle` flag of that press has already reported it)
+      await p.evaluate(() => { $('officeStatus').textContent = ''; const btn = $('refreshOfficesBtn'); if (btn.disabled) btnBusy(btn, false); });
+      await p.click('#refreshOfficesBtn');
+      await p.waitForFunction(() => /Заредени|Грешка/.test($('officeStatus').textContent) && !$('refreshOfficesBtn').disabled, null, { timeout: 8000 }).catch(() => {});
+      return { msg: await p.textContent('#officeStatus'), idle: await p.evaluate(() => !$('refreshOfficesBtn').disabled && !$('refreshOfficesBtn').hasAttribute('aria-busy') && !$('refreshOfficesBtn').querySelector('.spin')) };
+    };
+    let r = await press();
+    ok('refresh: loads and the button is ready again', r.msg === 'Заредени са 35 офиса.' && r.idle, JSON.stringify(r));
+    r = await press();
+    ok('refresh: a second press works too', r.msg === 'Заредени са 35 офиса.' && r.idle && (await mock.state()).offices.production === 3, JSON.stringify(r) + ' ' + JSON.stringify((await mock.state()).offices));
+    await p.context().setOffline(true);
+    r = await press();
+    await p.context().setOffline(false);
+    ok('refresh offline: says there is no connection', r.msg === 'Грешка: Няма връзка с интернет.' && r.idle, JSON.stringify(r));
+    p.faults.set({ '/api/offices/list': 1 });
+    r = await press();
+    ok('refresh while the server wakes up: says so', r.msg === 'Грешка: Сървърът се събужда. Изчакай 30 секунди и опитай пак.' && r.idle, JSON.stringify(r));
+    await mock.control({ faults: { offices: { mode: '502', n: 1 } } });
+    r = await press();
+    ok('refresh with Econt down: the kept copy, as before', r.msg === 'Заредени са 35 офиса.' && r.idle, JSON.stringify(r));
+    r = await press();
+    ok('refresh: works again afterwards', r.msg === 'Заредени са 35 офиса.' && r.idle, JSON.stringify(r));
+    ok('no page errors (refresh)', p.errs.length === 0, p.errs.join(' | '));
+    await p.context().close(); }
+
+  // ---------- 10. a tab still open from before the update ----------
+  // Its app.js calls the old routes; the login check must not show "Налични са ,
+  // офиса." but the reload message. Needs the old files from git (724526c).
+  let oldApp = null, oldHtml = null;
+  try {
+    const root = path.join(__dirname, '..', '..');
+    oldApp = execFileSync('git', ['show', '724526c:public/app.js'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    oldHtml = execFileSync('git', ['show', '724526c:public/index.html'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  } catch { console.error('note: git history not available, the old-tab check is left out'); }
+  if (oldApp && oldHtml) {
+    await mock.reset();
+    const p = await fresh(b, { cod: false, routes: { '/': oldHtml, '/index.html': oldHtml, '/app.js': oldApp }, ready: () => typeof enterApp === 'function' });
+    await p.click('#settingsBtn');
+    await p.click('#cfgTestBtn');
+    await p.waitForFunction(() => $('cfgTestMsg').textContent && !/Проверявам/.test($('cfgTestMsg').textContent), null, { timeout: 8000 }).catch(() => {});
+    const msg = await p.textContent('#cfgTestMsg');
+    ok('old tab: login check says reload (not "Налични са , офиса.")', msg === 'Приложението е обновено. Презаредете страницата.', msg);
+    // Its parcel refresh expects the statuses already read by the server: same.
+    await p.click('#settingsBackBtn');
+    await p.evaluate(() => saveParcels([{ number: '1051602800001', recipient: 'Клиент', createdAt: Date.now(), mode: 'production' }]));
+    const t0 = (await mock.state()).tracks;
+    await p.click('#navParcels');
+    await p.waitForFunction(() => $('parcelsUpdated').dataset.failed === '1', null, { timeout: 10000 }).catch(() => {});
+    const upd = await p.textContent('#parcelsUpdated');
+    ok('old tab: parcel refresh says reload, Econt not asked', /Приложението е обновено\. Презаредете страницата\./.test(upd) && (await mock.state()).tracks === t0, upd);
+    await p.context().close();
+  }
 
   await b.close();
   finish();

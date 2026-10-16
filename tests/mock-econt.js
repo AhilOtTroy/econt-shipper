@@ -12,8 +12,8 @@
 // Control endpoints (JSON):
 //   GET  /__state     counters (creates, previews, tracks, profiles, offices per mode),
 //                     every created label ({ number, phone, officeCode, label, mode }) and
-//                     the Accept-Encoding of the last office-list request
-//   POST /__control   { faults: { <op>: { mode, n, ms } }, bigOffices, extraOffices, reset }
+//                     the Accept-Encoding of the last office-list and tracking requests
+//   POST /__control   { faults: { <op>: { mode, n, ms } }, bigOffices, extraOffices, heavyTracking, reset }
 //                     ops: profile | offices | calculate | create | track | any
 //                     modes: 502 (gateway page, nothing done), 502after (done, then a
 //                     502 page), lost (done, socket destroyed, no reply), cut (done,
@@ -21,6 +21,9 @@
 //                     nothing done), slow (wait ms, then normal), auth (wrong login)
 //                     n = how many requests the fault applies to (default 1).
 //                     Shorthands: { lostReply: n }, { slowCreate: ms }.
+//                     heavyTracking: true = getShipmentStatuses answers at the size of a
+//                     real Econt reply (12 events per parcel, full ClientProfile, Address
+//                     and City objects: about 15 KB per parcel instead of about 3 KB).
 //   POST /__reset     counters, labels and faults back to the start
 //
 // The office list is gzipped when the request accepts gzip, like a real host.
@@ -40,6 +43,7 @@ function freshState() {
     offices: { production: 0, demo: 0 },
     createdLabels: [], lastLabel: null, lastTrack: null,
     officesAcceptEncoding: null, // what the last getOffices request accepted (the relay asks for identity)
+    trackAcceptEncoding: null,   // the same for getShipmentStatuses
     nextNum: 1051602900001,
   };
 }
@@ -47,6 +51,7 @@ let STATE = freshState();
 let FAULTS = {};
 let BIG = false;
 let EXTRA = []; // extra raw offices appended to the production list (e.g. "a new office opened")
+let HEAVY = false; // tracking replies at a real Econt reply's size
 
 const LISTS = { production: productionOffices(), demo: demoOffices() };
 let BIG_LIST = null;
@@ -156,6 +161,54 @@ function validateLabel(mode, label) {
   }
   if ((label.shipmentType || 'pack') === 'pack' && !String(label.shipmentDescription || '').trim()) return 'Липсва описание на пратката';
   return null;
+}
+
+// What a real Econt status carries besides what the app reads: full City, Address
+// and ClientProfile objects (Econt's field names) and a long event history. The
+// relay must parse all of it, so its CPU cost is measured against this size.
+function cityObj(name, nameEn, postCode, id) {
+  return {
+    id, country: { id: 1033, code2: 'BG', code3: 'BGR', name: 'България', nameEn: 'Bulgaria', isEU: true },
+    postCode, name, nameEn, regionName: name, regionNameEn: nameEn, phoneCode: '0' + String(id).slice(-2),
+    location: { latitude: 42.1354 + id / 1e5, longitude: 24.7453 + id / 1e5, confidence: 3 }, expressCityDeliveries: true,
+    monday: true, tuesday: true, wednesday: true, thursday: true, friday: true, saturday: true, sunday: false, serviceDays: 6,
+    zoneId: 1, zoneName: 'Зона 1', zoneNameEn: 'Zone 1',
+    servingOffices: Array.from({ length: 24 }, (_, k) => ({ officeCode: String(1000 + id % 900 + k), servingType: k % 3 ? 'office' : 'aps' })),
+  };
+}
+function addressObj(city, street, num, id) {
+  return {
+    id, city, fullAddress: city.name + ', ' + street + ' ' + num, fullAddressEn: city.nameEn + ', ' + street + ' ' + num,
+    quarter: 'Център', street, num, other: 'вх. А, ет. 2', location: city.location, zip: city.postCode, hezid: null,
+  };
+}
+function clientObj(name, nameEn, phone, id, addr) {
+  return {
+    id, name, nameEn, phones: [phone, phone.replace(/^08/, '+3598')], email: 'client' + id + '@example.com', skypeAccounts: [],
+    clientNumber: String(id), clientNumberEn: String(id), juridicalEntity: false, personalIDType: null, personalIDNumber: null,
+    companyType: null, ein: null, ddsEinPrefix: null, ddsEin: null, registrationAddress: addr, molName: null, molEGN: null, molIDNum: null,
+  };
+}
+function heavyStatus(num, i) {
+  const s = shipmentStatus(num, i);
+  const sof = cityObj('София', 'Sofia', '1000', 1001), pdv = cityObj('Пловдив', 'Plovdiv', '4000', 4001);
+  const sAddr = addressObj(sof, 'бул. Цар Борис III', '41', 70001), rAddr = addressObj(pdv, 'ул. Гладстон', '12', 70002);
+  s.senderClient = clientObj('Иван', 'Ivan', '0878916695', 7750001, sAddr);
+  s.receiverClient = clientObj('Мария Петрова', 'Maria Petrova', '0888123456', 7750002 + i, rAddr);
+  s.senderAddress = sAddr; s.receiverAddress = rAddr;
+  const base = s.trackingEvents[0];
+  const hubs = [['Пловдив', 'Plovdiv'], ['Стара Загора', 'Stara Zagora'], ['Сливен', 'Sliven'], ['Бургас', 'Burgas'], ['Варна', 'Varna']];
+  while (s.trackingEvents.length < 12) {
+    const k = s.trackingEvents.length, h = hubs[k % hubs.length];
+    s.trackingEvents.splice(k - 1, 0, Object.assign({}, base, {
+      destinationType: 'arrival_departure_from_hub', destinationDetails: 'Пристигане/заминаване от ЛЛЦ ' + h[0] + ', сортировъчен център, линия ' + k,
+      destinationDetailsEn: 'Arrival/departure from hub ' + h[1] + ', sorting centre, line ' + k, officeName: 'ЛЛЦ ' + h[0], officeNameEn: 'Hub ' + h[1],
+      cityName: h[0], cityNameEn: h[1], officeCode: String(9000 + k), time: base.time + k * 3600e3,
+    }));
+  }
+  s.services = s.services.concat(Array.from({ length: 4 }, (_, k) => ({ type: 'extra' + k, description: 'Допълнителна услуга ' + k, count: 1, paymentSide: 'receiver', price: 0.5, currency: 'EUR' })));
+  s.nextShipments = []; s.lastProcessedInstruction = null;
+  return s;
 }
 
 // A ShipmentStatus as getShipmentStatuses returns it: Econt's real field names,
@@ -292,6 +345,7 @@ async function handleEcont(req, res, mode, service) {
   if (service === 'Shipments/ShipmentService.getShipmentStatuses.json') {
     return withFault(req, res, 'track', async () => {
       STATE.tracks++;
+      STATE.trackAcceptEncoding = req.headers['accept-encoding'] || null;
       if (!authOk) { authFailure(res); return null; }
       const nums = Array.isArray(body.shipmentNumbers) ? body.shipmentNumbers.map(String) : [];
       STATE.lastTrack = nums;
@@ -300,7 +354,7 @@ async function handleEcont(req, res, mode, service) {
         obj: {
           shipmentStatuses: nums.map((n, i) => (/^9999/.test(n)
             ? { status: null, error: { type: 'ExInvalidParam', message: '', innerErrors: [{ message: 'Пратка ' + n + ' не е намерена' }] } }
-            : { status: shipmentStatus(n, i), error: null })),
+            : { status: (HEAVY ? heavyStatus : shipmentStatus)(n, i), error: null })),
         },
       };
     });
@@ -310,7 +364,7 @@ async function handleEcont(req, res, mode, service) {
 
 function applyControl(c) {
   if (!c || typeof c !== 'object') return;
-  if (c.reset) { STATE = freshState(); FAULTS = {}; BIG = false; EXTRA = []; }
+  if (c.reset) { STATE = freshState(); FAULTS = {}; BIG = false; EXTRA = []; HEAVY = false; }
   if (c.faults && typeof c.faults === 'object') {
     for (const [op, f] of Object.entries(c.faults)) {
       if (f == null) delete FAULTS[op];
@@ -322,11 +376,12 @@ function applyControl(c) {
   if (c.slowCreate) FAULTS.create = { mode: 'slow', ms: c.slowCreate, n: null };
   if (c.bigOffices != null) BIG = !!c.bigOffices;
   if (Array.isArray(c.extraOffices)) EXTRA = c.extraOffices;
+  if (c.heavyTracking != null) HEAVY = !!c.heavyTracking;
 }
 
 function handler(req, res) {
   const url = new URL(req.url, 'http://mock');
-  if (url.pathname === '/__state') return send(res, 200, Object.assign({}, STATE, { faults: FAULTS, big: BIG }));
+  if (url.pathname === '/__state') return send(res, 200, Object.assign({}, STATE, { faults: FAULTS, big: BIG, heavyTracking: HEAVY }));
   if (url.pathname === '/__control' || url.pathname === '/__reset') {
     return readBody(req).then((c) => {
       applyControl(url.pathname === '/__reset' ? { reset: true } : c);
@@ -351,7 +406,7 @@ function start(port) {
   });
 }
 
-module.exports = { start, applyControl, shipmentStatus, labelReply, BAD_PASSWORD };
+module.exports = { start, applyControl, shipmentStatus, heavyStatus, labelReply, BAD_PASSWORD };
 
 if (require.main === module) {
   const port = Number(process.argv[2] || process.env.MOCK_PORT || 5301);

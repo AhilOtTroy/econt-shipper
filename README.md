@@ -10,7 +10,8 @@ desktop as a normal website.
   review) and matching the office run in the page itself
   (`public/core/parser.js`, `public/core/match.js`). The Econt office list is kept
   in the browser for 6 hours per mode (demo / production), with the old copy used
-  if Econt is down.
+  if Econt is down. Econt's tracking statuses are read in the page too
+  (`public/core/track.js`): the relay hands both over as Econt sends them.
 - **The server is a thin, stateless relay** (`relay.js`). It stores **no
   credentials and no database**. Your Econt login, sender info and default options
   are saved **in your own browser**, and your Econt **password is encrypted with a
@@ -64,11 +65,12 @@ must be installed globally (`NODE_PATH=$(npm root -g)`).
 
 | Test | What it checks |
 |------|----------------|
-| `tests/parser-golden.js` | 335 messages: parser, office matching and the old server's `/api/parse`, `/api/parse-batch` answers (captured from 724526c) |
+| `tests/parser-golden.js` | 335 messages: parser, office matching and the old server's `/api/parse`, `/api/parse-batch` answers (captured from 724526c); tracking replies read as `/api/track` used to answer |
+| `tests/lookbehind-free.js` | the browser code runs on old Safari (no regex lookbehind, no newer syntax), and every rewritten pattern matches exactly like its old lookbehind form |
 | `tests/e2e/api.js` | every relay route and Econt fault, static headers |
-| `tests/e2e/moved.js` | the golden answers again inside the browser, office cache, limits, Settings |
+| `tests/e2e/moved.js` | the golden answers again inside the browser, office cache, limits, Settings, a browser without lookbehind, a page put to sleep mid-read, a tab from before the update |
 | `tests/e2e/ui.js`, `tests/e2e/regress.js` | the whole UI: paste, price, create, guards, batch, parcels |
-| `tests/cpu-profile.js` | CPU per relay route on workerd (Workers Free allows 10 ms) |
+| `tests/cpu-profile.js` | CPU per relay route on workerd (Workers Free allows 10 ms), warm and on a Worker that has just started, with Econt-sized tracking replies |
 
 ## Files
 
@@ -78,7 +80,7 @@ must be installed globally (`NODE_PATH=$(npm root -g)`).
 | `worker.js` | Cloudflare Workers entry (static files + relay) |
 | `server.js` | Node server: static files + the same relay |
 | `econt.js` | Econt API calls + builds the ShippingLabel payload |
-| `public/core/` | Message parser and office matching, run in the browser |
+| `public/core/` | Message parser, office matching and tracking reader, run in the browser |
 | `public/` | The web app: setup wizard, PIN lock, paste → create UI |
 | `wrangler.jsonc`, `public/_headers` | Cloudflare config and static file headers |
 | `render.yaml` | Render config |

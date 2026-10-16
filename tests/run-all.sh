@@ -4,7 +4,7 @@
 #   bash tests/run-all.sh            (or: npm test)
 #
 # 1. starts the Econt mock (tests/mock-econt.js)
-# 2. the parser golden test (Node)
+# 2. the parser golden test and the old-Safari (lookbehind-free) test (Node)
 # 3. the Node server (server.js) pointed at the mock: api, moved, ui, regress
 # 4. wrangler dev (Cloudflare's workerd running worker.js, local only, no
 #    Cloudflare login) pointed at the mock: api, moved, ui, regress, CPU per route
@@ -12,6 +12,7 @@
 # Needs: node 18+, `npm install` (for wrangler), and Playwright with Chromium
 # installed globally (NODE_PATH=$(npm root -g)).
 # Options (env): ONLY=node|workerd   SUITES="api moved ui regress"   KEEP_LOGS=1
+#                COLD_RUNS=<n> fresh Workers per route for the CPU check (default 3, 0 = skip)
 #                SHOT_DIR=<dir> (screenshots)   E2E_VERBOSE=1
 # Only the processes this script starts are stopped at the end.
 
@@ -82,10 +83,13 @@ PIDS+=($!)
 wait_http "$MOCK_URL/__state" 10 || { echo "!! the mock did not start"; cat "$LOGS/mock.log"; exit 1; }
 echo "mock: $MOCK_URL"
 
-# ---------- parser golden (Node) ----------
+# ---------- parser golden + old Safari (Node) ----------
 echo "- parser-golden on node"
 node tests/parser-golden.js >"$LOGS/golden.log" 2>&1
 record "$LOGS/golden.log" parser-golden node $?
+echo "- lookbehind-free on node"
+node tests/lookbehind-free.js >"$LOGS/lookbehind.log" 2>&1
+record "$LOGS/lookbehind.log" lookbehind-free node $?
 
 # ---------- Node server ----------
 if [ "$ONLY" != workerd ]; then

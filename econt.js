@@ -112,8 +112,16 @@ function createLabel(creds, label, mode, opts) {
 }
 
 // Live status/tracking for a list of shipment numbers.
+const STATUSES_PATH = '/Shipments/ShipmentService.getShipmentStatuses.json';
 function getShipmentStatuses(creds, shipmentNumbers, opts) {
-  return callEcont(creds, '/Shipments/ShipmentService.getShipmentStatuses.json', { shipmentNumbers }, opts);
+  return callEcont(creds, STATUSES_PATH, { shipmentNumbers }, opts);
+}
+// The same as a raw Response with its body unread, for the relay to pass through
+// (uncompressed, like the office list). An HTTP error is thrown with its body read.
+async function getShipmentStatusesRaw(creds, shipmentNumbers, opts) {
+  const res = await econtFetch(creds, STATUSES_PATH, { shipmentNumbers }, Object.assign({}, opts, { headers: { 'Accept-Encoding': 'identity' } }));
+  if (!res.ok) throw await httpError(res, baseUrl(creds, opts) + STATUSES_PATH);
+  return res;
 }
 
 // The client's own profile(s). Carries `cdPayOptions[]` — the COD payout
@@ -218,4 +226,4 @@ function buildLabel(sender, defaults, o) {
   return label;
 }
 
-module.exports = { callEcont, getOffices, getOfficesRaw, createLabel, getShipmentStatuses, getClientProfiles, buildLabel, baseUrl, basicAuth, DEFAULT_BASES };
+module.exports = { callEcont, getOffices, getOfficesRaw, createLabel, getShipmentStatuses, getShipmentStatusesRaw, getClientProfiles, buildLabel, baseUrl, basicAuth, DEFAULT_BASES };

@@ -124,7 +124,7 @@ const I18N = {
     details: 'Детайли', delivered_ok: 'Доставена', returned_ok: 'Върната към подателя', in_operation: 'В движение от {d}', delivered_in: 'Доставена за {d}', returned_in: 'Върната към подателя след {d}', awaiting_dispatch: 'Очаква изпращане', cancelled_ok: 'Анулирана', dur_sent: 'изпратена преди {d}', dur_in: 'за {d}', dur_after: 'след {d}',
     dur_min: '{n}\u00A0мин', dur_h: '{n}\u00A0ч', dur_d1: '1\u00A0ден', dur_d: '{n}\u00A0дни', dur_join: ' и ',
     d_status: 'Статус', d_sender: 'Подател', d_recipient: 'Получател', d_phone: 'Телефон', d_office: 'Офис на получателя', d_sender_office: 'Офис на подателя', d_storage: 'Съхранява се в', d_type: 'Тип', d_packs: 'Брой', d_weight: 'Тегло', d_contents: 'Съдържание', d_review: 'Преглед', d_sent: 'Изпратена', d_expected: 'Очаквана доставка', d_delivered: 'Доставена на', d_cod: 'Наложен платеж', d_price: 'Цена', d_attempts: 'Опити за доставка', d_routing: 'Маршрут',
-    testing: 'Проверявам…', login_saved: 'Запазено.', fix_login_hint: 'Отвори Настройки (зъбното колело горе) и натисни „Проверка на входа“ с паролата си за e-econt.com.', server_waking: 'Сървърът се събужда. Изчакай 30 секунди и опитай пак.', net_down: 'Няма връзка с интернет.', list_cut: 'Еконт прекъсна списъка с офиси. Опитай пак след малко.', login_ok: 'Входът работи. Налични са {n} офиса.', need_creds: 'Първо въведи потребителско име и парола.',
+    testing: 'Проверявам…', login_saved: 'Запазено.', fix_login_hint: 'Отвори Настройки (зъбното колело горе) и натисни „Проверка на входа“ с паролата си за e-econt.com.', server_waking: 'Сървърът се събужда. Изчакай 30 секунди и опитай пак.', net_down: 'Няма връзка с интернет.', list_cut: 'Еконт прекъсна списъка с офиси. Опитай пак след малко.', reply_cut: 'Еконт прекъсна отговора. Опитай пак след малко.', login_ok: 'Входът работи. Налични са {n} офиса.', need_creds: 'Първо въведи потребителско име и парола.',
     pin_short: 'PIN трябва да е поне 4 цифри.', pin_mismatch: 'Двата PIN-а не съвпадат.', test_first: 'Първо провери входа за Еконт (стъпка 2).',
     fill_sender: 'Попълни име, телефон и офис, от който пращаш (стъпка 3).',
     paste_first: 'Първо постави съобщение.', pick_office: 'Избери офис.', need_recip: 'Трябват име, телефон и офис.',
@@ -285,7 +285,7 @@ const I18N = {
     details: 'Details', delivered_ok: 'Delivered', returned_ok: 'Returned to sender', in_operation: 'In transit for {d}', delivered_in: 'Delivered in {d}', returned_in: 'Returned to sender after {d}', awaiting_dispatch: 'Waiting to be sent', cancelled_ok: 'Cancelled', dur_sent: 'sent {d} ago', dur_in: 'in {d}', dur_after: 'after {d}',
     dur_min: '{n}\u00A0min', dur_h: '{n}\u00A0h', dur_d1: '1\u00A0day', dur_d: '{n}\u00A0days', dur_join: ' ',
     d_status: 'Status', d_sender: 'Sender', d_recipient: 'Recipient', d_phone: 'Phone', d_office: 'Recipient office', d_sender_office: 'Sender office', d_storage: 'Stored at', d_type: 'Type', d_packs: 'Packs', d_weight: 'Weight', d_contents: 'Contents', d_review: 'Inspection', d_sent: 'Sent', d_expected: 'Expected delivery', d_delivered: 'Delivered at', d_cod: 'Cash on delivery', d_price: 'Price', d_attempts: 'Delivery attempts', d_routing: 'Routing',
-    testing: 'Testing…', login_saved: 'Saved.', fix_login_hint: 'Open Settings (the cog at the top) and press "Test login" with your e-econt.com password.', server_waking: 'The server is waking up. Wait 30 seconds and try again.', net_down: 'No internet connection.', list_cut: 'Econt cut the office list short. Try again in a moment.', login_ok: 'Login works. {n} offices available.', need_creds: 'Enter your username and password first.',
+    testing: 'Testing…', login_saved: 'Saved.', fix_login_hint: 'Open Settings (the cog at the top) and press "Test login" with your e-econt.com password.', server_waking: 'The server is waking up. Wait 30 seconds and try again.', net_down: 'No internet connection.', list_cut: 'Econt cut the office list short. Try again in a moment.', reply_cut: 'Econt cut its reply short. Try again in a moment.', login_ok: 'Login works. {n} offices available.', need_creds: 'Enter your username and password first.',
     pin_short: 'The PIN needs at least 4 digits.', pin_mismatch: 'The two PINs do not match.', test_first: 'Test your Econt login first (step 2).',
     fill_sender: 'Fill in your name, phone and the office you ship from (step 3).',
     paste_first: 'Paste a message first.', pick_office: 'Pick an office.', need_recip: 'A name, a phone and an office are needed.',
@@ -595,16 +595,20 @@ const api = async (path, body, opts) => {
   for (let attempt = 0; ; attempt++) {
     let kind;
     try {
-      const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ lang: LANG }, body || {})) });
+      // client: 2 tells the relay this page reads messages itself (a tab still open
+      // from before the update does not send it: see relay.js /api/test).
+      const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ lang: LANG, client: 2 }, body || {})) });
       // opts.passThrough: the reply is Econt's own body, relayed as it streams in (the
-      // office list). If the app's server answered with JSON and the body then broke
-      // off, Econt cut it: a plain failure, not a server waking up, so no retries.
+      // office list, the tracking statuses). If the app's server answered with JSON
+      // and the body then broke off, Econt cut it: a plain failure, not a server
+      // waking up, so no retries. Its message: the passThrough key ('list_cut' for true).
       const cut = () => opts.passThrough && res.ok && /json/.test(res.headers.get('content-type') || '');
+      const cutMsg = () => ({ ok: false, error: t(typeof opts.passThrough === 'string' ? opts.passThrough : 'list_cut') });
       let txt;
-      try { txt = await res.text(); } catch (e) { if (cut()) return { ok: false, error: t('list_cut') }; throw e; }
+      try { txt = await res.text(); } catch (e) { if (cut()) return cutMsg(); throw e; }
       try {
         let j;
-        try { j = JSON.parse(txt); } catch (e) { if (cut()) return { ok: false, error: t('list_cut') }; throw e; }
+        try { j = JSON.parse(txt); } catch (e) { if (cut()) return cutMsg(); throw e; }
         LAST_OK = Date.now();
         // Server and Econt messages are shown as written, minus their dashes (house style).
         if (j && typeof j.error === 'string') j.error = noDash(j.error);
@@ -679,8 +683,11 @@ async function loadOffices(c, force, opts) {
     p.then(done, done);
     return await p;
   } catch (err) {
+    // Econt down or the list cut: the kept copy (the old server did the same). But
+    // a forced refresh (Settings) with the app's own server out of reach (offline,
+    // waking up) says so, as it did when the server did the refreshing.
     const s = officeEntry(key);
-    if (s && s.offices.length) return s.offices;
+    if (s && s.offices.length && !(force && err && err.transient)) return s.offices;
     throw err;
   }
 }
@@ -1006,8 +1013,8 @@ $('cfgSenderOfficeSel').onchange = () => {
 };
 $('cfgSenderOffice').addEventListener('input', () => { $('cfgOfficeName').textContent = ''; });
 $('refreshOfficesBtn').onclick = async (ev) => {
-  const st = $('officeStatus');
-  btnBusy(ev.currentTarget, true); st.textContent = t('refreshing');
+  const st = $('officeStatus'), btn = ev.currentTarget;   // (currentTarget is null after an await)
+  btnBusy(btn, true); st.textContent = t('refreshing');
   const c = creds();
   let r;
   try {
@@ -1015,7 +1022,7 @@ $('refreshOfficesBtn').onclick = async (ev) => {
     const s = officeStatus(officeKey(c));
     r = { ok: true, count: offices.length, added: (s && s.added) || 0 };
   } catch (e) { r = { ok: false, error: e.message }; }
-  btnBusy(ev.currentTarget, false);
+  btnBusy(btn, false);
   st.textContent = r.ok
     ? t('offices_loaded', { n: r.count }) + (r.added > 0 ? ' ' + t('offices_added', { d: r.added }) : '')
     : (t('error_prefix') + r.error);
@@ -2656,10 +2663,12 @@ $('parcelList').addEventListener('click', (e) => {
     b.setAttribute('aria-expanded', String(open));
   }
 });
-// Econt's statuses for many parcels, asked for 40 at a time (three calls at once):
-// one call for the whole list could take the relay over the CPU a free Cloudflare
-// request may use. All or nothing, like a single call: any failed part fails it.
-const TRACK_CHUNK = 40;
+// Econt's statuses for many parcels, asked for 10 at a time (three calls at once).
+// The relay hands Econt's reply over unread (about 15 KB per parcel) and it is read
+// here (core/track.js), so the relay's CPU does not grow with Econt's reply; 10 per
+// call keep each reply and each wait small. All or nothing, like a single call:
+// any failed part fails it.
+const TRACK_CHUNK = 10;
 async function trackParcels(nums, opts) {
   const parts = [];
   for (let i = 0; i < nums.length; i += TRACK_CHUNK) parts.push(nums.slice(i, i + TRACK_CHUNK));
@@ -2668,7 +2677,9 @@ async function trackParcels(nums, opts) {
   const lane = async () => {
     while (next < parts.length) {
       const k = next++;
-      out[k] = await api('/api/track', { creds: creds(), shipmentNumbers: parts[k] }, opts);
+      const r = await api('/api/track', { creds: creds(), shipmentNumbers: parts[k] }, Object.assign({}, opts, { passThrough: 'reply_cut' }));
+      // Econt's own reply ({ shipmentStatuses }), or the relay's/api()'s { ok, ... }
+      out[k] = r && Array.isArray(r.shipmentStatuses) ? EcontTrack.trackReply(r, LANG) : (r && typeof r.ok === 'boolean' ? r : EcontTrack.trackReply(r, LANG));
       if (!out[k].ok) { next = parts.length; return; }
     }
   };

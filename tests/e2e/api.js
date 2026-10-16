@@ -12,6 +12,7 @@ const path = require('path');
 const crypto = require('crypto');
 const zlib = require('zlib');
 const { APP, MOCK, suite, mock } = require('./lib');
+const T = require('../../public/core/track.js');
 
 const { ok, finish } = suite('api');
 const ROOT = path.join(__dirname, '..', '..');
@@ -22,7 +23,10 @@ const SENDER = { name: 'Иван', phone: '0878916695', officeCode: '1111' };
 const DEFAULTS = { shipmentType: 'pack', packCount: 1, weight: 1, shipmentDescription: 'лични вещи', payer: 'receiver', cod: { enabled: true, currency: 'EUR' } };
 const OVR = (o) => Object.assign({ recipientName: 'Мария Петрова', phone: '0888123456', officeCode: '2222', cod: { enabled: true, amount: 45, currency: 'EUR' }, reviewMode: 'none' }, o || {});
 
+// Like the app (public/app.js api()): every JSON body carries client: 2. An old tab's
+// request is sent with client: null.
 async function post(route, body, opts) {
+  if (body && typeof body === 'object' && !('client' in body)) body = Object.assign({ client: 2 }, body);
   const r = await fetch(APP + route, Object.assign({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body || {}) }, opts || {}));
   const text = await r.text();
   let json = null; try { json = JSON.parse(text); } catch {}
@@ -45,7 +49,7 @@ const CSP = "frame-ancestors 'none'; object-src 'none'; base-uri 'self'";
     const r304 = await get('/', { 'If-None-Match': etag });
     ok('GET / with its ETag answers 304', !!etag && r304.status === 304, etag + ' -> ' + r304.status);
   }
-  for (const f of ['app.js', 'core/parser.js', 'core/match.js']) {
+  for (const f of ['app.js', 'core/parser.js', 'core/match.js', 'core/track.js']) {
     const r = await get('/' + f);
     const body = Buffer.from(await r.arrayBuffer());
     ok(`GET /${f}: same bytes as public/${f}, no-cache, nosniff`, r.status === 200 && /javascript/.test(r.headers.get('content-type')) && r.headers.get('cache-control') === 'no-cache'
@@ -81,6 +85,13 @@ const CSP = "frame-ancestors 'none'; object-src 'none'; base-uri 'self'";
   // ---------- login check ----------
   { let r = await post('/api/test', { creds: CREDS });
     ok('test: good login', r.json && r.json.ok === true && r.json.mode === 'production', r.text);
+    // A tab open from before the update (its body has no client: 2) read the office
+    // count from this reply ("Налични са , офиса." without it): told to reload.
+    const sOld = await mock.state();
+    r = await post('/api/test', { creds: CREDS, client: null });
+    const r2 = await post('/api/test', JSON.stringify({ creds: CREDS, lang: 'en' }));
+    ok('test: a page from before the update is told to reload', r.json.ok === false && r.json.code === 'app_updated' && r.json.error === 'Приложението е обновено. Презаредете страницата.'
+      && r2.json.code === 'app_updated' && r2.json.error === 'The app was updated. Reload the page.' && (await mock.state()).profiles === sOld.profiles, r.text + ' ' + r2.text);
     r = await post('/api/test', { creds: BAD });
     ok('test: wrong password (Econt 500 + message) = bad_login', r.json.ok === false && r.json.code === 'bad_login' && /^Грешен потребител или парола за Еконт/.test(r.json.error), r.text);
     r = await post('/api/test', { creds: BAD, lang: 'en' });
@@ -155,10 +166,16 @@ const CSP = "frame-ancestors 'none'; object-src 'none'; base-uri 'self'";
   }
 
   // ---------- tracking ----------
+  // The relay hands Econt's reply over unread; the browser reads it with
+  // public/core/track.js into what /api/track used to answer.
   { const nums = ['1051602900001', '1051602900002', '1051602900003', '9999000000001'];
     let r = await post('/api/track', { creds: CREDS, shipmentNumbers: nums });
-    const p = r.json.parcels || [];
-    ok('track: one entry per number', r.json.ok && p.length === 4 && p[0].number === nums[0], r.text.slice(0, 120));
+    ok('track: Econt\'s reply passed through as JSON, never cached', r.status === 200 && r.json && Array.isArray(r.json.shipmentStatuses) && r.json.shipmentStatuses.length === 4
+      && /application\/json/.test(r.headers.get('content-type')) && r.headers.get('cache-control') === 'no-store', r.status + ' ' + r.text.slice(0, 120));
+    ok('track: Econt asked for an uncompressed reply', (await mock.state()).trackAcceptEncoding === 'identity', (await mock.state()).trackAcceptEncoding);
+    let read = T.trackReply(r.json, 'bg');
+    const p = read.parcels || [];
+    ok('track: one entry per number', read.ok && p.length === 4 && p[0].number === nums[0], JSON.stringify(read).slice(0, 120));
     ok('track: statuses and money', p[0].status === 'Доставена' && p[0].statusEn === 'Delivered' && p[0].cdCollected === 45 && p[0].cdCurrency === 'EUR' && p[2].status === 'Върната' && p[1].deliveryAttempts === 0, JSON.stringify(p[0]).slice(0, 200));
     const ev0 = p[0].events;
     ok('track: events in the client\'s shape', ev0.length === 4 && ev0.every((e) => Object.keys(e).join(',') === 'time,office,text,type,isReceipt,officeCode'), JSON.stringify(ev0[0]));
@@ -167,11 +184,36 @@ const CSP = "frame-ancestors 'none'; object-src 'none'; base-uri 'self'";
     ok('track: a return is told apart', p[2].events[3].type === 'return' && p[2].events[3].text === 'Отказана от получателя' && p[2].storageOffice === 'Варна Чайка', JSON.stringify(p[2].events[3]));
     ok('track: unknown number carries Econt\'s error', p[3].error === 'Пратка 9999000000001 не е намерена', JSON.stringify(p[3]).slice(0, 160));
     r = await post('/api/track', { creds: CREDS, lang: 'en', shipmentNumbers: nums.slice(0, 1) });
-    const e = r.json.parcels[0].events;
+    const e = T.trackReply(r.json, 'en').parcels[0].events;
     ok('track: English event texts', e[1].office === 'Plovdiv' && e[1].text === 'Passing through a hub' && e[0].text === 'Accepted at Sofia Pavlovo' && e[2].office === 'Plovdiv Center' && e[2].text === 'Ready for pick-up at the office', JSON.stringify(e));
+    // An Econt-sized reply (about 15 KB a parcel) goes through whole.
+    await mock.control({ heavyTracking: true });
+    r = await post('/api/track', { creds: CREDS, shipmentNumbers: nums.slice(0, 3) });
+    await mock.control({ heavyTracking: false });
+    read = T.trackReply(r.json, 'bg');
+    ok('track: Econt-sized reply passed through whole', r.text.length > 40000 && r.json.shipmentStatuses[0].status.trackingEvents.length === 12 && read.parcels.length === 3 && read.parcels[0].events.length === 12, r.text.length + ' bytes');
     const t0 = (await mock.state()).tracks;
     r = await post('/api/track', { creds: CREDS, shipmentNumbers: [{ x: 1 }, null] });
     ok('track: nothing to ask, Econt not called', r.json.ok && r.json.parcels.length === 0 && (await mock.state()).tracks === t0, r.text);
+    // Errors still come back as { ok: false }.
+    r = await post('/api/track', { creds: BAD, shipmentNumbers: nums.slice(0, 1) });
+    ok('track: wrong password = bad_login', r.json.ok === false && r.json.code === 'bad_login', r.text.slice(0, 160));
+    await mock.control({ faults: { track: { mode: '502' } } });
+    r = await post('/api/track', { creds: CREDS, shipmentNumbers: nums.slice(0, 1) });
+    ok('track: Econt 502 page = an error with its status', r.json.ok === false && r.json.status === 502, r.text.slice(0, 160));
+    await mock.control({ faults: { track: { mode: 'down' } } });
+    r = await post('/api/track', { creds: CREDS, shipmentNumbers: nums.slice(0, 1) });
+    ok('track: Econt unreachable = an error', r.json.ok === false && /Cannot reach Econt/.test(r.json.error), r.text.slice(0, 160));
+    // Econt cuts its reply mid-body: the browser must never get it as complete.
+    await mock.control({ faults: { track: { mode: 'cut' } } });
+    let cutOk = false, cutInfo = '';
+    try { const c = await fetch(APP + '/api/track', { method: 'POST', body: JSON.stringify({ creds: CREDS, client: 2, shipmentNumbers: nums }) }); const t = await c.text(); try { JSON.parse(t); cutInfo = 'parsed?! ' + t.length; } catch { cutOk = true; cutInfo = 'truncated body ' + t.length; } } catch (err) { cutOk = true; cutInfo = 'connection cut: ' + err.message; }
+    ok('track: a cut reply never reaches the browser as complete', cutOk, cutInfo);
+    // A page from before the update expects the parcels already read: told to reload.
+    const t1 = (await mock.state()).tracks;
+    r = await post('/api/track', { creds: CREDS, client: null, shipmentNumbers: nums.slice(0, 1) });
+    ok('track: a page from before the update is told to reload', r.json.ok === false && r.json.code === 'app_updated' && (await mock.state()).tracks === t1, r.text);
+    await mock.control({ clearFaults: true });
   }
 
   // ---------- the office list, passed through ----------

@@ -8,10 +8,12 @@
 // (decrypted from their PIN) with each request, and the relay passes it on.
 // Parsing messages and matching offices happen in the browser (public/core/), so
 // every route here does little more than one fetch: well under the Workers Free
-// plan's 10 ms of CPU per request. The office list (~4 MB) is passed through as a
-// stream, never parsed here.
+// plan's 10 ms of CPU per request. The office list (~4 MB) and the tracking
+// statuses (~15 KB per parcel) are passed through as a stream, never parsed here.
 
 const econt = require('./econt');
+// Econt's nested error messages, flattened (shared with the browser's tracking reader).
+const { flattenEcontError } = require('./public/core/track.js');
 
 const BODY_LIMIT = 1e6; // bytes of a request body
 
@@ -39,52 +41,6 @@ function configFromEnv(env) {
 }
 
 // ---------- Econt response helpers ----------
-// What Econt's ShipmentTrackingEvent.destinationType means, for events that
-// carry no destinationDetails text.
-const EVENT_TYPE_TEXT = {
-  client: ['Доставена на получателя', 'Delivered to the recipient'],
-  courier: ['При куриер', 'With a courier'],
-  courier_direction: ['Пътува към направлението', 'On the way'],
-  office: ['В офис', 'At an office'],
-  first_try: ['Първи опит за доставка', 'First delivery attempt'],
-  second_try: ['Втори опит за доставка', 'Second delivery attempt'],
-  instruction: ['Изпълнено указание', 'Instruction carried out'],
-  redirect: ['Пренасочена', 'Redirected'],
-  return: ['Връща се към подателя', 'Being returned to the sender'],
-  destroy: ['Унищожена', 'Destroyed'],
-  failed_delivery: ['Неуспешна доставка', 'Delivery failed'],
-  in_pickup_courier: ['Взета от куриер', 'Picked up by a courier'],
-  in_pickup_office: ['Приета в офис', 'Accepted at an office'],
-  in_delivery_courier: ['При куриер за доставка', 'Out for delivery'],
-  in_delivery_office: ['Пристигнала в офиса за получаване', 'Ready for pick-up at the office'],
-  arrival_departure_from_hub: ['Преминава през логистичен център', 'Passing through a hub'],
-  is_returning_to_sender: ['Връща се към подателя', 'Being returned to the sender'],
-  returned_to_sender: ['Върната на подателя', 'Returned to the sender'],
-};
-// Econt's tracking event: { isReceipt, destinationType, destinationDetails,
-// destinationDetailsEn, officeName, officeNameEn, cityName, cityNameEn,
-// countryCode, officeCode, time }. Keeps the { time, office, text } shape the
-// client renders, and adds the raw type so returns/failed deliveries can be told apart.
-function mapTrackingEvent(ev, lang) {
-  ev = ev || {};
-  const en = lang === 'en';
-  const pick = (bg, eng) => (en ? (eng || bg) : (bg || eng)) || '';
-  const office = pick(ev.officeName, ev.officeNameEn) || pick(ev.cityName, ev.cityNameEn) || null;
-  const type = ev.destinationType || null;
-  const typeText = type ? (EVENT_TYPE_TEXT[type] ? EVENT_TYPE_TEXT[type][en ? 1 : 0] : String(type).replace(/_/g, ' ')) : '';
-  let text = pick(ev.destinationDetails, ev.destinationDetailsEn)
-    || pick(ev.destinationDescription, ev.destinationDescriptionEn) || ev.description || typeText;
-  if (office && text && String(text).trim() === String(office).trim()) text = typeText !== text ? typeText : '';
-  return {
-    time: ev.time || ev.eventTime || ev.date || null,
-    office,
-    text: text || '',
-    type,
-    isReceipt: !!ev.isReceipt,
-    officeCode: ev.officeCode || null,
-  };
-}
-
 // createLabel/calculate reply -> extra top-level fields for the client.
 // - Econt's label is a ShipmentStatus: the price currency is `currency`. The
 //   client reads `totalPriceCurrency`, so fill it in (only when missing).
@@ -111,19 +67,6 @@ function decorateLabelReply(resp) {
     extra.reviewIgnoredMessage = [...new Set(notes.filter(Boolean))].join('; ') || null;
   }
   return extra;
-}
-
-// Econt nests its real validation message inside innerErrors with blank parents.
-// Walk the tree and collect every non-empty message into one readable string.
-function flattenEcontError(node, acc) {
-  if (!node) return acc;
-  const arr = Array.isArray(node) ? node : [node];
-  for (const n of arr) {
-    if (n && typeof n.message === 'string' && n.message.trim()) acc.push(n.message.trim());
-    if (n && n.innerErrors) flattenEcontError(n.innerErrors, acc);
-    if (n && n.errors) flattenEcontError(n.errors, acc);
-  }
-  return acc;
 }
 
 // Econt does NOT reliably use 401 for a wrong login: it often answers 400/500
@@ -208,7 +151,10 @@ const ROUTES = {
   // call because it always requires a valid login; the office list is public on
   // some Econt hosts, so it could say "OK" for a wrong password. The browser counts
   // the offices itself (from its own copy of the list).
+  // A page from before the update (no `client: 2` in the body) would show "Налични
+  // са , офиса." for the office count this reply no longer has: it is told to reload.
   '/api/test': async (body, opts) => {
+    if (!(Number(body.client) >= 2)) return json(200, { ok: false, code: 'app_updated', error: fr(body, 'app_updated') });
     try {
       const creds = getCreds(body);
       try { await econt.getClientProfiles(creds, opts); }
@@ -241,38 +187,19 @@ const ROUTES = {
     } catch (e) { return failed(e); }
   },
 
+  // Econt's tracking statuses, exactly as Econt sends them, streamed through
+  // without being parsed (about 15 KB per parcel: parsing and mapping a batch took
+  // a freshly started Worker over its CPU limit). The browser reads them
+  // (public/core/track.js). An Econt error comes back as the usual { ok: false }.
+  // A page from before the update expects the parcels already read: told to reload.
   '/api/track': async (body, opts) => {
+    if (!(Number(body.client) >= 2)) return json(200, { ok: false, code: 'app_updated', error: fr(body, 'app_updated') });
     try {
       const creds = getCreds(body);
       const nums = (Array.isArray(body.shipmentNumbers) ? body.shipmentNumbers : []).filter((n) => typeof n === 'string' || typeof n === 'number').map(String).filter(Boolean);
       if (!nums.length) return json(200, { ok: true, parcels: [] });
-      const r = await econt.getShipmentStatuses(creds, nums, opts);
-      const parcels = (r.shipmentStatuses || []).map((e) => {
-        const s = e.status || {};
-        const evRaw = s.trackingEvents || [];
-        return {
-          number: s.shipmentNumber,
-          error: e.error ? (flattenEcontError(e.error, []).join(' ') || null) : null,
-          sender: (s.senderClient && s.senderClient.name) || null,
-          senderOffice: s.senderOfficeCode || null,
-          recipient: (s.receiverClient && s.receiverClient.name) || null,
-          recipientPhone: (s.receiverClient && s.receiverClient.phones && s.receiverClient.phones[0]) || null,
-          office: s.receiverOfficeCode || null,
-          receiverAddress: (s.receiverAddress && s.receiverAddress.fullAddress) || null,
-          storageOffice: s.storageOfficeName || null,
-          type: s.shipmentType, packCount: s.packCount, weight: s.weight, description: s.shipmentDescription,
-          status: s.shortDeliveryStatus || s.shortDeliveryStatusEn || null,
-          statusEn: s.shortDeliveryStatusEn || null,
-          deliveryAttempts: s.deliveryAttemptCount,
-          createdTime: s.createdTime, sendTime: s.sendTime, deliveryTime: s.deliveryTime,
-          expectedDeliveryDate: s.expectedDeliveryDate,
-          cdCollected: s.cdCollectedAmount, cdCurrency: s.cdCollectedCurrency,
-          totalPrice: s.totalPrice, currency: s.currency,
-          routingCode: s.routingCode || null, returnURL: s.returnShipmentURL || null, pdfURL: s.pdfURL,
-          events: evRaw.map((ev) => mapTrackingEvent(ev, body.lang)),
-        };
-      });
-      return json(200, { ok: true, parcels });
+      const res = await econt.getShipmentStatusesRaw(creds, nums, opts);
+      return new Response(res.body, { status: 200, headers: { 'Content-Type': JSON_TYPE, 'Cache-Control': 'no-store' } });
     } catch (e) { return failed(e); }
   },
 
@@ -351,4 +278,4 @@ async function handle(request, cfg) {
   }
 }
 
-module.exports = { handle, configFromEnv, FRIENDLY, RETIRED, mapTrackingEvent, decorateLabelReply, errorPayload, isAuthFail, flattenEcontError };
+module.exports = { handle, configFromEnv, FRIENDLY, RETIRED, decorateLabelReply, errorPayload, isAuthFail, flattenEcontError };

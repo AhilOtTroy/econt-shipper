@@ -11,6 +11,7 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const P = require(path.join(ROOT, 'public/core/parser.js'));
 const M = require(path.join(ROOT, 'public/core/match.js'));
+const T = require(path.join(ROOT, 'public/core/track.js'));
 const { productionOffices, demoOffices } = require('./fixtures/offices');
 const { edgeCases } = require('./golden/edge-cases');
 const G = (f) => require(path.join(__dirname, 'golden', f));
@@ -92,6 +93,10 @@ async function groupAsync(name, items, fn) {
 
   // 4. The old office search.
   group('searchOffices == old /api/offices', G('server-offices.json'), (g) => diff(g.response, json({ ok: true, candidates: M.searchOffices(g.q, PROD) })));
+
+  // 4b. Tracking: Econt's reply, read in the browser now, gives what /api/track
+  // answered when the relay read it (tests/golden/track.json).
+  group('trackReply == old /api/track', G('track.json').cases, (c) => { const d = diff(c.response, T.trackReply(json(c.raw), c.lang)); return d && c.name + ' (' + c.lang + ') -> ' + d; });
 
   // 5. Edge cases: limits, wrong/missing login, failing office list, demo list.
   const golden = new Map(G('server-edge.json').map((e) => [e.name, e.response]));
