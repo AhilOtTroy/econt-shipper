@@ -192,6 +192,19 @@ async function apiCalls(p, fn) {
     await p.evaluate(() => { localStorage.removeItem('econt_offices_production'); OFFICES.production = null; });
     r = await read('Мария Петрова 0888123456 Кърджали Възрожденци');
     ok('no copy + Econt down: office error in the editor', r.filled && r.office === '' && /502/.test(r.first), JSON.stringify(r));
+    // Econt cuts the list mid-body (the relay passes it through as it streams in):
+    // a plain failure, no "server waking up" retries; the old copy is used at once.
+    await mock.control({ clearFaults: true });
+    r = await read('Мария Петрова 0888123456 Варна офис Чайка');
+    await age(7);
+    await mock.control({ faults: { offices: { mode: 'cut', n: 99 } } });
+    let t0 = Date.now();
+    r = await read('Мария Петрова 0888123456 Бургас Сарафово');
+    ok('Econt cuts the list: the kept copy at once', r.filled && r.office === '4442' && Date.now() - t0 < 4000, (Date.now() - t0) + ' ms ' + JSON.stringify(r));
+    await p.evaluate(() => { localStorage.removeItem('econt_offices_production'); OFFICES.production = null; });
+    t0 = Date.now();
+    r = await read('Мария Петрова 0888123456 Бургас Сарафово');
+    ok('Econt cuts the list, no copy: says so, no retries', r.filled && r.office === '' && r.first === 'Списъкът с офиси не се зареди: Еконт прекъсна списъка с офиси. Опитай пак след малко.' && Date.now() - t0 < 4000, (Date.now() - t0) + ' ms ' + JSON.stringify(r));
     await mock.control({ clearFaults: true });
     ok('no page errors (cache)', p.errs.length === 0, p.errs.join(' | '));
     await p.context().close(); }

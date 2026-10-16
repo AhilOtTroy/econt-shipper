@@ -124,7 +124,7 @@ const I18N = {
     details: 'Детайли', delivered_ok: 'Доставена', returned_ok: 'Върната към подателя', in_operation: 'В движение от {d}', delivered_in: 'Доставена за {d}', returned_in: 'Върната към подателя след {d}', awaiting_dispatch: 'Очаква изпращане', cancelled_ok: 'Анулирана', dur_sent: 'изпратена преди {d}', dur_in: 'за {d}', dur_after: 'след {d}',
     dur_min: '{n}\u00A0мин', dur_h: '{n}\u00A0ч', dur_d1: '1\u00A0ден', dur_d: '{n}\u00A0дни', dur_join: ' и ',
     d_status: 'Статус', d_sender: 'Подател', d_recipient: 'Получател', d_phone: 'Телефон', d_office: 'Офис на получателя', d_sender_office: 'Офис на подателя', d_storage: 'Съхранява се в', d_type: 'Тип', d_packs: 'Брой', d_weight: 'Тегло', d_contents: 'Съдържание', d_review: 'Преглед', d_sent: 'Изпратена', d_expected: 'Очаквана доставка', d_delivered: 'Доставена на', d_cod: 'Наложен платеж', d_price: 'Цена', d_attempts: 'Опити за доставка', d_routing: 'Маршрут',
-    testing: 'Проверявам…', login_saved: 'Запазено.', fix_login_hint: 'Отвори Настройки (зъбното колело горе) и натисни „Проверка на входа“ с паролата си за e-econt.com.', server_waking: 'Сървърът се събужда. Изчакай 30 секунди и опитай пак.', net_down: 'Няма връзка с интернет.', login_ok: 'Входът работи. Налични са {n} офиса.', need_creds: 'Първо въведи потребителско име и парола.',
+    testing: 'Проверявам…', login_saved: 'Запазено.', fix_login_hint: 'Отвори Настройки (зъбното колело горе) и натисни „Проверка на входа“ с паролата си за e-econt.com.', server_waking: 'Сървърът се събужда. Изчакай 30 секунди и опитай пак.', net_down: 'Няма връзка с интернет.', list_cut: 'Еконт прекъсна списъка с офиси. Опитай пак след малко.', login_ok: 'Входът работи. Налични са {n} офиса.', need_creds: 'Първо въведи потребителско име и парола.',
     pin_short: 'PIN трябва да е поне 4 цифри.', pin_mismatch: 'Двата PIN-а не съвпадат.', test_first: 'Първо провери входа за Еконт (стъпка 2).',
     fill_sender: 'Попълни име, телефон и офис, от който пращаш (стъпка 3).',
     paste_first: 'Първо постави съобщение.', pick_office: 'Избери офис.', need_recip: 'Трябват име, телефон и офис.',
@@ -285,7 +285,7 @@ const I18N = {
     details: 'Details', delivered_ok: 'Delivered', returned_ok: 'Returned to sender', in_operation: 'In transit for {d}', delivered_in: 'Delivered in {d}', returned_in: 'Returned to sender after {d}', awaiting_dispatch: 'Waiting to be sent', cancelled_ok: 'Cancelled', dur_sent: 'sent {d} ago', dur_in: 'in {d}', dur_after: 'after {d}',
     dur_min: '{n}\u00A0min', dur_h: '{n}\u00A0h', dur_d1: '1\u00A0day', dur_d: '{n}\u00A0days', dur_join: ' ',
     d_status: 'Status', d_sender: 'Sender', d_recipient: 'Recipient', d_phone: 'Phone', d_office: 'Recipient office', d_sender_office: 'Sender office', d_storage: 'Stored at', d_type: 'Type', d_packs: 'Packs', d_weight: 'Weight', d_contents: 'Contents', d_review: 'Inspection', d_sent: 'Sent', d_expected: 'Expected delivery', d_delivered: 'Delivered at', d_cod: 'Cash on delivery', d_price: 'Price', d_attempts: 'Delivery attempts', d_routing: 'Routing',
-    testing: 'Testing…', login_saved: 'Saved.', fix_login_hint: 'Open Settings (the cog at the top) and press "Test login" with your e-econt.com password.', server_waking: 'The server is waking up. Wait 30 seconds and try again.', net_down: 'No internet connection.', login_ok: 'Login works. {n} offices available.', need_creds: 'Enter your username and password first.',
+    testing: 'Testing…', login_saved: 'Saved.', fix_login_hint: 'Open Settings (the cog at the top) and press "Test login" with your e-econt.com password.', server_waking: 'The server is waking up. Wait 30 seconds and try again.', net_down: 'No internet connection.', list_cut: 'Econt cut the office list short. Try again in a moment.', login_ok: 'Login works. {n} offices available.', need_creds: 'Enter your username and password first.',
     pin_short: 'The PIN needs at least 4 digits.', pin_mismatch: 'The two PINs do not match.', test_first: 'Test your Econt login first (step 2).',
     fill_sender: 'Fill in your name, phone and the office you ship from (step 3).',
     paste_first: 'Paste a message first.', pick_office: 'Pick an office.', need_recip: 'A name, a phone and an office are needed.',
@@ -596,9 +596,16 @@ const api = async (path, body, opts) => {
     let kind;
     try {
       const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ lang: LANG }, body || {})) });
-      const txt = await res.text();
+      // opts.passThrough: the reply is Econt's own body, relayed as it streams in (the
+      // office list). If the app's server answered with JSON and the body then broke
+      // off, Econt cut it: a plain failure, not a server waking up, so no retries.
+      const cut = () => opts.passThrough && res.ok && /json/.test(res.headers.get('content-type') || '');
+      let txt;
+      try { txt = await res.text(); } catch (e) { if (cut()) return { ok: false, error: t('list_cut') }; throw e; }
       try {
-        const j = JSON.parse(txt); LAST_OK = Date.now();
+        let j;
+        try { j = JSON.parse(txt); } catch (e) { if (cut()) return { ok: false, error: t('list_cut') }; throw e; }
+        LAST_OK = Date.now();
         // Server and Econt messages are shown as written, minus their dashes (house style).
         if (j && typeof j.error === 'string') j.error = noDash(j.error);
         if (j && typeof j.officesError === 'string') j.officesError = noDash(j.officesError);
@@ -642,7 +649,7 @@ function officeEntry(key) {
 }
 const officeError = (message, extra) => Object.assign(new Error(message), extra || {});
 async function fetchOfficeList(c, key, opts) {
-  const r = await api('/api/offices/list', { creds: c }, opts);
+  const r = await api('/api/offices/list', { creds: c }, Object.assign({}, opts, { passThrough: true }));
   // { ok:false } is the relay (an Econt error) or api() (server not reachable);
   // anything else is Econt's own reply, { offices: [...] }.
   if (!r || r.ok === false) throw officeError((r && r.error) || t('net_down'), { transient: !!(r && r.transient), stale: !!(r && r.stale) });
